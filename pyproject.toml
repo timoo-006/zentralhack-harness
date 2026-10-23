@@ -1,0 +1,32 @@
+[project]
+name = "harness"
+version = "0.1.0"
+description = "Minimal agent harness for Zentral Hack 2026: an LLM with one bash tool"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["openai>=2"]
+
+[project.scripts]
+harness = "harness.__main__:main"
+
+[dependency-groups]
+# arena (the arena CLI, the strategy contract) and arena-games-dev (the dev games) for local
+# development. They are not in the evaluation image, which installs with --no-dev. uv.lock pins
+# the commits; `uv sync --upgrade-package arena --upgrade-package arena-games-dev` moves both to
+# their latest main.
+dev = ["ruff", "arena", "arena-games-dev"]
+
+[tool.uv.sources]
+arena = { git = "https://github.com/zentralhack-2026-agentic-ai-harness/arena", branch = "main" }
+arena-games-dev = { git = "https://github.com/zentralhack-2026-agentic-ai-harness/arena-games-dev", branch = "main" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF"]
