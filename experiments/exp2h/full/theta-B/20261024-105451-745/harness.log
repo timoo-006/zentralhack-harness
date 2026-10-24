@@ -1,0 +1,25 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/theta-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/theta-B/20261024-105451-745 (no Docker)
+[    0.8s $0.0000] fallback_written {}
+[    0.8s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 58.1s $0.0459 (spent $0.0459)
+[   58.9s $0.0459] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 58.1, "cost": 0.04593, "spent": 0.04593}
+[   59.0s $0.0459] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   59.0s $0.0459] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_best_response gpt-6.1-sol completed 59.2s $0.0515 (spent $0.0974)
+[   60.0s $0.0974] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 59.2, "cost": 0.05151, "spent": 0.09745}
+[   60.2s $0.0974] candidate {"id": "c2_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   60.4s $0.0974] promoted {"id": "c2_best_response", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 70.1s $0.0543 (spent $0.1518)
+[   70.9s $0.1518] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 70.1, "cost": 0.05434, "spent": 0.15179}
+[   71.0s $0.1518] candidate {"id": "c3_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0 gpt-6.1-sol completed 83.3s $0.0781 (spent $0.2299)
+[   84.1s $0.2299] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 83.3, "cost": 0.07813, "spent": 0.22992}
+[   84.4s $0.2299] sim_checked {"attempt": 0, "repair": 0, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): dema
+[llm] sim0_fix0 gpt-6.1-sol completed 78.8s $0.0918 (spent $0.3218)
+[  163.2s $0.3218] llm {"label": "sim0_fix0", "model": "gpt-6.1-sol", "status": "completed", "secs": 78.8, "cost": 0.09183, "spent": 0.32176}
+[  163.4s $0.3218] sim_checked {"attempt": 0, "repair": 1, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): dema
+[llm] sim0_fix1 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3218) worst case $0.1435 > $0.1282 left
+[  163.4s $0.3218] llm {"label": "sim0_fix1", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.32176}
+[  163.6s $0.3218] final_probe {"ok": true}
+[  163.6s $0.3218] end {"champion": "c2_best_response", "spent": 0.32175549999999997, "elapsed": 163.63806959900012}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/theta-B/20261024-105451-745/output/strategy.py

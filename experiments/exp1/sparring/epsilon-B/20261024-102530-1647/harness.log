@@ -1,0 +1,42 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/epsilon-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/epsilon-B/20261024-102530-1647 (no Docker)
+[    0.9s $0.0000] fallback_written {}
+[    0.9s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 48.6s $0.0233 (spent $0.0233)
+[   49.5s $0.0233] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 48.6, "cost": 0.02333, "spent": 0.02333}
+[   49.6s $0.0233] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   49.7s $0.0233] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 58.4s $0.0286 (spent $0.0519)
+[   59.3s $0.0519] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 58.4, "cost": 0.02859, "spent": 0.05192}
+[   59.4s $0.0519] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   59.5s $0.0519] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] sim0 gpt-6.1-sol completed 69.5s $0.0478 (spent $0.0997)
+[   70.4s $0.0997] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 69.5, "cost": 0.04778, "spent": 0.0997}
+[   71.0s $0.0997] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_best_response gpt-6.1-sol completed 79.4s $0.0363 (spent $0.1360)
+[   80.3s $0.1360] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 79.4, "cost": 0.03635, "spent": 0.13605}
+[   80.6s $0.1360] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   83.4s $0.1360] ranking {"rows": [{"id": "c3_best_response", "mean": 0.833, "worst": 0.5, "margin": 1360.6}, {"id": "c2_marginal_greedy", "mean": 0.833, "worst": 0.5, "margin": 1280.8}, {"id": "c1_safe", "mean": 0.333, "wors
+[   83.4s $0.1360] kept_champion {"champion": "c2_marginal_greedy", "challenger": "c3_best_response", "gain": 0.0, "h2h": [4, 4]}
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol completed 132.2s $0.0940 (spent $0.2300)
+[  215.6s $0.2300] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 132.2, "cost": 0.09395, "spent": 0.23}
+[  216.5s $0.2300] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  216.5s $0.2300] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  231.8s $0.2300] ranking {"rows": [{"id": "c3_best_response", "mean": 0.781, "worst": 0.5, "margin": 1061.7}, {"id": "c2_marginal_greedy", "mean": 0.75, "worst": 0.5, "margin": 973.0}, {"id": "c4_improve0", "mean": 0.719, "wo
+[  232.3s $0.2300] promoted {"id": "c3_best_response", "reason": "tournament", "fallback": "c1_safe"}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 179.9s $0.1036 (spent $0.3336)
+[  412.2s $0.3336] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 179.9, "cost": 0.10359, "spent": 0.33359}
+[  412.6s $0.3336] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  412.6s $0.3336] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  423.8s $0.3336] ranking {"rows": [{"id": "c3_best_response", "mean": 0.725, "worst": 0.5, "margin": 839.8}, {"id": "c5_improve0", "mean": 0.7, "worst": 0.5, "margin": 885.4}, {"id": "c2_marginal_greedy", "mean": 0.7, "worst"
+[llm] improve_c3_best_response_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3336) worst case $0.1491 > $0.1164 left
+[  423.8s $0.3336] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33359}
+[  423.8s $0.3336] improve_round {"round": 3, "added": []}
+[llm] improve_c3_best_response_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3336) worst case $0.1491 > $0.1164 left
+[  423.9s $0.3336] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33359}
+[  423.9s $0.3336] improve_round {"round": 4, "added": []}
+[llm] improve_c3_best_response_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3336) worst case $0.1491 > $0.1164 left
+[  423.9s $0.3336] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33359}
+[  423.9s $0.3336] improve_round {"round": 5, "added": []}
+[  424.3s $0.3336] final_probe {"ok": true}
+[  424.3s $0.3336] end {"champion": "c3_best_response", "spent": 0.3335922, "elapsed": 424.2790138569999}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/epsilon-B/20261024-102530-1647/output/strategy.py

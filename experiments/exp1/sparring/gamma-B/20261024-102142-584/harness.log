@@ -1,0 +1,39 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/gamma-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/gamma-B/20261024-102142-584 (no Docker)
+[    0.8s $0.0000] fallback_written {}
+[    0.8s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_best_response gpt-6.1-sol error 10.7s $0.0967 (spent $0.0967) attempt 1: InternalServerError: Error code: 520 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/', 'title': 'Error 520: Web serv
+[   11.6s $0.0967] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "error", "secs": 10.7, "cost": 0.09665, "spent": 0.09665}
+[llm] cand_safe gpt-6.1-sol completed 44.8s $0.0214 (spent $0.1181)
+[   45.6s $0.1181] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 44.8, "cost": 0.02144, "spent": 0.11809}
+[   45.7s $0.1181] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   45.8s $0.1181] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 59.9s $0.0303 (spent $0.1484)
+[   60.7s $0.1484] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 59.9, "cost": 0.03029, "spent": 0.14838}
+[   60.8s $0.1484] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   60.9s $0.1484] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] sim0 gpt-6.1-sol completed 70.0s $0.0487 (spent $0.1971)
+[   70.8s $0.1971] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 70.0, "cost": 0.04868, "spent": 0.19706}
+[   71.5s $0.1971] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[   75.8s $0.1971] ranking {"rows": [{"id": "c2_marginal_greedy", "mean": 1.0, "worst": 1.0, "margin": 489.3}, {"id": "c1_safe", "mean": 0.5, "worst": 0.0, "margin": -23.0}]}
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol completed 144.2s $0.0960 (spent $0.2931)
+[  219.9s $0.2931] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 144.2, "cost": 0.09599, "spent": 0.29305}
+[  220.9s $0.2931] candidate {"id": "c3_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  220.9s $0.2931] improve_round {"round": 1, "added": ["c3_improve0"]}
+[  231.1s $0.2931] ranking {"rows": [{"id": "c2_marginal_greedy", "mean": 1.0, "worst": 1.0, "margin": 337.8}, {"id": "c3_improve0", "mean": 0.667, "worst": 0.0, "margin": 319.5}, {"id": "c1_safe", "mean": 0.333, "worst": 0.0, 
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol completed 117.1s $0.0832 (spent $0.3762)
+[  348.2s $0.3762] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 117.1, "cost": 0.08318, "spent": 0.37624}
+[  349.2s $0.3762] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  349.2s $0.3762] improve_round {"round": 2, "added": ["c4_improve0"]}
+[  367.1s $0.3762] ranking {"rows": [{"id": "c2_marginal_greedy", "mean": 1.0, "worst": 1.0, "margin": 263.2}, {"id": "c4_improve0", "mean": 0.688, "worst": 0.0, "margin": 247.5}, {"id": "c3_improve0", "mean": 0.562, "worst": 0
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3762) worst case $0.1447 > $0.0738 left
+[  367.2s $0.3762] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.37624}
+[  367.2s $0.3762] improve_round {"round": 3, "added": []}
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3762) worst case $0.1447 > $0.0738 left
+[  367.2s $0.3762] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.37624}
+[  367.2s $0.3762] improve_round {"round": 4, "added": []}
+[llm] improve_c2_marginal_greedy_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3762) worst case $0.1447 > $0.0738 left
+[  367.2s $0.3762] llm {"label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.37624}
+[  367.2s $0.3762] improve_round {"round": 5, "added": []}
+[  367.8s $0.3762] final_probe {"ok": true}
+[  367.8s $0.3762] end {"champion": "c2_marginal_greedy", "spent": 0.37623629999999997, "elapsed": 367.84443321599974}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/gamma-B/20261024-102142-584/output/strategy.py

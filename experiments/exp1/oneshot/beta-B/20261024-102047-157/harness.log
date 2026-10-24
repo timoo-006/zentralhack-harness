@@ -1,0 +1,10 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/beta-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/beta-B/20261024-102047-157 (no Docker)
+[    0.8s $0.0000] fallback_written {}
+[    0.8s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 1, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": null, "sim_effor
+[llm] cand_marginal_greedy gpt-6.1-sol completed 51.7s $0.0260 (spent $0.0260)
+[   52.6s $0.0260] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 51.7, "cost": 0.02604, "spent": 0.02604}
+[   52.7s $0.0260] candidate {"id": "c1_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   52.8s $0.0260] promoted {"id": "c1_marginal_greedy", "reason": "provisional", "fallback": null}
+[   52.9s $0.0260] final_probe {"ok": true}
+[   52.9s $0.0260] end {"champion": "c1_marginal_greedy", "spent": 0.0260352, "elapsed": 52.85471071200027}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/beta-B/20261024-102047-157/output/strategy.py

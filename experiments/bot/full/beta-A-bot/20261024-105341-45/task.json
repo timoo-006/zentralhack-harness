@@ -1,0 +1,26 @@
+{
+  "contract_version": "0.2",
+  "game_name": "beta",
+  "strategy_file": "strategy.py",
+  "strategy_class": "Bot",
+  "budget_usd": 0.03,
+  "deadline_s": 180,
+  "allowed_models": [
+    "gpt-6-luna"
+  ],
+  "prices": {
+    "gpt-6-luna": {
+      "input": 0.1,
+      "cached_input": 0.01,
+      "cache_write": 0.125,
+      "output": 0.5,
+      "long_context": {
+        "above_input_tokens": 272000,
+        "input": 0.2,
+        "cached_input": 0.02,
+        "cache_write": 0.25,
+        "output": 0.75
+      }
+    }
+  }
+}

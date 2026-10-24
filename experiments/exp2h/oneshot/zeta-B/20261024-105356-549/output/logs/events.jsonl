@@ -1,0 +1,7 @@
+{"t": 0.54, "event": "fallback_written"}
+{"t": 0.55, "event": "start", "profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 1, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": null, "sim_effort": "low", "sim_max_out": 9000, "analysis_model": null, "analysis_effort": "low", "repair_model": "gpt-6.1-sol", "repair_effort": "low", "repair_max_out": 8000, "improve_model": null, "improve_effort": "medium", "improve_max_out": 10000, "improve_parallel": 1, "call_timeout_s": 200.0, "seeds": 4, "max_sim_repairs": 0, "max_strategy_repairs": 0, "min_improve_s": 130.0, "sparring": false, "robust_rank": true, "polish": true, "ablated": ["oneshot"]}, "examples": 3, "obs_keys": ["turn", "graph", "you", "rival", "orders", "feedback"], "deadline_s": 600.0, "budget_usd": 0.5}
+{"t": 51.77, "event": "llm", "label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 51.2, "cost": 0.02748, "spent": 0.02748}
+{"t": 51.86, "event": "candidate", "id": "c1_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 51.94, "event": "promoted", "id": "c1_marginal_greedy", "reason": "provisional", "fallback": null}
+{"t": 52.02, "event": "final_probe", "ok": true}
+{"t": 52.02, "event": "end", "champion": "c1_marginal_greedy", "spent": 0.0274755, "elapsed": 52.01608198699978}

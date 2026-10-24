@@ -1,0 +1,34 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/epsilon-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/epsilon-B/20261024-102229-1084 (no Docker)
+[    0.7s $0.0000] fallback_written {}
+[    0.7s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_sparring_naive gpt-6-luna completed 22.3s $0.0013 (spent $0.0013)
+[   23.0s $0.0013] llm {"label": "cand_sparring_naive", "model": "gpt-6-luna", "status": "completed", "secs": 22.3, "cost": 0.00135, "spent": 0.00135}
+[   23.1s $0.0013] candidate {"id": "c1_sparring_naive", "persona": "sparring_naive", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[   23.2s $0.0013] promoted {"id": "c1_sparring_naive", "reason": "provisional", "fallback": null}
+[llm] cand_safe gpt-6.1-sol completed 53.6s $0.0451 (spent $0.0465)
+[   54.3s $0.0465] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 53.6, "cost": 0.04514, "spent": 0.04648}
+[   54.4s $0.0465] candidate {"id": "c2_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   54.5s $0.0465] promoted {"id": "c2_safe", "reason": "provisional", "fallback": null}
+[llm] cand_best_response gpt-6.1-sol completed 60.3s $0.0303 (spent $0.0768)
+[   61.0s $0.0768] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 60.3, "cost": 0.03035, "spent": 0.07683}
+[   61.1s $0.0768] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   61.2s $0.0768] promoted {"id": "c3_best_response", "reason": "provisional", "fallback": "c2_safe"}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 67.0s $0.0312 (spent $0.1080)
+[   67.6s $0.1080] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 67.0, "cost": 0.03116, "spent": 0.10799}
+[   67.7s $0.1080] candidate {"id": "c4_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0 gpt-6.1-sol completed 94.3s $0.0500 (spent $0.1580)
+[   95.0s $0.1580] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 94.3, "cost": 0.05002, "spent": 0.15801}
+[   95.3s $0.1580] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[   98.6s $0.1580] ranking {"rows": [{"id": "c3_best_response", "mean": 1.0, "worst": 1.0, "margin": 1948.2}, {"id": "c4_marginal_greedy", "mean": 0.75, "worst": 0.0, "margin": 1089.3}, {"id": "c2_safe", "mean": 0.5, "worst": 0
+[llm] improve_c3_best_response_0 gpt-6.1-sol error 200.1s $0.1482 (spent $0.3062) attempt 1: APITimeoutError: Request timed out.; no time
+[  298.7s $0.3062] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "error", "secs": 200.1, "cost": 0.14818, "spent": 0.30619}
+[  298.7s $0.3062] improve_round {"round": 1, "added": []}
+[llm] improve_c3_best_response_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3062) worst case $0.1482 > $0.1438 left
+[  298.7s $0.3062] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.30619}
+[  298.8s $0.3062] improve_round {"round": 2, "added": []}
+[llm] improve_c3_best_response_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3062) worst case $0.1482 > $0.1438 left
+[  298.8s $0.3062] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.30619}
+[  298.8s $0.3062] improve_round {"round": 3, "added": []}
+[  299.0s $0.3062] final_probe {"ok": true}
+[  299.0s $0.3062] end {"champion": "c3_best_response", "spent": 0.30619014, "elapsed": 299.02197910499945}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/epsilon-B/20261024-102229-1084/output/strategy.py

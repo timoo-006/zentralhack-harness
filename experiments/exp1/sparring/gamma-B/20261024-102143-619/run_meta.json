@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792830103.50639,
+  "wall_s": 532.57,
+  "deadline_s": 600.0,
+  "commit": "61610da",
+  "dirty_files": 1,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/gamma-B"
+}
