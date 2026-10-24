@@ -1,0 +1,25 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/delta-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/delta-B/20261024-141246-211 (no Docker)
+[    0.6s $0.0000] fallback_written {}
+[    0.6s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] sim0 gpt-6.1-sol completed 46.4s $0.0460 (spent $0.0460)
+[   47.1s $0.0460] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 46.4, "cost": 0.04604, "spent": 0.04604}
+[   47.3s $0.0460] sim_checked {"attempt": 0, "repair": 0, "problems": ["selftest() failed:\nselftest: 1 failure(s)\n- worked movement and payout: (-3.4000000000000004, -16.6)", "Game(0).observe(0): opponent_drones[0]: expected int
+[llm] cand_marginal_greedy gpt-6.1-sol completed 51.4s $0.0307 (spent $0.0768)
+[   52.0s $0.0768] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 51.4, "cost": 0.03073, "spent": 0.07677}
+[   52.1s $0.0768] candidate {"id": "c1_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   52.2s $0.0768] promoted {"id": "c1_marginal_greedy", "reason": "provisional", "fallback": null}
+[llm] cand_safe gpt-6.1-sol completed 62.7s $0.0292 (spent $0.1059)
+[   63.4s $0.1059] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 62.7, "cost": 0.02916, "spent": 0.10592}
+[   63.5s $0.1059] candidate {"id": "c2_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_best_response gpt-6.1-sol completed 77.6s $0.0426 (spent $0.1485)
+[   78.2s $0.1485] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 77.6, "cost": 0.04256, "spent": 0.14848}
+[   78.3s $0.1485] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0_fix0 gpt-6.1-sol completed 37.9s $0.0757 (spent $0.2242)
+[   90.2s $0.2242] llm {"label": "sim0_fix0", "model": "gpt-6.1-sol", "status": "completed", "secs": 37.9, "cost": 0.07574, "spent": 0.22423}
+[   90.4s $0.2242] sim_checked {"attempt": 0, "repair": 1, "problems": ["Game(0).observe(0): opponent_drones[0]: expected int, got NoneType", "Game(0).observe(1): opponent_drones[0]: expected int, got NoneType", "seed 0 turn 0 obse
+[llm] sim0_fix1 gpt-6.1-sol completed 34.2s $0.0758 (spent $0.3000)
+[  124.5s $0.3000] llm {"label": "sim0_fix1", "model": "gpt-6.1-sol", "status": "completed", "secs": 34.2, "cost": 0.07581, "spent": 0.30004}
+[  124.7s $0.3000] sim_checked {"attempt": 0, "repair": 2, "problems": ["Game(0).observe(0): opponent_drones[0]: expected int, got NoneType", "Game(0).observe(1): opponent_drones[0]: expected int, got NoneType", "seed 0 turn 0 obse
+[  124.8s $0.3000] final_probe {"ok": true}
+[  124.8s $0.3000] end {"champion": "c1_marginal_greedy", "spent": 0.3000358000000001, "elapsed": 124.80175902700284}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/delta-B/20261024-141246-211/output/strategy.py

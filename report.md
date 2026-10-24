@@ -122,6 +122,15 @@ with hidden information (a field typed `int | None`), so those runs never had se
 check now accepts exactly the kinds the specification's examples show; replaying all 51 saved
 simulators verifies 3 more on delta and 6 more on a held-out game, and none less elsewhere.
 
+**Fresh exam and final verification** (last hour before the freeze). Two new games were
+built by agents that never saw our prompts (orders with deadlines; congested edges with
+winner-take-all and a dict action format). On them the final pipeline beats the one-shot
+baseline 36-0-12 and 48-0-0. Independent checks on raw data: all 112 distinct strategies the
+harness delivered today pass arena's conformance check (448 matches, 0 forfeits); under full
+CPU load the slowest move took 0.19 s of the 1 s limit, and with deliberately broken code the
+guard still answers within 0.67 s; all 171 runs stayed within budget (at most 80.5%) and
+deadline; a deadline watchdog exits 4 s before the deadline whatever the run is doing.
+
 **Model policy.** Models and efforts follow from `task.json` (budget, deadline, allowed
 models), never from a task name. Task A (cheapest model only): everything at low effort,
 because the deadline binds and the cheap model gets weaker and slower with more effort. Task

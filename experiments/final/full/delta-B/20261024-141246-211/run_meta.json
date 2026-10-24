@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792843966.183248,
+  "wall_s": 124.82,
+  "deadline_s": 600.0,
+  "commit": "4f49004",
+  "dirty_files": 0,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/delta-B"
+}

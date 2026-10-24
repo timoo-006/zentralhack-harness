@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792844878.3417034,
+  "wall_s": 44.26,
+  "deadline_s": 600.0,
+  "commit": "unknown",
+  "dirty_files": 0,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/review-main/tasks/kappa-B"
+}

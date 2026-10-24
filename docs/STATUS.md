@@ -1,6 +1,6 @@
 # Status: read this first
 
-> Living handoff page of the team. Last update: Sat 24 Oct, 14:15. **Freeze: today 15:30.**
+> Living handoff page of the team. Last update: Sat 24 Oct, 14:55. **Freeze: today 15:30.**
 > All work happens on **`main`**. How to set up, run, measure and freeze:
 > [`DEVELOPING.md`](DEVELOPING.md). Module contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > Design: [`PLAN.md`](PLAN.md). The official task: [`TASK.md`](TASK.md).
@@ -73,6 +73,34 @@ Task B, games beta and the hidden h1, 4 teams x 5 runs per game, commit `793a5b5
   simulator-check fix below); whether it was h1's cause cannot be proven without its logs.
 
 ## Decision log (newest first)
+
+### Final verification (14:25-14:55, Elias): fresh exam, double checks, no code change
+
+Everything below was checked on raw data by independent agents (Opus, xhigh), read-only.
+
+- **Fresh exam (exp5)**: two brand-new games built at 14:35 by agents that never saw our
+  prompts (iota: orders with deadlines; kappa: congested edges, winner-take-all, dict
+  actions), merged code `b52227d`, task B, 2 runs per arm: full beats one-shot head-to-head
+  **36-0-12** (iota) and **48-0-0** (kappa); vs baselines full 86% / 100%, one-shot 72% /
+  100%; all 8 strategies pass the check, spend $0.33-0.35, wall 560-579 s.
+- **Docker runs of the merged code**: beta-A 149/180 s, $0.014, check PASS; delta-B (hidden
+  information) 568/600 s, $0.385, check PASS: simulator repaired, tournament, improvement, and
+  the budget rescue fired and its challenger became champion.
+- **Tournament rules**: all **112 distinct delivered strategies** (165 files) pass arena's
+  conformance check: 448 matches, **0 forfeits**; stdlib only, right class name. Under full
+  CPU load the slowest act took **0.194 s** of the 1.0 s limit; with sabotaged cores (endless
+  loop, sleep, a huge computation) the guard holds at **0.670 s**; largest reply 393 bytes.
+- **Hard limits**: all 171 runs within budget (max 80.5% of `budget_usd`; recomputed cost =
+  logged cost on every call; real cost never above the reserved worst case) and deadline
+  (0 SIGTERM/SIGKILL). The real task-C run of the old code (`4f49004`) used $2.78 of $10 but
+  ended 10.1 s before the deadline: `finish()` has no clock check, which the **watchdog of
+  `fd424dd` bounds** (hard exit at deadline - 4 s, tested: hanging pipeline, SIGTERM, PID-1
+  clock). Known limit: a C call holding the GIL blocks both watchdog and SIGTERM (not in our
+  code paths).
+- **Data hygiene**: all 198 experiment runs sit in the arm whose settings they logged (0
+  misfiled; a run-folder race in `ablate.sh` only left one run unmoved, fixed by hand).
+- **Decision**: no code change; the freeze is `fd424dd` + docs, games and evidence, after
+  `scripts/freeze_check.sh --with-b` passes on that exact commit.
 
 ### Fix (14:00): the simulator check rejected correct simulators (hidden information)
 

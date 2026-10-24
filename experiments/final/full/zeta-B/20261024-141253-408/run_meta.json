@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792843973.1865184,
+  "wall_s": 570.37,
+  "deadline_s": 600.0,
+  "commit": "4f49004",
+  "dirty_files": 0,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/zeta-B"
+}

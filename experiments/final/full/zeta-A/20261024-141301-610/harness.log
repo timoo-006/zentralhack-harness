@@ -1,0 +1,43 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/zeta-A into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/zeta-A/20261024-141301-610 (no Docker)
+[    0.8s $0.0000] fallback_written {}
+[    0.8s $0.0000] start {"profile": {"name": "tiny", "cheap": "gpt-6-luna", "strong": "gpt-6-luna", "n_candidates": 3, "cand_models": ["gpt-6-luna"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6-luna", "si
+[llm] cand_safe gpt-6-luna completed 26.4s $0.0024 (spent $0.0024)
+[   27.2s $0.0024] llm {"label": "cand_safe", "model": "gpt-6-luna", "status": "completed", "secs": 26.4, "cost": 0.00243, "spent": 0.00243}
+[   27.4s $0.0024] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[   27.4s $0.0024] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_best_response gpt-6-luna completed 27.6s $0.0026 (spent $0.0050)
+[   28.4s $0.0050] llm {"label": "cand_best_response", "model": "gpt-6-luna", "status": "completed", "secs": 27.6, "cost": 0.00256, "spent": 0.00499}
+[   28.5s $0.0050] candidate {"id": "c2_best_response", "persona": "best_response", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[   28.5s $0.0050] promoted {"id": "c2_best_response", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_marginal_greedy gpt-6-luna completed 29.8s $0.0026 (spent $0.0076)
+[   30.6s $0.0076] llm {"label": "cand_marginal_greedy", "model": "gpt-6-luna", "status": "completed", "secs": 29.8, "cost": 0.00262, "spent": 0.00761}
+[   30.7s $0.0076] candidate {"id": "c3_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[llm] sim0 gpt-6-luna completed 37.0s $0.0035 (spent $0.0111)
+[   37.9s $0.0111] llm {"label": "sim0", "model": "gpt-6-luna", "status": "completed", "secs": 37.0, "cost": 0.00353, "spent": 0.01115}
+[   38.0s $0.0111] sim_checked {"attempt": 0, "repair": 0, "problems": ["selftest() failed:\nselftest: 2 failure(s)\n- numeric examples: \n- malformed and illegal actions: "]}
+[llm] sim0_fix0 gpt-6-luna completed 32.5s $0.0040 (spent $0.0151)
+[   70.6s $0.0151] llm {"label": "sim0_fix0", "model": "gpt-6-luna", "status": "completed", "secs": 32.5, "cost": 0.00399, "spent": 0.01514}
+[   70.9s $0.0151] sim_checked {"attempt": 0, "repair": 1, "problems": []}
+[   71.2s $0.0151] late_problems {"id": "c2_best_response", "problems": ["As seat 0 it LOST against an opponent that never acts (scores [-58.400000000000006, 0.0]). It must at least beat doing nothing.", "As seat 1 it LOST against an
+[   71.3s $0.0151] late_problems {"id": "c3_marginal_greedy", "problems": ["As seat 0 it LOST against an opponent that never acts (scores [-2297.5, 0.0]). It must at least beat doing nothing.", "As seat 1 it LOST against an opponent 
+[llm] fix_c3_marginal_greedy gpt-6-luna completed 21.7s $0.0027 (spent $0.0179)
+[   93.1s $0.0179] llm {"label": "fix_c3_marginal_greedy", "model": "gpt-6-luna", "status": "completed", "secs": 21.7, "cost": 0.00273, "spent": 0.01787}
+[   93.3s $0.0179] candidate {"id": "c4_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[llm] fix_c2_best_response gpt-6-luna completed 24.5s $0.0028 (spent $0.0207)
+[   95.7s $0.0207] llm {"label": "fix_c2_best_response", "model": "gpt-6-luna", "status": "completed", "secs": 24.5, "cost": 0.00282, "spent": 0.02069}
+[   95.9s $0.0207] candidate {"id": "c5_best_response", "persona": "best_response", "model": "gpt-6-luna", "attempt": 0, "problems": ["As seat 0 it LOST against an opponent that never acts (scores [-482.80000000000007, 0.0]). It 
+[   96.7s $0.0207] ranking {"rows": [{"id": "c1_safe", "mean": 0.75, "worst": 0.5, "margin": 266.6}, {"id": "c4_marginal_greedy", "mean": 0.667, "worst": 0.5, "margin": 91.3}]}
+[   96.9s $0.0207] promoted {"id": "c1_safe", "reason": "tournament", "fallback": null}
+[llm] improve_c1_safe_1 gpt-6-luna skipped_budget 0.0s $0.0000 (spent $0.0207) worst case $0.0052 > $0.0011 left
+[  108.9s $0.0207] llm {"label": "improve_c1_safe_1", "model": "gpt-6-luna", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.02069}
+[llm] improve_c1_safe_0 gpt-6-luna completed 22.8s $0.0026 (spent $0.0233)
+[  119.7s $0.0233] llm {"label": "improve_c1_safe_0", "model": "gpt-6-luna", "status": "completed", "secs": 22.8, "cost": 0.00264, "spent": 0.02333}
+[  120.0s $0.0233] candidate {"id": "c6_improve0", "persona": "improve0", "model": "gpt-6-luna", "attempt": 0, "problems": []}
+[  120.0s $0.0233] improve_round {"round": 1, "added": ["c6_improve0"]}
+[  121.0s $0.0233] ranking {"rows": [{"id": "c6_improve0", "mean": 0.889, "worst": 0.833, "margin": 855.4}, {"id": "c1_safe", "mean": 0.556, "worst": 0.167, "margin": -62.9}, {"id": "c4_marginal_greedy", "mean": 0.5, "worst": 0
+[  121.2s $0.0233] promoted {"id": "c6_improve0", "reason": "tournament", "fallback": "c1_safe"}
+[  133.3s $0.0233] polished {"seeds": 27, "matches": 324}
+[  133.3s $0.0233] ranking {"rows": [{"id": "c6_improve0", "mean": 0.975, "worst": 0.963, "margin": 1235.2}, {"id": "c1_safe", "mean": 0.494, "worst": 0.037, "margin": -205.8}, {"id": "c4_marginal_greedy", "mean": 0.414, "worst
+[  133.4s $0.0233] final_probe {"ok": true}
+[  133.4s $0.0233] end {"champion": "c6_improve0", "spent": 0.023327405, "elapsed": 133.44822628600014}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/zeta-A/20261024-141301-610/output/strategy.py

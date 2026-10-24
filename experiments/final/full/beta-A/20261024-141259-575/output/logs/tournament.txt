@@ -1,0 +1,9 @@
+Tournament: 140 valid matches, 0 invalid (simulator errors), 5 entries, seeds played 7/7, pending 0
+
+Standings (W-D-L; win% = (W + D/2) / played; margin = mean own - opponent score):
+ # entry              played       W-D-L   win%    margin forfeit exc tmo malformed illegal
+ 1 c1_marginal_greedy     56      43-4-9  80.4%    1645.7       0   0   0         0       0
+ 2 c3_best_response       56     39-3-14  72.3%    1650.5       0   0   0         0       0
+ 3 c4_improve1            56     38-5-13  72.3%    1641.3       0   0   0         0       0
+ 4 c2_safe                56     13-0-43  23.2%   -2057.9       0   0   0         0       0
+ 5 idle                   56      1-0-55   1.8%   -2879.6       0   0   0      5600       0
