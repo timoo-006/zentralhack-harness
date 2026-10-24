@@ -2,7 +2,7 @@
 
 | file | what |
 |------|------|
-| **`pitch.pptx`** / **`pitch.pdf`** | **the 3-minute pitch** (6 slides, speaker notes with timings in the PPTX) |
+| **`pitch.pptx`** / **`pitch.pdf`** | **the 3-minute pitch** (5 slides, speaker notes with timings in the PPTX) |
 | `slides.md` | a longer 9-slide draft in Markdown (Marp), kept as a source of extra material; updated at 14:15 with the midpoint evaluation, the simulator-check fix and experiments 3-4 |
 | `build/` | the generator of the pitch: `cd build && npm install && node build.js ../pitch.pptx` |
 

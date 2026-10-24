@@ -113,7 +113,7 @@ pres.addSection({ title: "Why" });
   s.addText("The LLM is the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.95, w: w - 0.7, h: 2.4, fontFace: HEAD, fontSize: 30, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   s.addText("Sources: Zentral Hack 2026 task description; Code World Models for General Game Playing, arXiv 2510.04542.",
     { x: M, y: 6.92, w: 10.5, h: 0.32, fontFace: BODY, fontSize: 10, color: "6B7380", margin: 0, isTextBox: true });
-  s.addNotes("(0:15–0:40) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. So our insight: the LLM is the programmer, not the player, and nothing it writes is trusted before it is verified.");
+  s.addNotes("(0:15–0:45) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. So our insight: the LLM is the programmer, not the player, and nothing it writes is trusted before it is verified.");
 }
 
 // ---------------------------------------------------------------- 3 pipeline
@@ -150,7 +150,7 @@ pres.addSection({ title: "How" });
     s.addText([{ text: k + "  ", options: { bold: true, color: TEXT_L } }, { text: v, options: { color: MUTED_D } }],
       { x, y: 5.85, w: 5.9, h: 0.65, fontFace: BODY, fontSize: 14, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addNotes("(0:40–1:15) The pipeline. It writes several strategy drafts with different strategic personas and, in parallel, a simulator of the game. Nothing is trusted: the simulator must reproduce the spec’s worked examples, every draft is probed and repaired from its tracebacks. The survivors play a round robin on the simulator, both seats, many seeds, under the tournament’s real time limits. Then the strongest model writes challengers against the champion’s weak spots, and we repeat while time and money last. Around all of it, a guard: hard timer, fallback strategy, output check, so a forfeit is impossible by construction. Budget and deadline are enforced per call.");
+  s.addNotes("(0:45–1:30) The pipeline. It writes several strategy drafts with different strategic personas and, in parallel, a simulator of the game. Nothing is trusted: the simulator must reproduce the spec’s worked examples, every draft is probed and repaired from its tracebacks. The survivors play a round robin on the simulator, both seats, many seeds, under the tournament’s real time limits. Then the strongest model writes challengers against the champion’s weak spots, and we repeat while time and money last. Around all of it, a guard: hard timer, fallback strategy, output check, so a forfeit is impossible by construction. Budget and deadline are enforced per call.");
 }
 
 // ---------------------------------------------------------------- 4 loop
@@ -179,33 +179,13 @@ pres.addSection({ title: "How" });
     s.addText(title, { x: ex + 1.65, y: y + 0.16, w: ew - 1.95, h: 0.4, fontFace: HEAD, fontSize: 18, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
     s.addText(desc, { x: ex + 1.65, y: y + 0.56, w: ew - 1.95, h: 0.5, fontFace: BODY, fontSize: 14, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addNotes("(1:15–1:45) We built the harness the way it works itself. Claude Code was our engineering team: parallel agents wrote and reviewed every module, held to 416 tests. Then we ran loops. Besides the two dev games we built eight games of our own with new mechanics, and kept four of them out of all tuning, as an honest exam. Each epoch: switch features off one at a time, measure, keep only what wins. More than 120 measured runs, about 45 dollars in total.");
+  s.addNotes("(1:30–2:15) We built the harness the way it works itself. Claude Code was our engineering team: parallel agents wrote and reviewed every module, held to 416 tests. Then we ran loops. Besides the two dev games we built eight games of our own with new mechanics, and kept four of them out of all tuning, as an honest exam. Each epoch: switch features off one at a time, measure, keep only what wins. More than 120 measured runs, about 45 dollars in total.");
 }
 
-// ---------------------------------------------------------------- 5 proof
-pres.addSection({ title: "Proof" });
-{
-  const s = pres.addSlide({ masterName: "ACCENT", sectionTitle: "Proof" });
-  eyebrow(s, "THE ORGANISERS’ MIDPOINT EVALUATION", "3A2010");
-  s.addText("Our best strategy topped the hidden game", { placeholder: "title" });
-  const cols = [["#1 of 20", "strategies on the hidden game (94.8% won)"],
-                ["2nd of 4", "teams overall, task B"],
-                ["0", "forfeits in 112 delivered strategies"]];
-  const w = 3.85, gap = 0.3;
-  cols.forEach(([big, small], i) => {
-    const x = M + i * (w + gap);
-    s.addText(big, { x, y: 2.6, w, h: 1.2, fontFace: HEAD, fontSize: 56, bold: true, color: INK, margin: 0, isTextBox: true });
-    s.addShape(pres.shapes.LINE, { x, y: 4.0, w: 1.2, h: 0, line: { color: INK, width: 2 } });
-    s.addText(small, { x, y: 4.25, w: w - 0.2, h: 0.9, fontFace: BODY, fontSize: 20, color: "2A1408", margin: 0, valign: "top", isTextBox: true });
-  });
-  s.addText("Weak runs traced to our simulator check and fixed. On fresh, untuned games the final harness beats the one-shot baseline 36–0–12 and 48–0–0.",
-    { x: M, y: 5.85, w: 11.9, h: 0.75, fontFace: BODY, fontSize: 18, color: "2A1408", margin: 0, valign: "top", isTextBox: true });
-  s.addNotes("(1:45–2:30) Real evidence from outside: the organisers’ midpoint evaluation, task B, four teams, five runs each, on beta and a hidden game. On the hidden game our best strategy was number one of all twenty, winning 94.8% of its matches; overall we placed second of four. Not one of our strategies ever forfeited: 112 delivered strategies, all pass the official conformance check. Two of our five runs were weak, and we traced that to our own simulator check, which rejected correct simulators of games with hidden information; it is fixed. And on two brand-new games nobody tuned on, the final harness beats the one-shot baseline 36 to 0 to 12 and 48 to 0 to 0. (Wins–draws–losses; one-shot = one LLM draft, what a typical harness ships.)");
-}
-
+pres.addSection({ title: "Demo" });
 // ---------------------------------------------------------------- 7 demo
 {
-  const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Proof" });
+  const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Demo" });
   eyebrow(s, "DEMO · ONE REAL RUN, FROM SPEC TO STRATEGY.PY", ORANGE);
   s.addText("141 seconds, 1.8 cents, one champion", { placeholder: "title" });
   const x0 = 0.9, x1 = 12.4, ay = 3.7, T = 180, sx = (x1 - x0) / T;
@@ -230,7 +210,7 @@ pres.addSection({ title: "Proof" });
     s.addText(label, { x: cx - 0.11, y: ly + 0.34, w: 2.35, h: 0.6, fontFace: BODY, fontSize: 14, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   });
   s.addText("Spec in. Strategy out. Never a forfeit.", { x: M, y: 6.05, w: 8.5, h: 0.55, fontFace: HEAD, fontSize: 26, bold: true, color: TEXT_L, margin: 0, isTextBox: true });
-  s.addNotes("(2:30–3:00) Finally, one real run, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, at 68 it is repaired and passes. Self-play ranks the drafts, an improvement round adds a challenger, and at 141 seconds the champion is delivered, for 1.8 cents. Spec in, strategy out, never a forfeit. Thank you.\n\nLIVE DEMO OPTION: start `./run.sh tasks/beta-A` on a second screen when the pitch begins (about 2.5 minutes, about $0.02); on this slide show its last lines (exit code 0) and `arena check ... PASSED`. If anything goes wrong, this slide is the recorded run.");
+  s.addNotes("(2:15–3:00) Finally, one real run, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, at 68 it is repaired and passes. Self-play ranks the drafts, an improvement round adds a challenger, and at 141 seconds the champion is delivered, for 1.8 cents. Spec in, strategy out, never a forfeit. Thank you.\n\nLIVE DEMO OPTION: start `./run.sh tasks/beta-A` on a second screen when the pitch begins (about 2.5 minutes, about $0.02); on this slide show its last lines (exit code 0) and `arena check ... PASSED`. If anything goes wrong, this slide is the recorded run.");
 }
 
 (async () => {
