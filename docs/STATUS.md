@@ -78,7 +78,8 @@ arms' strategies (+1/0/-1 per match, both seats, 6 seeds, an arm never meets its
 |------|-----:|------------:|---------------:|-------------------:|
 | beta (net per strategy) | **+48.0** | **+48.0** | -48.5 | -47.5 |
 | gamma (net per strategy) | **+32.5** | +28.5 | -14.5 | -46.5 |
-| epsilon | (evaluator did not know the new test games yet: being re-run) | | | |
+| epsilon (net per strategy) | -17.0 | **+36.5** | +2.0 | -21.5 |
+| **total over 3 games** | +63.5 | **+113** | -61 | -115.5 |
 
 Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improvement
 **48-0-0**, **30-6-12**; no sparring 24-0-24, 24-2-22.
@@ -86,8 +87,11 @@ Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improve
 - **The pipeline is worth it**: against the one-shot baseline (one sol draft + guard, what a
   typical team ships) it wins almost every match.
 - **Improvement rounds are worth it**: they are the biggest single gain.
-- **The sparring draft has no measurable effect** (also not against the baselines: gamma
-  94% vs 97%). Decision pending the epsilon numbers.
+- **The sparring draft is switched off**: no gain on beta and gamma, and on epsilon it made
+  selection worse (full lost 11-1-36 to the arm without it): weak opponents in the pool
+  reward strategies that crush naive play but lose to strong play.
+- Caveat: 2 runs per arm is noisy (which personas happen to come out strong varies); we trust
+  directions that agree across games, not single cells.
 - Mean spend per B run: full $0.34, no improvement $0.14, oneshot $0.03. Several full runs
   ended early because the money ran out, not the time.
 

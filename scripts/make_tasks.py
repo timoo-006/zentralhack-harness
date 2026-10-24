@@ -30,6 +30,10 @@ GAMES: dict[str, str] = {
     "beta": "arena_games_dev.beta",
     "gamma": "testgames.gamma",
     "delta": "testgames.delta",
+    "epsilon": "testgames.epsilon",
+    "eta": "testgames.eta",
+    "zeta": "testgames.zeta",  # held out: measure only, never tune on it
+    "theta": "testgames.theta",  # held out: measure only, never tune on it
 }
 
 

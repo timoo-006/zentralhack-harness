@@ -75,7 +75,9 @@ class Profile:
     max_sim_repairs: int
     max_strategy_repairs: int
     min_improve_s: float  # time an improvement round needs (call + checks + matches)
-    sparring: bool = True  # a cheap naive draft joins self-play
+    # A cheap naive draft in self-play. Off: experiment 1 (24 runs, 3 games) showed no gain on
+    # beta/gamma and worse selection on epsilon (full lost 11-1-36 to the arm without it).
+    sparring: bool = False
     robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
     ablated: tuple[str, ...] = ()
 
