@@ -134,3 +134,26 @@ def install_sigterm_handler(on_term: Callable[[], None], *, timeout_s: float = 1
         signal.signal(signal.SIGTERM, handler)
     except Exception:
         pass
+
+
+def start_watchdog(clock: Clock, *, lead_s: float = 4.0, exit=os._exit) -> threading.Timer:
+    """Hard stop: `exit(0)` `lead_s` seconds before the deadline, whatever the run is doing.
+
+    The stages stop by themselves `clock.margin_s` before the deadline; this is the backstop
+    for anything that blocks (a timeout counts as an invalid run at the evaluation). It is
+    safe because the strategy file is valid at every moment (only ever replaced atomically).
+    """
+
+    def fire() -> None:
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.write("watchdog: deadline reached, exiting\n")
+                stream.flush()
+            except BaseException:
+                pass
+        exit(0)
+
+    t = threading.Timer(max(0.0, clock.hard_remaining() - lead_s), fire)
+    t.daemon = True
+    t.start()
+    return t

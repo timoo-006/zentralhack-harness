@@ -6,6 +6,7 @@ import textwrap
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -269,3 +270,25 @@ def test_sigterm_while_main_thread_waits_like_the_pipeline(tmp_path, block):
     assert rc == 0, p.stderr.read()
     assert time.monotonic() - t0 < 5
     assert marker.read_text() == "done"
+
+
+def test_watchdog_exits_lead_s_before_the_deadline() -> None:
+    fired = threading.Event()
+    codes = []
+
+    def fake_exit(code):
+        codes.append(code)
+        fired.set()
+
+    deadline_in = 4.5  # hard_remaining(): the deadline is 4.5 s away, the lead 4.2 s
+    clock.start_watchdog(SimpleNamespace(hard_remaining=lambda: deadline_in), lead_s=4.2,
+                         exit=fake_exit)  # fmt: skip
+    assert not fired.wait(0.15)  # not before deadline - lead (0.3 s from now)
+    assert fired.wait(2.0)
+    assert codes == [0]
+
+
+def test_watchdog_fires_at_once_when_the_deadline_is_past() -> None:
+    fired = threading.Event()
+    clock.start_watchdog(SimpleNamespace(hard_remaining=lambda: -1.0), exit=lambda c: fired.set())
+    assert fired.wait(1.0)

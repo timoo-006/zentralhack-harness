@@ -60,8 +60,8 @@ def run(task_dir: Path, output: Path, work: Path, *, container: bool) -> int:
         d.mkdir(parents=True, exist_ok=True)
     strategy_path = output / task.get("strategy_file", "strategy.py")
 
-    # Before anything that can fail: a valid strategy, and SIGTERM handled (the file is always
-    # valid, so on SIGTERM there is nothing left to do but leave).
+    # Before anything that can fail: a valid strategy, SIGTERM handled and a hard stop just
+    # before the deadline (the file is always valid, so there is nothing left to do but leave).
     from harness import guard
 
     try:
@@ -70,6 +70,7 @@ def run(task_dir: Path, output: Path, work: Path, *, container: bool) -> int:
     except Exception:
         traceback.print_exc()
     clock.install_sigterm_handler(lambda: print("SIGTERM: exiting", flush=True))
+    clock.start_watchdog(clock.Clock(task.get("deadline_s"), container=container))
 
     try:
         from harness.pipeline import Run
