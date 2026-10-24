@@ -189,8 +189,7 @@ pres.addSection({ title: "Close" });
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Close" });
   eyebrow(s, "ONE REAL RUN, FROM SPEC TO STRATEGY.PY", ORANGE);
   s.addText("Spec in. Strategy out. Never a forfeit.", { placeholder: "title" });
-  s.addText("Thank you for listening!", { x: M, y: 1.62, w: 9, h: 0.55, fontFace: HEAD, fontSize: 26, bold: true, color: ORANGE, margin: 0, isTextBox: true });
-  const x0 = 0.9, x1 = 12.4, ay = 4.0, T = 180, sx = (x1 - x0) / T;
+  const x0 = 0.9, x1 = 12.4, ay = 3.8, T = 180, sx = (x1 - x0) / T;
   const X = (t) => x0 + t * sx;
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x0, y: ay - 0.05, w: x1 - x0, h: 0.1, rectRadius: 0.05, fill: { color: LINE_D }, line: { color: LINE_D, width: 0 }, objectName: "axis" });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x0, y: ay - 0.05, w: X(141) - x0, h: 0.1, rectRadius: 0.05, fill: { color: ORANGE }, line: { color: ORANGE, width: 0 }, objectName: "progress" });
@@ -214,7 +213,37 @@ pres.addSection({ title: "Close" });
   s.addText([{ text: "141 seconds, 1.8 cents, one champion.  ", options: { bold: true, color: TEXT_L } },
               { text: "A real task-A run in the evaluation’s container: drafts written, the simulator checked against the spec and repaired, drafts ranked by self-play, a challenger tried, the champion delivered well before the deadline.", options: { color: MUTED_D } }],
     { x: M, y: 6.0, w: W - 2 * M, h: 0.75, fontFace: BODY, fontSize: 15, margin: 0, valign: "top", isTextBox: true });
-  s.addNotes("(2:15–3:00) To close, this is what one real run looks like, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, so it is not trusted; at 68 it is repaired and passes. Then the drafts play each other and get ranked, an improvement round adds a challenger, and at 141 of 180 seconds the champion is delivered, for 1.8 of 3 cents. Every step is checked by plain code, and the file on disk is a valid strategy at every second. Spec in, strategy out, never a forfeit. Thank you for listening!");
+  s.addNotes("(2:15–2:55) To close, this is what one real run looks like, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, so it is not trusted; at 68 it is repaired and passes. Then the drafts play each other and get ranked, an improvement round adds a challenger, and at 141 of 180 seconds the champion is delivered, for 1.8 of 3 cents. Every step is checked by plain code, and the file on disk is a valid strategy at every second. Spec in, strategy out, never a forfeit.");
+}
+
+// ---------------------------------------------------------------- 6 thank you
+{
+  const s = pres.addSlide({ masterName: "COVER", sectionTitle: "Close" });
+  const ox = 8.0, oy = 1.45, k = 0.0062;
+  const P = (x, y) => [ox + x * k, oy + y * k];
+  const nodes = { A: [90, 380], B: [250, 200], C: [250, 560], D: [420, 110], E: [420, 380], F: [420, 650], G: [590, 240], H: [590, 520], I: [690, 380] };
+  const edges = ["AB", "AC", "BD", "BE", "CE", "CF", "DG", "EG", "EH", "FH", "GI", "HI", "DE"];
+  const path_ = ["AB", "BE", "EH", "HI"];
+  for (const e of edges) { const [a, b] = [P(...nodes[e[0]]), P(...nodes[e[1]])]; line(s, a[0], a[1], b[0], b[1], LINE_D, 1.5); }
+  for (const e of path_) { const [a, b] = [P(...nodes[e[0]]), P(...nodes[e[1]])]; line(s, a[0], a[1], b[0], b[1], ORANGE, 3.5); }
+  for (const [id, [x, y]] of Object.entries(nodes)) {
+    const [cx, cy] = P(x, y);
+    const base = id === "A" || id === "I", hot = "BEH".includes(id);
+    const r = base ? 0.17 : 0.1;
+    s.addShape(pres.shapes.OVAL, { x: cx - r, y: cy - r, w: 2 * r, h: 2 * r,
+      fill: { color: base ? INK : hot ? ORANGE : INK2 },
+      line: { color: base ? (id === "A" ? ORANGE : BLUE) : hot ? ORANGE : NODE, width: base ? 3 : 1.5 },
+      objectName: `node ${id}` });
+  }
+  s.addText("ZENTRAL HACK 2026 · AGENT HARNESS", { x: M, y: 0.7, w: 7, h: 0.35, fontFace: MONO, fontSize: 13,
+    bold: true, color: ORANGE, charSpacing: 3, margin: 0, isTextBox: true });
+  s.addText("Thank you\nfor listening!", { x: M, y: 2.0, w: 7.2, h: 2.4, fontFace: HEAD, fontSize: 60, bold: true,
+    color: TEXT_L, margin: 0, valign: "top", lineSpacingMultiple: 0.95, isTextBox: true, objectName: "title" });
+  s.addText("Spec in. Strategy out. Never a forfeit.", { x: M, y: 4.55, w: 6.6, h: 0.6, fontFace: BODY, fontSize: 20,
+    color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+  s.addText("Elias  ·  Isaak  ·  Timo", { x: M, y: 6.6, w: 6, h: 0.45, fontFace: HEAD, fontSize: 18, bold: true,
+    color: MUTED_D, margin: 0, isTextBox: true });
+  s.addNotes("(2:55–3:00) Thank you for listening! We are happy to take questions.");
 }
 
 (async () => {
