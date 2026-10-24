@@ -41,10 +41,15 @@ FINAL_ACT_LIMIT_S = 0.70
 # PROMOTE_MARGIN and it does not lose the head-to-head, or if it is higher by CLEAR_MARGIN.
 PROMOTE_MARGIN = 0.03
 CLEAR_MARGIN = 0.12
+MAX_POLISH_SEEDS = 24
 
 # A cheap draft of what a typical competitor writes, as a sparring partner in self-play:
 # the real field is mostly other LLM-written strategies, many of them naive.
 SPARRING_PERSONA = "sparring_naive"
+
+# Self-play files are internal: their class is always this name (the tournament and the
+# sandbox look it up), whatever task.json asks for; only the delivered file uses that.
+SELFPLAY_CLASS = "Strategy"
 
 
 @dataclass
@@ -79,6 +84,7 @@ class Profile:
     # beta/gamma and worse selection on epsilon (full lost 11-1-36 to the arm without it).
     sparring: bool = False
     robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
+    polish: bool = True  # time left after the last call: more self-play seeds, re-rank
     ablated: tuple[str, ...] = ()
 
 
@@ -93,6 +99,8 @@ ABLATIONS = {
     "analysis": "no strategic analysis call",
     "robust_rank": "rank by raw standings, no incumbent protection",
     "oneshot": "baseline: one draft, no simulator, no repair (guard still on)",
+    "polish": "no extra self-play seeds in the time left after the last LLM call",
+    "improve_low": "variant: improvement calls at low effort (cheaper, more rounds)",
 }
 
 
@@ -111,6 +119,10 @@ def apply_ablations(p: Profile, flags: str | None) -> Profile:
             p.max_strategy_repairs = p.max_sim_repairs = 0
         if name in ("analysis", "oneshot"):
             p.analysis_model = None
+        if name == "polish":
+            p.polish = False
+        if name == "improve_low":
+            p.improve_effort = "low"
         if name == "robust_rank":
             p.robust_rank = False
         if name == "oneshot":
@@ -240,6 +252,7 @@ class Run:
             if self.sim_path is not None:
                 self.select()
                 self.improve()
+                self.polish()
         except Exception:
             self.event("error", where="run", traceback=traceback.format_exc())
         self.finish()
@@ -330,6 +343,24 @@ class Run:
             for c in added:
                 self.tournament.add(c.id, c.guarded_path)
             self.play(share=0.6)
+            self.promote_best()
+
+    def polish(self) -> None:
+        """Time left but no money (or no more rounds): more seeds, a less noisy ranking."""
+        t = self.tournament
+        if t is None or not self.profile.polish:
+            return
+        added = 0
+        while self.clock.remaining() > 30 and added < MAX_POLISH_SEEDS:
+            if not t.pending():
+                t.seeds.append(max(t.seeds, default=-1) + 1)
+                added += 1
+            before = len(t.results)
+            self.play(share=0.8)
+            if len(t.results) == before:
+                break  # nothing fit into the time left
+        if added:
+            self.event("polished", seeds=len(t.seeds), matches=len(t.results))
             self.promote_best()
 
     def finish(self) -> None:
@@ -507,7 +538,7 @@ class Run:
         """One match per seat against idle on the simulator: errors, bad actions, losses."""
         results = sandbox.play_matches(
             sim, {c.id: c.guarded_path}, [(c.id, "idle", 0), ("idle", c.id, 0)],
-            strategy_class=self.cls, timeout_s=120,
+            strategy_class=SELFPLAY_CLASS, timeout_s=120,
         )  # fmt: skip
         problems = []
         for r in results:
@@ -551,7 +582,7 @@ class Run:
         if len(cands) == 2:
             pairings.append((cands[0].id, cands[1].id, 1))
         problems = []
-        for r in sandbox.play_matches(sim, entries, pairings, strategy_class=self.cls,
+        for r in sandbox.play_matches(sim, entries, pairings, strategy_class=SELFPLAY_CLASS,
                                       timeout_s=120):  # fmt: skip
             if r.sim_error and r.sim_error != "timeout":
                 problems.append(f"The simulator raised while playing real strategies:\n"
@@ -739,7 +770,7 @@ class Run:
         raw.write_text(code, "utf-8")
         guarded = self.work / "cands" / f"{cid}.py"
         guarded.write_text(
-            guard.assemble(code, strategy_class=self.cls, core_class=_core_class(code),
+            guard.assemble(code, strategy_class=SELFPLAY_CLASS, core_class=_core_class(code),
                            time_budget_s=SELFPLAY_TIME_BUDGET_S),
             "utf-8",
         )  # fmt: skip
