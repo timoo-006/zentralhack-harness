@@ -11,7 +11,7 @@
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$36 spent so far (calibration, first runs,
+- **OpenAI money:** we have ~150 CHF in total. ~$37 spent so far (calibration, first runs,
   experiments 1-4, held-out exam, task-C check). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
@@ -54,6 +54,25 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
   model (luna) only ever runs at low effort, and only allowed models are used.
 - Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
   (`ruff format .` would otherwise rewrite the prompts' code blocks).
+
+## Fix (14:00): the simulator check rejected correct simulators (hidden information)
+
+Found in the experiment-4 logs (per-run analysis): in 6 of 24 runs (delta and theta, every
+arm) the simulator never passed, so the run had no self-play and no improvement, delivered
+the provisional first draft and ended after 116-178 s of 600. The cause was ours: the
+generic schema check compared a list's first element only with the spec example's first
+element. Delta's spec types `opponent_drones` as `list[int | None]` (None on unseen nodes, as
+its own example shows), so a correct simulator failed whenever node 0 was hidden, and the
+repairs chased a non-bug ($0.08 each). Now a value may take any kind the spec's examples show
+at that position; None only where an example shows None. Replay of the 51 saved simulators
+of experiments 3-4 (offline, no LLM): delta 0 -> 3 fully verified (the other 4 still fail
+their own selftest), held-out theta 0 -> 6 (measured only), all other games unchanged.
+This is the most likely kind of failure behind weak runs on unseen games with hidden
+information (h1's 29% and 38% runs: not provable without their logs).
+Real check (Docker, delta-B, commit `4fa0036`): simulator verified first try at 41 s,
+self-play, 2 improvement rounds, 25 polish seeds; 560/600 s, $0.393, check PASS; against
+the 3 pre-fix delta strategies of experiment 4 it wins **44-1-15** (10 seeds, both seats).
+The fix acts in every profile (A, B and C check simulators the same way); runs: B only.
 
 ## Experiment 4 (done, 13:45): game plan first, more drafts -> both rejected
 

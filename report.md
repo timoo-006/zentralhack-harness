@@ -105,6 +105,16 @@ in (better on one tuning game, tied on one, worse on one; better in total; tied 
 small: only 3 of 13 rescue attempts fitted, since even a cheap call of the strong model costs
 about $0.06, mostly input.
 
+**Experiment 4** (24 task-B runs, all eight games) followed the midpoint evaluation, where our
+best strategy on the hidden game was the best of the field but two of our five runs were
+weak. Two ideas against that variance were rejected by the decision rule: a game plan by the
+strong model before the drafts (worse on the tuning games, though better on one held-out
+game) and five drafts instead of three (worse in total). The logs of that experiment showed
+the real cause of weak runs: our own simulator check rejected correct simulators of games
+with hidden information (a field typed `int | None`), so those runs never had self-play. The
+check now accepts exactly the kinds the specification's examples show; replaying all 51 saved
+simulators verifies 3 more on delta and 6 more on a held-out game, and none less elsewhere.
+
 **Model policy.** Models and efforts follow from `task.json` (budget, deadline, allowed
 models), never from a task name. Task A (cheapest model only): everything at low effort,
 because the deadline binds and the cheap model gets weaker and slower with more effort. Task
