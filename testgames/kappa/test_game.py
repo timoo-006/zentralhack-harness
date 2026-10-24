@@ -22,12 +22,29 @@ EXAMPLE_ACTIONS = [
 ]
 
 GARBAGE = [
-    None, [], (), 0, 1.5, "moves", True, {}, {"moves": None}, {"moves": ()},
-    {"moves": [(0, 4, 1)]}, {"moves": [[0, 4]]}, {"moves": [[0, 4, 1, 0]]},
-    {"moves": [[True, 4, 1]]}, {"moves": [[0, 4, 1.0]]}, {"moves": [], "x": 1},
-    {"Moves": []}, {1: []}, [[0, 4, 1]], {"moves": [[10**30, -(10**30), 10**30]]},
+    None,
+    [],
+    (),
+    0,
+    1.5,
+    "moves",
+    True,
+    {},
+    {"moves": None},
+    {"moves": ()},
+    {"moves": [(0, 4, 1)]},
+    {"moves": [[0, 4]]},
+    {"moves": [[0, 4, 1, 0]]},
+    {"moves": [[True, 4, 1]]},
+    {"moves": [[0, 4, 1.0]]},
+    {"moves": [], "x": 1},
+    {"Moves": []},
+    {1: []},
+    [[0, 4, 1]],
+    {"moves": [[10**30, -(10**30), 10**30]]},
     {"moves": [[0, 0, 1], [0, 4, -1], [0, 4, 10**30], [-1, 0, 1]]},
-    {"moves": [[0, 4, 3], [4, 0, 1], [0, 4, 1]]}, {"moves": [[0, 4, 0], [0, 9, 0]]},
+    {"moves": [[0, 4, 3], [4, 0, 1], [0, 4, 1]]},
+    {"moves": [[0, 4, 0], [0, 9, 0]]},
 ]
 
 
@@ -205,8 +222,17 @@ def test_none_is_malformed_noop():
 
 def test_capacity_and_illegal_moves():
     game = GAME(EXAMPLE_SEED)  # base 0; edge (0, 4) capacity 3, (0, 5) capacity 2; 0-9 no edge
-    moves = [[0, 4, 2], [0, 4, 2], [0, 4, 1], [0, 5, 3], [0, 9, 1], [0, 4, -1], [4, 2, 1],
-             [0, 5, 0], [0, 9, 0]]
+    moves = [
+        [0, 4, 2],
+        [0, 4, 2],
+        [0, 4, 1],
+        [0, 5, 3],
+        [0, 9, 1],
+        [0, 4, -1],
+        [4, 2, 1],
+        [0, 5, 0],
+        [0, 9, 0],
+    ]
     game.step([{"moves": moves}, {"moves": []}])
     obs = game.observe(0)
     assert obs["action_format_correct_last_turn"] is True

@@ -96,9 +96,7 @@ class GreedyMajority(Strategy):
         planned: dict[tuple[int, int], int] = {}
         for a in range(n):
             for _ in range(spare[a]):
-                targets = [
-                    j for j in range(n) if 0 < need[j] <= self.MAX_NEED and j != a
-                ]
+                targets = [j for j in range(n) if 0 < need[j] <= self.MAX_NEED and j != a]
                 if not targets:
                     break
                 j = max(targets, key=lambda t: (demand[t] / (self.dist[a][t] + 1), -t))

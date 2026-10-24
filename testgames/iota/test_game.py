@@ -201,9 +201,10 @@ def test_garbage_actions_never_raise():
     rng = random.Random(0)
     for seed in range(5):
         game = GAME(seed)
-        for k in range(game.N_TURNS + 3):
-            pool = GARBAGE + [
-                [(rng.randrange(-2, 15), rng.randrange(-2, 15), rng.randrange(-3, 20))]
+        for _ in range(game.N_TURNS + 3):
+            pool = [
+                *GARBAGE,
+                [(rng.randrange(-2, 15), rng.randrange(-2, 15), rng.randrange(-3, 20))],
             ]
             game.step([rng.choice(pool), rng.choice(pool)])
             for p in range(2):
