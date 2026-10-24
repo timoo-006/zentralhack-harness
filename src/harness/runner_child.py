@@ -712,13 +712,16 @@ def set_limits(memory_mb) -> None:
         import resource
     except ImportError:  # not POSIX
         return
+    file_bytes = 64 * 2**20  # bounds what anything can write to disk via raw fds
+    limits = [(resource.RLIMIT_CORE, 0), (resource.RLIMIT_FSIZE, file_bytes)]
+    if memory_mb:
+        limits.append((resource.RLIMIT_AS, int(memory_mb) * 2**20))
+    for which, value in limits:  # one by one: macOS rejects RLIMIT_AS, the others still hold
+        try:
+            resource.setrlimit(which, (value, value))
+        except Exception:
+            pass
     try:
-        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-        if memory_mb:
-            limit = int(memory_mb) * 2**20
-            resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
-        file_bytes = 64 * 2**20  # bounds what anything can write to disk via raw fds
-        resource.setrlimit(resource.RLIMIT_FSIZE, (file_bytes, file_bytes))
         if hasattr(signal, "SIGXFSZ"):
             signal.signal(signal.SIGXFSZ, signal.SIG_IGN)  # EFBIG instead of being killed
     except Exception:

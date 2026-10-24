@@ -1,9 +1,9 @@
 # scripts/: the offline measure loop (dev only)
 
 Run harness, measure, improve prompts/code, repeat. Run everything from the repository root.
-On Windows, start Python with `uv run`. Isolated play (the real 1 s act limit, real forfeits)
-only works on Linux, so pass `--wsl` (re-runs in WSL) or call `/root/venv-harness/bin/python`
-inside WSL. `run_harness.sh` switches to WSL by itself.
+Isolated play (the real 1 s act limit, real forfeits) works on Linux and macOS. On Windows,
+pass `--wsl` (re-runs in WSL) or call `/root/venv-harness/bin/python` inside WSL;
+`run_harness.sh` switches to WSL by itself. On macOS leave out `--wsl` (see `docs/MAC.md`).
 
 ```bash
 # 1. tasks/<game>-<profile>/ for alpha beta gamma delta x A B C (skips games that don't import)

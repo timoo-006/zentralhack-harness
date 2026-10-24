@@ -63,7 +63,6 @@ def test_personas() -> None:
     names = [p["name"] for p in personas]
     assert len(set(names)) == len(names)
     assert "safe" in names
-    assert "sparring_naive" in names  # pipeline.SPARRING_PERSONA: self-play sparring partner
     for p in personas:
         assert set(p) == {"name", "persona"}
         assert isinstance(p["name"], str) and re.fullmatch(r"[a-z_]+", p["name"])

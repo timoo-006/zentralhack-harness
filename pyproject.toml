@@ -1,7 +1,7 @@
 [project]
 name = "harness"
 version = "0.1.0"
-description = "Minimal agent harness for Zentral Hack 2026: an LLM with one bash tool"
+description = "Agent harness for Zentral Hack 2026: LLM-written strategies, a verified simulator, self-play"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = ["openai>=2"]
@@ -32,6 +32,10 @@ build-backend = "hatchling.build"
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+extend-exclude = ["experiments"]  # exported run evidence (generated strategies), not our code
+
+[tool.ruff.format]
+exclude = ["*.md"]  # prompts and specs are text the LLM reads: never reformat them
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "RUF"]

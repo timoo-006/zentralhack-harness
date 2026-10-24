@@ -90,29 +90,6 @@ def parse_spec(spec: str) -> SpecInfo:
     return info
 
 
-def describe_obs_keys(info: SpecInfo) -> str:
-    """Text for a prompt slot listing the expected observation keys."""
-    if not info.obs_keys:
-        return "unknown (no observation schema or example could be parsed from the spec)"
-    return ", ".join(repr(k) for k in info.obs_keys)
-
-
-def describe_examples(info: SpecInfo) -> str:
-    """Text for a prompt slot saying how many worked example observations were extracted."""
-    n = len(info.example_observations)
-    if n == 0:
-        return (
-            "The harness could not extract any complete example observation from the spec, so "
-            "selftest() is the only check of your rules: make it reproduce every worked example "
-            "the spec describes in prose or tables."
-        )
-    return (
-        f"The harness extracted {n} complete example observation(s) from the spec's code "
-        "blocks. It checks that your observe() returns dicts with exactly these keys and value "
-        "types, and selftest() must reproduce every worked example exactly."
-    )
-
-
 # --------------------------------------------------------------------------- top level
 
 

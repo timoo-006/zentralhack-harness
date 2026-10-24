@@ -70,8 +70,6 @@ def install_sigterm_handler(on_term: Callable[[], None]) -> None
 ## 2 `budget.py`
 
 ```python
-class BudgetExceeded(Exception): ...
-
 @dataclass
 class Reservation:
     model: str

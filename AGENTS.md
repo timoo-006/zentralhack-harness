@@ -128,9 +128,11 @@ uv run arena make-task --game arena_games_dev.beta --budget-usd 10 --deadline-s 
 
 ./run.sh tasks/alpha-A                           # like the evaluation: Docker, limits, deadline
 uv run --env-file .env harness tasks/alpha-A     # quick local run without Docker
-                                                 # (the model's bash commands run on this machine)
 
-# check and play a produced strategy
+# check a produced strategy and play it against the game's baselines (isolated, also on macOS)
+uv run python scripts/evaluate.py runs/alpha-A/latest
+
+# the same with arena directly (Linux or Docker only: macOS rejects arena's memory limit)
 uv run arena check runs/alpha-A/latest/output/strategy.py:Strategy --game arena_games_dev.alpha
 uv run arena run --game arena_games_dev.alpha \
     --strategies mine=runs/alpha-A/latest/output/strategy.py:Strategy \

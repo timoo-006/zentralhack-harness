@@ -13,10 +13,6 @@ from dataclasses import dataclass
 from harness.pricing import cost
 
 
-class BudgetExceeded(Exception):
-    """A call would exceed the budget."""
-
-
 @dataclass
 class Reservation:
     model: str

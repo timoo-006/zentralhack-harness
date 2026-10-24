@@ -17,6 +17,9 @@ from harness.guard import assemble, sanitize, write_atomic
 FIXTURES = Path(__file__).parent / "fixtures"
 HAS_TIMER = hasattr(signal, "setitimer")
 linux_only = pytest.mark.skipif(not HAS_TIMER, reason="needs signal.setitimer (Linux)")
+# arena's worker caps memory with RLIMIT_AS, which macOS rejects: its isolated workers then die
+# at start-up. Isolated play on macOS needs Limits(memory_mb=None); `arena check` cannot do that.
+MACOS = sys.platform == "darwin"
 
 BAD_CORES = [
     "bad_raise_turn5",
@@ -317,6 +320,7 @@ def _arena_cli() -> Path:
 
 
 @linux_only
+@pytest.mark.skipif(MACOS, reason="arena check sets RLIMIT_AS, which macOS rejects")
 @pytest.mark.skipif(os.environ.get("HARNESS_FAST_TESTS") == "1", reason="slow (~4 min)")
 def test_every_guarded_bad_core_passes_arena_check(tmp_path):
     """MUST PASS: guard.assemble(bad core, fallback=greedy) never forfeits in arena's worker."""
@@ -472,6 +476,7 @@ def test_slow_import_and_init_stay_within_arena_start_limit(tmp_path):
 def test_core_reading_stdin_cannot_desync_arenas_worker(tmp_path):
     """In arena's worker stdin is the protocol pipe: a core reading it would block and forfeit."""
     from arena.core import Entrant
+    from arena.isolation import Limits
     from arena.match import play_match
     from arena_games_dev.beta.game import BetaGame
 
@@ -486,7 +491,8 @@ def test_core_reading_stdin_cannot_desync_arenas_worker(tmp_path):
     cand = Entrant("cand", f"{path}:Strategy")
     idle = Entrant("idle", "arena.strategies:Idle", trusted=True)
     t0 = time.perf_counter()
-    r = play_match(BetaGame, [cand, idle], 0, isolate=True)
+    limits = Limits(memory_mb=None) if MACOS else None
+    r = play_match(BetaGame, [cand, idle], 0, isolate=True, limits=limits)
     assert r.forfeit is None, r.error
     assert r.winner == 0
     assert time.perf_counter() - t0 < 30  # not 0.6 s per turn waiting on a blocked read

@@ -31,7 +31,6 @@ src/harness/
   tournament.py   # incremental round-robin self-play, robust ranking, text report
   prompts/        # system.md, playbook.md (lessons), simulator.md, strategy.md, repair_*.md,
                   # improve.md, analysis.md, personas.json
-  agent.py, prompt.md  # the template's one-model agent: unused, kept until cleanup
 tests/            # unit tests per module; tests/fixtures/ has broken strategies and sims
 testgames/        # our own games (gamma, delta, epsilon, zeta, eta, theta): spec, simulator
                   # and baselines each; zeta and theta are held out (never tuned on)
@@ -213,7 +212,6 @@ HARNESS_ABLATE=oneshot uv run --env-file .env harness tasks/beta-B
 
 | switch | effect |
 |--------|--------|
-| `sparring` | no cheap naive draft in self-play (this is already the default) |
 | `improve` | no improvement rounds |
 | `selfplay` | no simulator, so no self-play and no improvement: the first valid draft wins |
 | `repair` | no repair calls for strategies or simulators |
@@ -230,16 +228,14 @@ HARNESS_ABLATE=oneshot uv run --env-file .env harness tasks/beta-B
 | constant | value | meaning |
 |----------|-------|---------|
 | `FINAL_TIME_BUDGET_S` | 0.25 | search time per `act` in the delivered file (the strategy's `TIME_BUDGET`) |
-| `FINAL_ACT_LIMIT_S` | 0.70 | hard limit per `act` in the delivered file (arena allows 1.0 s) |
-| `SELFPLAY_TIME_BUDGET_S`, `SELFPLAY_ACT_LIMIT_S` | same two | self-play uses the delivered file's settings |
+| `FINAL_ACT_LIMIT_S` | 0.70 | hard limit per `act` in the delivered file (arena allows 1.0 s); self-play uses the same two |
 | `PROMOTE_MARGIN` | 0.03 | a challenger needs this much more mean per-opponent score and must not lose the head-to-head |
 | `CLEAR_MARGIN` | 0.12 | ... or this much more, whatever the head-to-head says |
 | `MAX_POLISH_SEEDS` | 24 | cap on the extra self-play seeds from leftover time |
-| `SPARRING_PERSONA` | `sparring_naive` | persona of the optional naive sparring draft |
 | `SELFPLAY_CLASS` | `Strategy` | class name of internal self-play files; only the delivered file uses `strategy_class` |
 
 The rest are fields of `Profile`, filled in by `make_profile`: models, efforts, token caps,
-parallel calls, seeds, repair counts, and the flags `polish`, `robust_rank` and `sparring`.
+parallel calls, seeds, repair counts, and the flags `polish` and `robust_rank`.
 
 **Where the logs go.** In the container `/output/logs/`; locally
 `runs/<task>/<time>-<pid>/output/logs/`:

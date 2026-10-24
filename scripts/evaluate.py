@@ -12,8 +12,9 @@ and scripts/run_harness.sh leave it) or strategy file:
    run_meta.json, against the task's budget_usd and deadline_s.
 
 Prints a markdown summary on stdout and appends one JSON line per strategy to
-runs/eval_log.jsonl. Isolation needs Linux: run it in WSL (or pass --wsl on Windows, which
-re-runs it there); plain Windows falls back to in-process play, without time limits.
+runs/eval_log.jsonl. Isolation needs POSIX (Linux, or macOS without arena's memory cap): on
+Windows pass --wsl (re-runs it in WSL); plain Windows falls back to in-process play, without
+time limits.
 
     python scripts/evaluate.py runs/beta-B                     # every run of that task
     python scripts/evaluate.py --group old='runs-old/beta-B/*' --group new='runs/beta-B/*' --cross
@@ -319,6 +320,9 @@ def _mtime_wall(run_dir: Path) -> float | None:
 def _limits(turn_timeout: float):
     from arena.isolation import Limits
 
+    # macOS rejects arena's RLIMIT_AS memory cap (every worker would die at start-up): no cap.
+    if sys.platform == "darwin":
+        return Limits(turn_timeout=turn_timeout, memory_mb=None)
     return Limits(turn_timeout=turn_timeout)
 
 

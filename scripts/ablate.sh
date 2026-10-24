@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # An ablation experiment: the same tasks, the harness with and without features.
 #
-#   scripts/ablate.sh EXP "full oneshot sparring improve" "beta-B gamma-B" RUNS [JOBS]
+#   scripts/ablate.sh EXP "full oneshot improve polish" "beta-B gamma-B" RUNS [JOBS]
 #
 # Each arm is a value for HARNESS_ABLATE (see harness.pipeline.ABLATIONS; "full" = none).
 # Every (arm, task) gets RUNS parallel runs; at most JOBS (arm, task) jobs run at once.

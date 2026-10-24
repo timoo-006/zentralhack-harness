@@ -34,18 +34,12 @@ PROMPTS = Path(__file__).with_name("prompts")
 # (arena allows 1.0 s per act including the pipe round trip; a loaded machine needs headroom).
 FINAL_TIME_BUDGET_S = 0.25
 FINAL_ACT_LIMIT_S = 0.70
-SELFPLAY_TIME_BUDGET_S = FINAL_TIME_BUDGET_S
-SELFPLAY_ACT_LIMIT_S = FINAL_ACT_LIMIT_S
 
 # A challenger replaces the champion only if its mean per-opponent score is higher by
 # PROMOTE_MARGIN and it does not lose the head-to-head, or if it is higher by CLEAR_MARGIN.
 PROMOTE_MARGIN = 0.03
 CLEAR_MARGIN = 0.12
 MAX_POLISH_SEEDS = 24
-
-# A cheap draft of what a typical competitor writes, as a sparring partner in self-play:
-# the real field is mostly other LLM-written strategies, many of them naive.
-SPARRING_PERSONA = "sparring_naive"
 
 # Self-play files are internal: their class is always this name (the tournament and the
 # sandbox look it up), whatever task.json asks for; only the delivered file uses that.
@@ -80,19 +74,15 @@ class Profile:
     max_sim_repairs: int
     max_strategy_repairs: int
     min_improve_s: float  # time an improvement round needs (call + checks + matches)
-    # A cheap naive draft in self-play. Off: experiment 1 (24 runs, 3 games) showed no gain on
-    # beta/gamma and worse selection on epsilon (full lost 11-1-36 to the arm without it).
-    sparring: bool = False
     robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
     polish: bool = True  # time left after the last call: more self-play seeds, re-rank
     ablated: tuple[str, ...] = ()
 
 
-# Development only: HARNESS_ABLATE=sparring,improve,... switches features off, so that every
+# Development only: HARNESS_ABLATE=improve,polish,... switches features off, so that every
 # feature is kept on measured evidence (same tasks, with vs without, cross-tournament). The
 # evaluation sets no such variable, so it always runs the full harness.
 ABLATIONS = {
-    "sparring": "no sparring draft in self-play",
     "improve": "no improvement rounds",
     "selfplay": "no simulator: no self-play, no improvement (first valid draft wins)",
     "repair": "no repair calls for strategies or simulators",
@@ -109,8 +99,6 @@ def apply_ablations(p: Profile, flags: str | None) -> Profile:
     for name in names:
         if name not in ABLATIONS:
             continue
-        if name in ("sparring", "oneshot"):
-            p.sparring = False
         if name in ("improve", "selfplay", "oneshot"):
             p.improve_model = None
         if name in ("selfplay", "oneshot"):
@@ -274,15 +262,9 @@ class Run:
         futures = []
         if p.sim_model:
             futures.append(self.pool.submit(self._guarded, self.build_simulator))
-        main = [x for x in self.personas if x.get("name") != SPARRING_PERSONA]
-        for i, persona in enumerate(main[: p.n_candidates]):
+        for i, persona in enumerate(self.personas[: p.n_candidates]):
             model = p.cand_models[i % len(p.cand_models)]
             futures.append(self.pool.submit(self._guarded, self.new_candidate, persona, model))
-        sparring = [x for x in self.personas if x.get("name") == SPARRING_PERSONA]
-        if sparring and p.sim_model and p.sparring:  # only useful when there is self-play
-            futures.append(
-                self.pool.submit(self._guarded, self.new_candidate, sparring[0], p.cheap, "low")
-            )
         if p.analysis_model:
             futures.append(self.pool.submit(self._guarded, self.analyse))
         # Whatever misses the cut is not waited for: the run has to finish.
@@ -301,7 +283,7 @@ class Run:
             if problems:
                 c.valid = False
                 self.event("late_problems", id=c.id, problems=problems[:4])
-                if self.clock.remaining() > 90 and c.persona != SPARRING_PERSONA:
+                if self.clock.remaining() > 90:
                     fixes.append(self.pool.submit(self._guarded, self.repair, c, problems))
         self._wait(fixes, reserve_s=40.0)
         valid = self.valid_candidates()
@@ -452,16 +434,14 @@ class Run:
             problems += self._sim_vs_candidates(path)
         return problems
 
-    def new_candidate(
-        self, persona: dict, model: str, effort: str | None = None
-    ) -> Candidate | None:
+    def new_candidate(self, persona: dict, model: str) -> Candidate | None:
         p = self.profile
         prompt = _read("strategy.md").format(
             persona=persona.get("persona", ""), time_budget=FINAL_TIME_BUDGET_S,
             analysis=self.analysis,
         )  # fmt: skip
         label = f"cand_{persona.get('name')}"
-        r = self.ask(label, model, prompt, effort or p.cand_effort, p.cand_max_out)
+        r = self.ask(label, model, prompt, p.cand_effort, p.cand_max_out)
         code = extract_code(r.text) if r.ok else None
         if code is None:
             return None
@@ -489,8 +469,6 @@ class Run:
 
     def verify(self, code: str, persona: str, model: str, repairs: int) -> Candidate | None:
         """Probe a core (and play it on the simulator if there is one); repair on failure."""
-        if persona == SPARRING_PERSONA:
-            repairs = 0  # a sparring partner is used as written, or not at all
         for attempt in range(repairs + 1):
             c = self._candidate(code, persona, model)
             c.problems = self.problems_of(c)
@@ -567,9 +545,7 @@ class Run:
             if st.get("illegal", 0) > turns // 2:
                 problems.append(f"As seat {seat}, {st['illegal']} illegal moves in {turns} turns "
                                 "(each one was skipped by the game).")  # fmt: skip
-            # Losing to idle is fine for the sparring draft: naive real opponents do that too.
-            lost = r.scores is not None and r.winner is not None and r.winner != seat
-            if lost and c.persona != SPARRING_PERSONA:
+            if r.scores is not None and r.winner is not None and r.winner != seat:
                 problems.append(
                     f"As seat {seat} it LOST against an opponent that never acts (scores "
                     f"{r.scores}). It must at least beat doing nothing."
@@ -603,14 +579,9 @@ class Run:
                 self.fallback = c
             if self.tournament is not None:
                 return  # from here on the tournament decides
-            if self.champion is None or self._rank(c) < self._rank(self.champion):
+            safe = self._safe_name()
+            if self.champion is None or (self.champion.persona == safe and c.persona != safe):
                 self._promote(c, reason="provisional")
-
-    def _rank(self, c: Candidate) -> int:
-        """Provisional preference before any self-play: main personas, then safe, sparring."""
-        if c.persona == SPARRING_PERSONA:
-            return 2
-        return 1 if c.persona == self._safe_name() else 0
 
     def ranking(self) -> list[tuple[float, float, float, str]]:
         """(mean, worst, margin, id) per candidate in the tournament, best first.
@@ -778,8 +749,8 @@ class Run:
         guarded = self.work / "cands" / f"{cid}.py"
         guarded.write_text(
             guard.assemble(code, strategy_class=SELFPLAY_CLASS, core_class=_core_class(code),
-                           time_budget_s=SELFPLAY_TIME_BUDGET_S,
-                           act_limit_s=SELFPLAY_ACT_LIMIT_S),
+                           time_budget_s=FINAL_TIME_BUDGET_S,
+                           act_limit_s=FINAL_ACT_LIMIT_S),
             "utf-8",
         )  # fmt: skip
         self._save_log(f"{cid}.py", code)

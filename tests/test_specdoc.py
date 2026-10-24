@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from harness.specdoc import SpecInfo, describe_examples, describe_obs_keys, parse_spec
+from harness.specdoc import SpecInfo, parse_spec
 
 
 def _dev_spec(game: str) -> str:
@@ -93,9 +93,6 @@ def test_beta() -> None:
     assert [(8, 0, 3), (8, 1, 1)] in info.action_examples
     assert [(3, 4, 4), (3, 6, 1)] in info.action_examples
     assert not any(_contains_ellipsis(a) for a in info.action_examples)
-
-    assert "'demand_forecast'" in describe_obs_keys(info)
-    assert "2" in describe_examples(info)
 
 
 SYNTHETIC = """# Game Gamma
@@ -209,8 +206,6 @@ def test_schema_without_examples() -> None:
     info = parse_spec('```python\n{"a": int, "b": list[int], "c": float}\n```\n')
     assert info.obs_keys == ["a", "b", "c"]
     assert info.example_observations == []
-    assert "unknown" not in describe_obs_keys(info)
-    assert "could not extract" in describe_examples(info)
 
 
 def test_examples_without_schema() -> None:
@@ -268,7 +263,6 @@ def test_garbage_never_raises(garbage, recwarn) -> None:
 def test_empty_fields() -> None:
     info = parse_spec("no code at all, just `prose`.")
     assert info == SpecInfo()
-    assert "unknown" in describe_obs_keys(info)
 
 
 # ------------------------------------------------- adversarial: choosing the observation

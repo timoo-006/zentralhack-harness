@@ -53,8 +53,9 @@ the money rules below).
 uv run pytest -q
 ```
 
-All tests should pass or skip. Tests that need Linux specifics (the `/proc` clock tests) skip
-on macOS by themselves. `HARNESS_FAST_TESTS=1 uv run pytest -q` skips the one slow test
+All tests should pass or skip. Tests that need Linux specifics (the `/proc` clock tests, and
+the one that runs the `arena check` CLI: macOS rejects arena's memory limit) skip on macOS by
+themselves. `HARNESS_FAST_TESTS=1 uv run pytest -q` skips the one slow test
 (about 4 minutes). A test that fails *only* on the Mac: do not "fix" it blindly, check it
 against Docker (step 8) or tell Elias.
 
@@ -110,12 +111,12 @@ On macOS **no `--wsl`** (that flag only exists to hop from Windows into WSL). Re
 column and flag.
 
 **Isolation on macOS:** `scripts/evaluate.py` plays isolated (arena's real worker: 1 s per
-act, real forfeits) on any POSIX system, macOS included (arena only needs process groups,
-signals and rlimits). This was enabled at 11:45 but **not yet tried on a Mac**: on the first
-evaluation, check that the `check` column says `PASS` for a known-good run (e.g.
-`experiments/clite/full/*/*`). If isolated play fails on macOS (every strategy FAILs or the
-workers crash), add `--in-process` (no 1 s limit, no forfeits: fine for comparing arms, not
-for conformance) and use the Docker run in step 8 for conformance-grade numbers.
+act, real forfeits) on macOS too. macOS rejects arena's memory cap (`RLIMIT_AS`: every worker
+would die at start-up with `ValueError: current limit exceeds maximum limit`), so on macOS it
+plays without that cap; the time limit, forfeits and reply checks are the real ones. Verified:
+`experiments/clite/full/beta-C-lite/*` gives `PASS` and 16-0-0. The `arena check` and
+`arena run` CLIs cannot drop the cap and fail on macOS with a `BrokenPipeError`: use
+`evaluate.py`, or run them in Docker (step 8).
 
 ## 8. A run like the evaluation (Docker)
 
@@ -189,6 +190,5 @@ organiser account **`nkaslin`** has access to the repository (GitHub: Settings, 
 | `uv sync` fails cloning `arena` | your git has no access to the GitHub org: log in (`gh auth login`) |
 | `.env missing` | step 3 |
 | `realpath: command not found` in `run.sh` | macOS before 13: see step 1 |
-| `WARNING: ... IN-PROCESS` from `evaluate.py` | expected on macOS, see the caveat in step 7 |
+| `arena check` / `arena run`: `BrokenPipeError` | macOS rejects arena's memory limit: use `scripts/evaluate.py` (step 7) |
 | Docker: `Cannot connect to the Docker daemon` | start Docker Desktop and wait for it to be ready |
-| `scripts/run_harness.new.sh` still exists | it is the portable version of `run_harness.sh` (same for `ablate.new.sh`); Elias swaps them in; if both are there, use the `.new.sh` ones on a Mac |

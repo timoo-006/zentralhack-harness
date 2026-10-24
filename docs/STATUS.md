@@ -1,7 +1,7 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:50.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~12:00.
 > Freeze: **today 16:00**.
 
 ## TL;DR
@@ -41,8 +41,19 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 4. **Do not** change `src/harness/` in the last hour without a full test run and one Docker
    run afterwards.
 
-**Template leftovers:** `src/harness/agent.py` and `prompt.md` are unused (nothing imports
-them); deleting them is cosmetic and safe.
+## Cleanup (12:00, Timo): simpler code, macOS fixes; no change in how a run plays
+
+- Removed: the template's `agent.py` / `prompt.md`; the sparring draft (off since experiment 1:
+  its persona, profile flag, ablation switch and every branch for it); unused helpers
+  (`BudgetExceeded`, `specdoc.describe_*`); the `SELFPLAY_*` aliases of `FINAL_*`.
+- macOS: arena's worker sets `RLIMIT_AS`, which macOS rejects, so every isolated worker died
+  (`BrokenPipeError`). `scripts/evaluate.py` now drops only that cap on macOS (verified:
+  C-lite beta run PASS, 16-0-0); the one test that runs the `arena check` CLI skips on macOS;
+  `runner_child` sets each rlimit on its own, so the file-size cap holds on macOS too.
+- `tests/test_profiles.py`: for tasks A, B, C and every `HARNESS_ABLATE` switch, the cheapest
+  model (luna) only ever runs at low effort, and only allowed models are used.
+- Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
+  (`ruff format .` would otherwise rewrite the prompts' code blocks).
 
 ## Failure mining of experiment 1 (11:40): applied fixes and open proposals
 
@@ -123,11 +134,8 @@ freeze logistics), each with its own paths and a ready-to-paste prompt for Claud
 | dev tooling (make tasks, run, evaluate, ablate) | `scripts/*` | done + reviewed (9 fixes) |
 | report (deliverable) | `report.md` | draft |
 
-Tests: 199/199 on Linux (WSL), incl. real `arena check` (isolated) of deliberately broken
+Tests: 380/380 on Linux (Docker, 12:00; macOS: 370 pass, 10 skip), incl. real `arena check` (isolated) of deliberately broken
 strategies (raise, sleep, infinite loop, numpy import, print flood, non-literal output).
-
-The template's `agent.py` / `prompt.md` (one model, one bash tool) are replaced by the
-pipeline and will be removed at integration.
 
 ## First results
 
@@ -289,8 +297,8 @@ We are scored on two games nobody has seen, so every change is judged by how it 
     same), then their **worst pairing**, then the margin;
   - a challenger replaces the champion only if it is better by a margin and does not lose
     the head-to-head (incumbent protection against noisy self-play);
-  - the pool always contains **idle** (never lose to doing nothing), the **safe** persona,
-    and a cheap **sparring** draft that stands in for the naive part of the real field;
+  - the pool always contains **idle** (never lose to doing nothing) and the **safe** persona
+    (the sparring draft was measured in experiment 1, did not help and was removed);
   - both seats and several seeds (= several random maps) per pairing;
   - the simulator is trusted only after it reproduces the spec's worked examples; strategies
     are written from the spec, never from the simulator's code, so they cannot be tuned to
@@ -298,11 +306,11 @@ We are scored on two games nobody has seen, so every change is judged by how it 
 
 ## How to run things
 
-Linux matters: the guard's timer (`signal.setitimer`) and arena's isolated runner
-(`os.killpg`) do not exist on Windows. Use WSL or Docker for anything real.
+Linux or macOS (on a Mac follow [`MAC.md`](MAC.md)): the guard's timer (`signal.setitimer`)
+and arena's isolated runner (`os.killpg`) do not exist on Windows, so there use WSL or Docker.
 
 ```bash
-uv sync                                        # Windows dev env (.venv)
+uv sync                                        # dev env (.venv)
 # WSL (Ubuntu-24.04): uv + Python 3.13 venv at /root/venv-harness (already set up on Elias' machine)
 #   UV_PROJECT_ENVIRONMENT=/root/venv-harness uv sync --python 3.13
 
@@ -320,15 +328,11 @@ and spend), `transcript.jsonl` (every LLM call), `candidates/` (all generated co
 
 ## Next steps (today)
 
-1. Integrate the modules, unit tests green on Windows + WSL.
-2. First real runs: beta-A, beta-B (cheap), then alpha, then the test games.
-3. Offline lessons loop: classify why runs lose (format, simulator, timeouts, losing to
-   idle), fix the harness or the playbook, repeat.
-4. Docker runs of all three profiles, `report.md` with numbers, presentation.
-5. Merge into `main`, freeze commit to the organisers (`nkaslin` needs repo access).
+Steps 1-4 of the original list (integration, first runs, lessons loop, Docker runs of all
+profiles, report, presentation draft) are done. Left: the freeze steps in "Handover" above.
 
 ## Open questions / decisions for the team
 
 - Is anyone else changing `src/harness/` right now? If so, tell us before merging.
-- Who prepares the presentation? Material: this page, `report.md`, `runs/eval_log.jsonl`.
+- Who presents? Draft: `docs/presentation/slides.md`; material: this page, `report.md`.
 - Has `nkaslin` been invited to the repo yet (Settings → Access)?
