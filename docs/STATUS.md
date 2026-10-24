@@ -1,61 +1,71 @@
 # Status: read this first
 
-> Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~12:55.
-> Freeze: **today 15:30** (moved from 16:00).
+> Living handoff page of the team. Last update: Sat 24 Oct, 14:15. **Freeze: today 15:30.**
+> All work happens on **`main`**. How to set up, run, measure and freeze:
+> [`DEVELOPING.md`](DEVELOPING.md). Module contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+> Design: [`PLAN.md`](PLAN.md). The official task: [`TASK.md`](TASK.md).
 
-## TL;DR
+## Now
 
-- `main` = the harness, built on Timo's `PLAN.md`: a deterministic pipeline that
-  has the LLM write **several strategies + a simulator**, verifies both, picks the winner by
-  **self-play**, improves it, and wraps it in a **never-forfeit guard**.
-- How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
-  Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$37 spent so far (calibration, first runs,
-  experiments 1-4, held-out exam, task-C check). Rules below.
-- **It works end to end**, also in Docker exactly like the evaluation (see "First results").
+- **What the evaluation runs:** one unattended run per task reads the unseen game's spec and
+  leaves one `/output/strategy.py`. The harness has the LLM write several strategies and a
+  simulator, verifies both, selects by self-play, improves the champion, and delivers it
+  wrapped in a never-forfeit guard. Models and efforts follow from `task.json` (README,
+  "Settings"); the spending limit is always 90% of the task's `budget_usd`.
+- **Since the midpoint evaluation** (commit `793a5b5`), `main` changed in three ways:
+  1. **simulator-check fix** (14:00, the only change with clear evidence): correct simulators
+     of games with hidden information were rejected, so those runs had no self-play;
+  2. **budget rescue** (experiment 3, adopted by its rule, weak evidence);
+  3. cleanup with no change in play (template agent and sparring code removed, macOS fixes).
+  Rejected and removed again: game plan first and five drafts (experiment 4).
+- **Tests:** 385/385 on Linux (Docker), 374 pass + 10 skip on macOS.
+- **Docker runs of today's code** (like the evaluation):
 
-## Handover: continue on any machine (Mac guide: [`MAC.md`](MAC.md))
+| task | game | wall | spend | check | vs baselines |
+|---|---|---:|---:|---|---|
+| A | delta (with the fix) | 146 / 180 s | $0.024 | PASS | 16-0-8 |
+| B | beta | 575 / 600 s | $0.340 | PASS | 32-0-0 |
+| B | delta (with the fix) | 560 / 600 s | $0.393 | PASS | 21-0-3; 44-1-15 vs the pre-fix runs |
+| C-lite | beta | 865 / 900 s | $1.181 | PASS | 32-0-0 |
 
-**State at 11:35:** all experiments are done and exported to [`experiments/`](../experiments/)
-(re-evaluable anywhere); every decision is recorded on this page; `main` is a tested state
-that can be frozen as it is. Nothing depends on Elias' laptop any more.
+- **Money:** about $37 of the team's ~150 CHF spent (today's experiments about $16). At the
+  evaluation the organisers pay.
 
-**For the next Claude / person, in this order:**
+## Freeze checklist (by 15:15)
 
-1. **Setup** on the Mac: [`MAC.md`](MAC.md) steps 1-5 (`brew install uv coreutils`, Docker
-   Desktop, `uv sync`, `.env` with the team key, `uv run pytest -q`, `make_tasks.py`).
-2. **Freeze (mandatory, by 15:15):**
-   ```bash
-   git checkout main && git pull
-   uv run pytest -q                       # all pass (a few Linux-only tests skip on macOS)
-   ./run.sh tasks/beta-A                  # Docker, like the evaluation: exit 0, strategy written (~$0.02)
-   uv run python scripts/evaluate.py --seeds 4 --no-log runs/beta-A/<that run>   # check PASS
-   git rev-parse HEAD                     # send the full hash to the organisers (TASKS.md T5)
-   ```
-   `nkaslin` must have access to the repository; `report.md` is already complete.
-3. **Optional, only with measurement** (same rules as experiments 1-2: fix the decision rule
-   first, compare with `scripts/ablate.sh` on tuning games only, never on zeta/theta):
-   the open proposals in "Failure mining of experiment 1" (numbered by expected value);
-   tasks T2/T3 on [`TASKS.md`](TASKS.md).
-4. **Do not** change `src/harness/` in the last hour without a full test run and one Docker
-   run afterwards.
+1. `git checkout main && git pull`; tests (DEVELOPING.md, section 2); one `./run.sh
+   tasks/beta-B` and `evaluate.py` on it (check PASS).
+2. Tell Elias, then `git push origin main`; `git rev-parse HEAD` is the freeze hash: send the
+   full hash to the organisers.
+3. The organiser account `nkaslin` needs access to the repository (GitHub: Settings, Access).
+4. `report.md` is the written deliverable; the presentation draft is
+   `docs/presentation/slides.md` (9 slides, about 6 minutes): decide who presents.
+5. Not done, and not for the freeze: a fresh exam game nobody tuned on (`testgames/<new>/`)
+   and an independent read-only risk review (`docs/review-<name>.md`).
 
-## Cleanup (12:00, Timo): simpler code, macOS fixes; no change in how a run plays
+## Midpoint evaluation (organisers, 10:39 UTC): what it says
 
-- Removed: the template's `agent.py` / `prompt.md`; the sparring draft (off since experiment 1:
-  its persona, profile flag, ablation switch and every branch for it); unused helpers
-  (`BudgetExceeded`, `specdoc.describe_*`); the `SELFPLAY_*` aliases of `FINAL_*`.
-- macOS: arena's worker sets `RLIMIT_AS`, which macOS rejects, so every isolated worker died
-  (`BrokenPipeError`). `scripts/evaluate.py` now drops only that cap on macOS (verified:
-  C-lite beta run PASS, 16-0-0); the one test that runs the `arena check` CLI skips on macOS;
-  `runner_child` sets each rlimit on its own, so the file-size cap holds on macOS too.
-- `tests/test_profiles.py`: for tasks A, B, C and every `HARNESS_ABLATE` switch, the cheapest
-  model (luna) only ever runs at low effort, and only allowed models are used.
-- Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
-  (`ruff format .` would otherwise rewrite the prompts' code blocks).
+Task B, games beta and the hidden h1, 4 teams x 5 runs per game, commit `793a5b5`.
 
-## Fix (14:00): the simulator check rejected correct simulators (hidden information)
+| | beta | h1 (hidden) |
+|---|---|---|
+| our points (rank) | +760 (2nd) | +449 (2nd; Bypass +619) |
+| our 5 strategies, % won | 80, 78, 77, 75, 67 | **95**, 84, 79, **38, 29** |
+| vs Team_1 / Bypass / Template (net per match) | **-0.48** / +1.00 / +1.00 | -0.06 / +0.01 / +0.95 |
+
+- Overall 2nd of 4 (+1,209; Team_1 +1,645). 10/10 runs valid, $0.30-0.39 per run, 8:29-9:32
+  of 10 min: the guard and the budget work.
+- **beta:** steady but below Team_1, whose 5 strategies are identical (274-0-26) at $0.15 per
+  run. Our local yardsticks cannot see this gap: every arm of experiments 2-4 ties on beta and
+  beats all beta baselines.
+- **h1:** our rep2 is the best strategy of the whole field (94.8%), but rep0 and rep1 are
+  weak. Had they been at our median, h1 would be about +850 (first). **Variance between runs
+  is our biggest loss.** Experiment 4's logs then showed one cause of exactly such runs (the
+  simulator-check fix below); whether it was h1's cause cannot be proven without its logs.
+
+## Decision log (newest first)
+
+### Fix (14:00): the simulator check rejected correct simulators (hidden information)
 
 Found in the experiment-4 logs (per-run analysis): in 6 of 24 runs (delta and theta, every
 arm) the simulator never passed, so the run had no self-play and no improvement, delivered
@@ -74,7 +84,7 @@ self-play, 2 improvement rounds, 25 polish seeds; 560/600 s, $0.393, check PASS;
 the 3 pre-fix delta strategies of experiment 4 it wins **44-1-15** (10 seeds, both seats).
 The fix acts in every profile (A, B and C check simulators the same way); runs: B only.
 
-## Experiment 4 (done, 13:45): game plan first, more drafts -> both rejected
+### Experiment 4 (done, 13:45): game plan first, more drafts -> both rejected
 
 Midpoint report (B, beta + hidden h1): our best h1 strategy was the best of the whole field
 (94.8%), but 2 of our 5 h1 runs were weak (29%, 38%): the problem is variance between runs.
@@ -102,7 +112,7 @@ over all 8 games (+12 vs +9 and -21). Both switches were removed again (the code
 `faa028d`). With 1 run per game the single cells are noisy; the plan's held-out result is
 the one worth a follow-up with more runs after the hackathon.
 
-## Experiment 3 (done, 12:50): budget rescue (open proposal 1) -> adopted, weak evidence
+### Experiment 3 (done, 12:50): budget rescue (open proposal 1) -> adopted, weak evidence
 
 When nothing is in flight and the money left no longer covers a full improvement call, send it
 at low effort with the drafts' token cap (`Profile.rescue`, switch `HARNESS_ABLATE=rescue`).
@@ -133,10 +143,24 @@ from a run where the rescue never fired, so most of the difference is noise. In 
 (gamma) a rescue candidate became the champion. Risk is bounded: it only acts when a full call
 cannot be made, and its candidate must beat the champion under incumbent protection. No
 effect on A (same effort and cap). On C it can act near the end of a run: in the C-lite check
-(13:00) an astra call went out at low effort with $0.81 left instead of being skipped. The remaining lever for B money is
-prompt caching (open proposal 2), not measured.
+(13:00) an astra call went out at low effort with $0.81 left instead of being skipped. The
+remaining lever for B money is prompt caching (open proposal 2), not measured.
 
-## Failure mining of experiment 1 (11:40): applied fixes and open proposals
+### Cleanup (12:00, Timo): simpler code, macOS fixes; no change in how a run plays
+
+- Removed: the template's `agent.py` / `prompt.md`; the sparring draft (off since experiment 1:
+  its persona, profile flag, ablation switch and every branch for it); unused helpers
+  (`BudgetExceeded`, `specdoc.describe_*`); the `SELFPLAY_*` aliases of `FINAL_*`.
+- macOS: arena's worker sets `RLIMIT_AS`, which macOS rejects, so every isolated worker died
+  (`BrokenPipeError`). `scripts/evaluate.py` now drops only that cap on macOS (verified:
+  C-lite beta run PASS, 16-0-0); the one test that runs the `arena check` CLI skips on macOS;
+  `runner_child` sets each rlimit on its own, so the file-size cap holds on macOS too.
+- `tests/test_profiles.py`: for tasks A, B, C and every `HARNESS_ABLATE` switch, the cheapest
+  model (luna) only ever runs at low effort, and only allowed models are used.
+- Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
+  (`ruff format .` would otherwise rewrite the prompts' code blocks).
+
+### Failure mining of experiment 1 (11:40): applied fixes and open proposals
 
 Two read-only agents analysed all experiment-1 logs (tuning games only) and replayed every
 valid candidate (93 strategies) in a round robin on the real games. Key facts: 98 of 99
@@ -159,7 +183,8 @@ Spearman 0.88 (it picks well); 8 of 27 challengers promoted (round 1: 6 of 11; l
   simulator, tournament, improvement round, polish; 141/180 s, $0.018, exit 0.
 - Selection logic is covered by `tests/test_selection.py`.
 
-**Open proposals (not measured; only with an ablation on tuning games, rule fixed first):**
+**Proposals** (status at 14:15: 1 became the budget rescue, experiment 3, adopted; 4 was
+experiment 4's `drafts5`, rejected; 2, 3, 5, 6 are open and unmeasured):
 
 1. *Budget stranding*: 8 of 12 runs ended on `skipped_budget` with $0.07-0.14 and 160-290 s
    left, because the worst-case reservation (~$0.15) is far above the real cost (~$0.086).
@@ -179,58 +204,49 @@ Spearman 0.88 (it picks well); 8 of 27 challengers promoted (round 1: 6 of 11; l
 6. *5xx accounting*: a 520 error after 11 s was booked at the full worst case ($0.10).
    Releasing instead of booking is only right if the gateway does not bill such calls.
 
-Evidence and scripts: the agents' reports are summarised here; their scratch scripts are not
-in git.
 
-## Want to help? → [`TASKS.md`](TASKS.md)
+### Task C check (C-lite: $2, 900 s, sol + astra; done, 11:25)
 
-Claimable work packages (presentation, a fresh exam game, a read-only risk review, README,
-freeze logistics), each with its own paths and a ready-to-paste prompt for Claude Code.
+| game | wall | spend | improvement rounds | champion | check | vs baselines |
+|------|-----:|------:|---:|----------|-------|-------------:|
+| beta | 869 / 900 s | $1.11 | 2 | `improve1` (a sol challenger) | PASS | 100% |
+| gamma | 874 / 900 s | $0.96 | 1 | `improve1` (a sol challenger) | PASS | 100% |
 
-## Branches
+The large profile works end to end; time binds before money (at the real task C, 1800 s and
+$10, there is room for about twice the rounds). In both runs the winning challenger came from
+sol, not astra (n = 2, consistent with the calibration: astra is not stronger than sol here).
+Astra stays in for diversity: at the evaluation its cost is not ours.
 
-- **`main` = the harness** (fast-forwarded from `feat/harness-v1` at 10:45; the planned
-  shoot-out is not needed: nothing else was built on `main`).
-- Development continues on **`feat/harness-v1`**; `main` is fast-forwarded to it at each
-  checkpoint (always a tested, committed state). The freeze commit will be on `main`.
-- **Teammates:** `git pull` on `main`, put documents and the presentation under `docs/`
-  (or `presentation/`), commit and push to `main` as usual. Please do not edit
-  `src/harness/`, `tests/` or `scripts/` without telling us: those are tested together.
+### Experiment 2 (done, 11:30): polish and cheaper improvement calls
 
-## What is built (and by whom)
+Commit `aa0297c` (self-play under tournament conditions, sparring off), task B, 2 runs per
+arm and game, 18 runs. Cross-tournament net per strategy:
 
-| part | files | state |
-|------|-------|-------|
-| entry point, SIGTERM, t=0 fallback | `src/harness/__main__.py` | done, runs in Docker |
-| pipeline + task profiles + ablation switches | `src/harness/pipeline.py` | done, tuned on first runs |
-| deadline clock (counts from container start) | `src/harness/clock.py` | done + reviewed (7 fixes) |
-| budget (worst-case reservation per call) | `src/harness/budget.py` | done + reviewed |
-| LLM client (4 concurrent, retries, transcript) | `src/harness/llm.py` | done + reviewed |
-| spec parser (example observations, schema) | `src/harness/specdoc.py` | done + reviewed (5 fixes) |
-| never-forfeit guard (assembles the final file) | `src/harness/guard.py` | done + reviewed (8 fixes) |
-| sandbox + match runner (subprocess, stdlib only) | `src/harness/sandbox.py`, `runner_child.py` | done + reviewed |
-| self-play tournament (incremental, robust ranking) | `src/harness/tournament.py` | done + reviewed |
-| prompts + playbook (the "lessons file") | `src/harness/prompts/*` | done + reviewed |
-| our own test games (6, different mechanics) | `testgames/{gamma,delta,epsilon,zeta,eta,theta}` | done, each verified by an independent simulator |
-| dev tooling (make tasks, run, evaluate, ablate) | `scripts/*` | done + reviewed (9 fixes) |
-| report (deliverable) | `report.md` | draft |
+| arm | beta | gamma | epsilon |
+|-----|-----:|------:|--------:|
+| **full** (polish on, improvement @ medium) | 0.0 | **+6.0** | **+22.0** |
+| no polish | 0.0 | -5.5 | -15.5 |
+| improvement @ low effort | 0.0 | -0.5 | -6.5 |
 
-Tests: 380/380 on Linux (Docker, 12:00; macOS: 370 pass, 10 skip), incl. real `arena check` (isolated) of deliberately broken
-strategies (raise, sleep, infinite loop, numpy import, print flood, non-literal output).
+Decisions (rules fixed before the results): **polish stays on** (the no-polish arm beats full
+on no game), **improvement stays at medium effort** (low beats full on no game). No code
+change. Beta is a three-way tie (24-0-24 everywhere: the strategies are nearly equal there).
+All 18 strategies pass `arena check`, all runs within budget and deadline, and the full arm
+wins 100% of its matches against the baselines on all three games.
 
-## First results
+### Held-out exam (done, 11:20): does it transfer to untuned games?
 
-| run | where | time | spend | outcome |
-|-----|-------|-----:|------:|---------|
-| beta-A | WSL | 146 / 180 s | $0.017 / 0.03 | simulator OK first try; check PASS; **39-1-8 vs beta's 4 baselines** |
-| beta-A | **Docker** (like the evaluation) | 155 / 180 s | $0.020 / 0.03 | exit 0; simulator repaired once from its failed selftest |
-| beta-B | WSL | 530 / 600 s | $0.33 / 0.50 | best_response won self-play (0.94); first challenger won every pairing (1.00) and was promoted |
+zeta and theta were never used for tuning. Task B, 2 runs per arm, commit `aa0297c`:
 
-Fixed from these runs: a float residue in the budget made a run sit idle for ~285 s; token
-caps were 3-5x the real output (blocked parallel calls); the sparring draft was repaired
-with the expensive model.
+| game | full vs oneshot (head-to-head, +1/0/-1 matches) | panel vs baselines: full / oneshot |
+|------|------------------------------------------------|-----------------------------------|
+| theta (hidden demand, surges, typed units) | **44-1-3** | 100% / 93% |
+| zeta (renamed fields, nested-dict actions) | **32-0-16** | 94% / 89% |
 
-## Experiment 1: is each feature worth it? (done, 10:35)
+All 8 strategies pass `arena check`; all runs within budget and deadline. The pipeline's
+advantage over the one-shot baseline holds on games it was not tuned on.
+
+### Experiment 1: is each feature worth it? (done, 10:35)
 
 Same tasks, same commit (`61610da`), one feature switched off per arm (`HARNESS_ABLATE`),
 task profile B, 2 runs per arm and game, 24 runs, $5.31 in total. Cross-tournament between the
@@ -257,78 +273,19 @@ Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improve
 - Mean spend per B run: full $0.34, no improvement $0.14, oneshot $0.03. Several full runs
   ended early because the money ran out, not the time.
 
-## Experiment 2 (done, 11:30): polish and cheaper improvement calls
+### First runs (morning)
 
-Commit `aa0297c` (self-play under tournament conditions, sparring off), task B, 2 runs per
-arm and game, 18 runs. Cross-tournament net per strategy:
+| run | where | time | spend | outcome |
+|-----|-------|-----:|------:|---------|
+| beta-A | WSL | 146 / 180 s | $0.017 / 0.03 | simulator OK first try; check PASS; **39-1-8 vs beta's 4 baselines** |
+| beta-A | **Docker** (like the evaluation) | 155 / 180 s | $0.020 / 0.03 | exit 0; simulator repaired once from its failed selftest |
+| beta-B | WSL | 530 / 600 s | $0.33 / 0.50 | best_response won self-play (0.94); first challenger won every pairing (1.00) and was promoted |
 
-| arm | beta | gamma | epsilon |
-|-----|-----:|------:|--------:|
-| **full** (polish on, improvement @ medium) | 0.0 | **+6.0** | **+22.0** |
-| no polish | 0.0 | -5.5 | -15.5 |
-| improvement @ low effort | 0.0 | -0.5 | -6.5 |
+Fixed from these runs: a float residue in the budget made a run sit idle for ~285 s; token
+caps were 3-5x the real output (blocked parallel calls); the (since removed) sparring draft
+was repaired with the expensive model.
 
-Decisions (rules fixed before the results): **polish stays on** (the no-polish arm beats full
-on no game), **improvement stays at medium effort** (low beats full on no game). No code
-change. Beta is a three-way tie (24-0-24 everywhere: the strategies are nearly equal there).
-All 18 strategies pass `arena check`, all runs within budget and deadline, and the full arm
-wins 100% of its matches against the baselines on all three games.
-
-## Held-out exam (done, 11:20): does it transfer to untuned games?
-
-zeta and theta were never used for tuning. Task B, 2 runs per arm, commit `aa0297c`:
-
-| game | full vs oneshot (head-to-head, +1/0/-1 matches) | panel vs baselines: full / oneshot |
-|------|------------------------------------------------|-----------------------------------|
-| theta (hidden demand, surges, typed units) | **44-1-3** | 100% / 93% |
-| zeta (renamed fields, nested-dict actions) | **32-0-16** | 94% / 89% |
-
-All 8 strategies pass `arena check`; all runs within budget and deadline. The pipeline's
-advantage over the one-shot baseline holds on games it was not tuned on.
-
-## Task C check (C-lite: $2, 900 s, sol + astra; done, 11:25)
-
-| game | wall | spend | improvement rounds | champion | check | vs baselines |
-|------|-----:|------:|---:|----------|-------|-------------:|
-| beta | 869 / 900 s | $1.11 | 2 | `improve1` (a sol challenger) | PASS | 100% |
-| gamma | 874 / 900 s | $0.96 | 1 | `improve1` (a sol challenger) | PASS | 100% |
-
-The large profile works end to end; time binds before money (at the real task C, 1800 s and
-$10, there is room for about twice the rounds). In both runs the winning challenger came from
-sol, not astra (n = 2, consistent with the calibration: astra is not stronger than sol here).
-Astra stays in for diversity: at the evaluation its cost is not ours.
-
-## How one run works
-
-```
-t=0     write a fallback strategy (guard, plays None)  -> /output/strategy.py is ALWAYS valid
-        parse the spec (no LLM): example observations, observation keys, constants
-batch   simulator (LLM) | 3-4 strategies with different personas (LLM)  -- in parallel
-verify  probe each strategy on the spec's example observations, then play it vs idle on the
-        simulator; repair from tracebacks / malformed-action counts. The simulator must pass
-        its own selftest of the spec's worked examples + generic checks, else repair/escalate.
-select  round robin on the simulator (candidates + idle, both seats, several seeds)
-improve strongest model gets the champion + tournament report -> challengers -> re-rank
-finish  promote = guard.assemble(champion, fallback=safe candidate), atomic replace
-```
-
-The profile (how many calls, which model, which effort) is derived from `task.json` (budget,
-deadline, allowed models), never from the task letter. **The tier only picks the plan; the
-spending limit is always the task's own `budget_usd`**, hard-capped at 90% of it ($0.027 for
-A, $0.45 for B, $9 for C): every call reserves its worst case before it is sent and is refused
-if that does not fit. Measured: B runs spend $0.31-0.40, never above $0.45.
-
-| tier | picked when (task.json) | evaluation task | drafts | simulator | improvement |
-|------|-------------------------|-----------------|--------|-----------|-------------|
-| tiny | budget < $0.10 or deadline < 5 min | A ($0.03, 3 min) | 3x cheapest @ low | cheapest @ low | 2 parallel @ low, while time lasts |
-| mid | budget $0.10-1.50 | B ($0.50, 10 min) | 3x strongest @ low | strongest @ low | strongest @ medium, while money lasts |
-| large | budget >= $1.50 | C ($10, 30 min) | astra + 2x sol + astra @ low | sol @ medium | 3 parallel per round (astra + 2x sol) |
-
-After the last LLM call, the time that is left plays more self-play seeds (less noisy
-selection, no money). Self-play uses exactly the delivered file's settings (0.25 s search per
-turn, 0.70 s hard limit), so what wins self-play is what plays in the tournament.
-
-## What we measured (calibration, beta spec, one-shot strategy, Oct 24)
+### What we measured (calibration, beta spec, one-shot strategy, Oct 24)
 
 | model | effort | seconds | output tokens | USD | wins vs field (128 matches) |
 |-------|--------|--------:|--------------:|----:|-----:|
@@ -350,15 +307,15 @@ DoNothing 0 wins). Takeaways:
 - The first call writes the prompt cache at **1.25x** the input price; the budget's worst
   case accounts for that.
 
-## Money rules (our own OpenAI key)
+## Rules
 
-- At **evaluation** the organisers' key pays, so task C should use its full $10 there.
-  Only our **test runs** cost us.
-- Test with A and B profiles; for C use a "C-lite" task (`--budget-usd 2 --deadline-s 900
-  --model gpt-6.1-sol --model gpt-6-astra`). At most 1-2 real C runs before the freeze.
-- Calibration done, so no more one-off experiments without a reason. Target: < $30 total.
+### Money (our own OpenAI key)
 
-## Against overfitting (rules for everyone tuning prompts or code)
+- Iterate on A and B. For C use C-lite ($2, 900 s, sol + astra); at most 1-2 real C runs.
+- No experiment without a question and a decision rule written down first; several runs per
+  arm over several games (single runs are noise; the evaluation averages 5 runs).
+
+### Against overfitting (for everyone tuning prompts or code)
 
 We are scored on two games nobody has seen, so every change is judged by how it transfers.
 
@@ -385,35 +342,8 @@ We are scored on two games nobody has seen, so every change is judged by how it 
     are written from the spec, never from the simulator's code, so they cannot be tuned to
     its bugs.
 
-## How to run things
+### Team
 
-Linux or macOS (on a Mac follow [`MAC.md`](MAC.md)): the guard's timer (`signal.setitimer`)
-and arena's isolated runner (`os.killpg`) do not exist on Windows, so there use WSL or Docker.
-
-```bash
-uv sync                                        # dev env (.venv)
-# WSL (Ubuntu-24.04): uv + Python 3.13 venv at /root/venv-harness (already set up on Elias' machine)
-#   UV_PROJECT_ENVIRONMENT=/root/venv-harness uv sync --python 3.13
-
-uv run pytest -q                               # unit tests (Linux-only ones skip on Windows)
-uv run arena make-task --game arena_games_dev.beta --budget-usd 0.5 --deadline-s 600 \
-    --model gpt-6-luna --model gpt-6.1-sol --out tasks/beta-B
-uv run --env-file .env harness tasks/beta-B    # local run (no Docker), output in runs/beta-B/<time>/
-./run.sh tasks/beta-B                          # like the evaluation (Docker)
-```
-
-`scripts/README.md` has the batch loops (make all tasks, N parallel runs, evaluate,
-harness-vs-harness). Each run leaves `output/logs/events.jsonl` (every decision, with time
-and spend), `transcript.jsonl` (every LLM call), `candidates/` (all generated code) and
-`tournament.txt`.
-
-## Next steps (today)
-
-Steps 1-4 of the original list (integration, first runs, lessons loop, Docker runs of all
-profiles, report, presentation draft) are done. Left: the freeze steps in "Handover" above.
-
-## Open questions / decisions for the team
-
-- Is anyone else changing `src/harness/` right now? If so, tell us before merging.
-- Who presents? Draft: `docs/presentation/slides.md`; material: this page, `report.md`.
-- Has `nkaslin` been invited to the repo yet (Settings → Access)?
+- Everything is on `main`, always a tested state; the freeze commit is on `main`.
+- Tell Elias before pushing changes to `src/harness/`, `tests/` or `scripts/`: they are
+  tested together. Documents and the presentation can be pushed directly.

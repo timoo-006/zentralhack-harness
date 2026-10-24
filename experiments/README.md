@@ -12,8 +12,13 @@ sources (large; they stay in the local run dirs).
 | `exp2h/` | held-out exam: full / oneshot on zeta-B, theta-B | `docs/STATUS.md`, "Held-out exam" |
 | `clite/` | task-C check: full on beta-C-lite, gamma-C-lite | `docs/STATUS.md`, "Task C check" |
 | `bot/` | strategy_class "Bot" in task.json (class-name robustness) | passes `arena check ...:Bot` |
+| `exp3/`, `exp3-heldout/` | budget rescue: full (rescue on) / rescue (= off), beta-B gamma-B epsilon-B x 2, zeta-B x 1 | `docs/STATUS.md`, "Experiment 3" |
+| `exp4/` | full / plan (game plan first) / drafts5 (5 drafts), all 8 games x 1, task B | `docs/STATUS.md`, "Experiment 4" |
 
-Re-evaluate on any machine (macOS/Linux: drop `--wsl`):
+Arm names are `HARNESS_ABLATE` values at the time of the run; some switches were removed later
+(`sparring`, `plan`, `drafts5`): the exported strategies stay valid evidence.
+
+Re-evaluate on any machine (macOS or Linux; on Windows add `--wsl`):
 
 ```bash
 uv run python scripts/evaluate.py --cross --seeds 6 --cross-seeds 6 --workers 8 --no-log \

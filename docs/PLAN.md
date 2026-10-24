@@ -1,6 +1,10 @@
 # Plan: our harness for Zentral Hack 2026
 
-> Living document. Update the status column in §7 when a milestone lands.
+> The design document, written before the build. Update the status column in §7 when a
+> milestone lands. Where a guess was replaced by a measurement, a note says so and points to
+> the numbers: results are in [`STATUS.md`](STATUS.md), how to run things is in
+> [`DEVELOPING.md`](DEVELOPING.md), the module contracts are in
+> [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > Sources: [`docs/TASK.md`](TASK.md) (official task), [`README.md`](../README.md) (template
 > contract), and the `arena` / `arena-games-dev` repositories (installed into `.venv` by
 > `uv sync`: `.venv/lib/python3.13/site-packages/arena/` and `.../arena_games_dev/`).
@@ -86,6 +90,10 @@ are ~3–5k tokens):
 
 Keep the stable prefix (instructions + spec) first in every call so it gets cached.
 
+> Measured later (calibration, `STATUS.md`): the real cost per call and per effort level.
+> Every call reserves its worst case, which is well above its real cost, so on B a run can
+> end with money left (see the budget rescue in `ARCHITECTURE.md` §8).
+
 ### 2.5 The game family
 
 What the dev games show (hidden games: "same family", own rules and simulator):
@@ -104,12 +112,13 @@ What the dev games show (hidden games: "same family", own rules and simulator):
 
 ## 3 What the template does and lacks
 
-The template reads the spec, always uses the cheapest allowed model, gives it one `bash` tool
-and loops up to 30 steps, logging the transcript and spend.
+The template read the spec, always used the cheapest allowed model, gave it one `bash` tool
+and looped up to 30 steps, logging the transcript and spend. (Its `agent.py` and `prompt.md`
+are gone: the pipeline in `src/harness/pipeline.py` replaced them.)
 
-It lacks budget and deadline control, a SIGTERM handler, a fallback strategy, a conformance
+It lacked budget and deadline control, a SIGTERM handler, a fallback strategy, a conformance
 check, a simulator, any evaluation or selection of strategies, model choice per task,
-parallel calls and retries.
+parallel calls and retries. The harness now has all of these.
 
 ## 4 Design principles
 
@@ -161,7 +170,23 @@ Times are fractions of `deadline_s`; task-specific settings are in §6.
   busier than ours), and a cheap `__init__`.
 - Verified: an `act()` that sleeps 5 s passes `arena check` when wrapped.
 
+> **As built** (contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md) §0, §5, §8). Step 1 became a
+> deterministic parse of the spec without an LLM (`specdoc.py`); there is no game card, every
+> call carries the full spec. Step 2 became the "safe" draft, which is also the guard's
+> fallback core. Steps 3 and 4 run as planned, with extras: a strategic analysis call (large
+> budgets only) and, after the last LLM call, more self-play seeds ("polish"). The guard's
+> hard limit is 0.70 s per `act` and the strategies' search budget is 0.25 s.
+
 ## 6 Task profiles (initial guesses: tune by measurement)
+
+> **Replaced by measurements.** The three profiles below were the starting guesses. The
+> profiles the harness runs are derived from `task.json` (budget, deadline, models) and are
+> documented in [`README.md`](../README.md), "Settings"; the calibration and experiments
+> behind them are in [`STATUS.md`](STATUS.md). The main differences from the guesses: a
+> `tiny`/`mid`/`large` tier instead of a task letter; the strong model at low effort for
+> drafts (as good as medium effort, much faster); the cheapest model only at low effort; in B
+> the simulator and the fixes use the strong model too; the spending limit is 90% of the
+> budget.
 
 - **A ($0.03, 3 min, luna only):** no long agent loop. One parallel batch of 2–3 strategy
   candidates and 1 simulator attempt (low/medium reasoning). If the simulator reproduces the
@@ -175,21 +200,26 @@ Times are fractions of `deadline_s`; task-specific settings are in §6.
 
 ## 7 Milestones
 
+State at Sat 24 Oct, 14:15. Everything is built; experiments 1-4 are done; the freeze is today
+at 15:30. Numbers and dates are in [`STATUS.md`](STATUS.md).
+
 | #  | milestone | done when | status |
 |----|-----------|-----------|--------|
-| M0 | **Setup:** private repo from the template, team and `nkaslin` invited, `uv sync`, tasks for alpha and beta per task profile, `./run.sh` works | template runs in Docker on alpha | in progress: `uv sync` + WSL venv done; Docker run pending; `nkaslin` invite? |
-| M1 | **Never forfeit:** t=0 fallback, SIGTERM handler, deadline and budget manager, guard wrapper, own conformance check, atomic promotion, task profiles, up to 4 parallel calls | 20/20 runs across tasks and dev games pass `arena check`; no budget overrun; every run ends before its deadline | built on `feat/harness-v1`, integrating |
-| M2 | **Strong first attempt:** game-card extraction, system prompt with a playbook for this game family, model per role | beats all dev baselines on alpha and beta in tasks B and C | prompts + playbook + personas written; calibration done (STATUS.md) |
-| M3 | **Simulator:** generate, verify against worked examples, fuzz, fix loop | reproduces the worked examples in ≥ 90% of runs; agrees with the real `game.py` on random rollouts | built (selftest + generic checks + repair/escalation), untested end-to-end |
-| M4 | **Self-play selection and improvement:** candidates, opponent pool, statistics, promotion | new harness version beats the previous one in a harness-vs-harness tournament | built (incremental round robin, challengers), untested end-to-end |
-| M5 | **Generalisation suite:** 2–4 own test games of the family with new mechanics (`spec.md` + `game.py` + baselines) | harness reaches M1–M4 criteria on them too | in progress: 6 games (gamma, delta, epsilon, zeta, eta, theta) |
-| M6 | **Freeze:** `report.md`, presentation, final `./run.sh` tests in Docker for every task | freeze commit sent to the organisers | open |
+| M0 | **Setup:** private repo from the template, team and `nkaslin` invited, `uv sync`, tasks for alpha and beta per task profile, `./run.sh` works | template runs in Docker on alpha | done: `uv sync`, tasks and Docker runs work (A, B and a C-lite run in Docker on beta). To confirm: `nkaslin` has access (STATUS.md, freeze checklist) |
+| M1 | **Never forfeit:** t=0 fallback, SIGTERM handler, deadline and budget manager, guard wrapper, own conformance check, atomic promotion, task profiles, up to 4 parallel calls | 20/20 runs across tasks and dev games pass `arena check`; no budget overrun; every run ends before its deadline | done, on `main`. All 24 runs of experiment 4 pass `arena check` with 0 forfeits, within budget ($0.31-0.40 of $0.50) and deadline; the midpoint evaluation had 10/10 valid runs |
+| M2 | **Strong first attempt:** system prompt with a playbook for this game family, personas, model per role (the planned game card became a deterministic parse, §5) | beats all dev baselines on alpha and beta in tasks B and C | done: Docker beta-B 32-0-0 and beta C-lite 32-0-0 against beta's baselines; calibration of models and efforts in STATUS.md |
+| M3 | **Simulator:** generate, verify against worked examples, fuzz, fix loop | reproduces the worked examples in ≥ 90% of runs; agrees with the real `game.py` on random rollouts | done: the simulator passed its checks first try in 18 of 18 runs (experiment 1) and 7 of 7 (experiment 3). A schema-check bug that rejected correct simulators of games with hidden information was fixed (`4fa0036`) |
+| M4 | **Self-play selection and improvement:** candidates, opponent pool, statistics, promotion | new harness version beats the previous one in a harness-vs-harness tournament | done: full pipeline beats the one-shot baseline 48-0-0 (beta) and 46-1-1 (gamma). Experiments 1-4 kept or rejected every feature and variant by a rule fixed beforehand |
+| M5 | **Generalisation suite:** 2–4 own test games of the family with new mechanics (`spec.md` + `game.py` + baselines) | harness reaches M1–M4 criteria on them too | done: 6 games (gamma, delta, epsilon, zeta, eta, theta); zeta and theta are held out and only measured |
+| M6 | **Freeze:** `report.md`, presentation, final `./run.sh` tests in Docker for every task | freeze commit sent to the organisers | open, due today 15:30: `report.md` written, presentation draft in `docs/presentation/`, final Docker runs passed for A, B and C-lite; the freeze hash still has to be sent |
 
-Suggested split: (1) harness core, budget and deadline (M1); (2) simulator and verification
-(M3); (3) strategy wrapper, playbook and selection (M2, M4); (4) test games and evaluation
-pipeline (M5).
+Original split of the work: (1) harness core, budget and deadline (M1); (2) simulator and
+verification (M3); (3) strategy wrapper, playbook and selection (M2, M4); (4) test games and
+evaluation pipeline (M5).
 
 ## 8 How we evaluate the harness
+
+How to set up, run and measure is in [`DEVELOPING.md`](DEVELOPING.md). The method:
 
 - Tasks per profile, e.g.
   `uv run arena make-task --game arena_games_dev.alpha --budget-usd 0.03 --deadline-s 180 --model gpt-6-luna --out tasks/alpha-A`
@@ -200,25 +230,36 @@ pipeline (M5).
 - Check each strategy with `arena check`, play it against the baselines with `arena run`, and
   play harness versions against each other with `arena tournament` (a job file whose `tables`
   keep runs of the same harness apart), scored +1/0/−1.
-- Keep results in a log so changes are compared on data, not impressions.
-- Development runs are paid from the team's $100: iterate on A/B profiles, use C sparingly.
+- Keep results in a log so changes are compared on data, not impressions. The decision rule of
+  an experiment is written down before it runs. Tune on alpha, beta, gamma, delta, epsilon and
+  eta; zeta and theta are held out (measure only).
+- Development runs are paid from the team's own OpenAI budget: iterate on A/B profiles, use C
+  sparingly (a C-lite task: `--budget-usd 2 --deadline-s 900`).
 
 ## 9 Deliverables checklist
 
-- [ ] Private repository; team and organiser `nkaslin` invited
-- [ ] Freeze commit pushed and reported to the organisers
-- [ ] `report.md` at the freeze commit
-- [ ] Short presentation
-- [ ] Final Docker runs for every task profile pass
+- [ ] Private repository; team and organiser `nkaslin` invited (access to be confirmed)
+- [ ] Freeze commit pushed and reported to the organisers (today 15:30)
+- [x] `report.md` written (to be final at the freeze commit)
+- [x] Short presentation: draft in `docs/presentation/slides.md`
+- [x] Final Docker runs for the task profiles pass (A, B, C-lite; see STATUS.md)
 
 ## 10 Open questions for the organisers
 
-- May `arena` become a runtime dependency (its match runner, isolation and conformance check)?
-  Does the evaluation build have network access for git dependencies? Otherwise we write our
-  own small match runner.
-- When exactly is the freeze?
-- Do hidden games keep the dev games' conventions (100 turns, `None` as no-op, list of tuples)?
+- ~~May `arena` become a runtime dependency (its match runner, isolation and conformance
+  check)? Does the evaluation build have network access for git dependencies?~~ Not needed: we
+  wrote our own match runner and isolation (`sandbox.py`, `runner_child.py`), which follow
+  arena's worker (strategy classes loaded fresh for every match, similar limits, no
+  site-packages). `arena` and `arena-games-dev` stay dev dependencies and the harness imports
+  neither.
+- ~~When exactly is the freeze?~~ Today, Sat 24 Oct, 15:30 (moved from 16:00).
+- Do hidden games keep the dev games' conventions (100 turns, `None` as no-op, list of
+  tuples)? Partly answered: on the hidden game h1 of the midpoint evaluation, all 5 of our runs
+  were valid. Not confirmed for the two final games, so the harness takes every format from
+  the spec and assumes none.
 - Do the 5 runs per task run in parallel on one machine (CPU contention during self-play)?
+  Still open. Self-play uses 2 worker processes and wall-clock budgets, so a slower machine
+  plays fewer matches in the same time.
 
 ## 11 Background research
 

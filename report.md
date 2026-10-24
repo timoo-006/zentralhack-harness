@@ -74,7 +74,14 @@ more drafts and improvement rounds, not more effort per draft.
 
 **End to end:** in Docker, exactly like the evaluation, a task-A run finishes in 155 of 180 s
 for $0.020, and its luna-only strategy goes 39-1-8 against beta's four baselines. Task-B runs
-take 300-560 s and spend $0.31-0.40 of $0.50.
+take 300-575 s and spend $0.31-0.40 of $0.50; a C-lite run ($2, 900 s) takes 865 s for $1.18.
+All five Docker checks run today (A, B, C-lite) exit 0 and pass the conformance check.
+
+**Midpoint evaluation by the organisers** (task B, beta and a hidden game h1, four teams, five
+runs each): we placed second of four. All ten of our runs were valid and stayed within budget
+and deadline. On the hidden game our best strategy was the best of the whole field (94.8% of
+its points), but two of our five runs were weak (29% and 38%). Variance between runs, not the
+ceiling, was our largest loss, and it guided the last experiment.
 
 **Ablation (experiment 1, 24 task-B runs on three games, one feature switched off per arm):**
 cross-tournament of the arms' strategies, +1/0/-1 per match like the official scoring.
@@ -132,5 +139,10 @@ strategy passes the conformance check.
 
 ## What we would do next
 
+- Measure the game-plan-first variant with more runs: it lost on the tuning games but won
+  every match on one held-out game, which one run per game cannot settle.
+- A stronger reference opponent for local measurement: on beta every variant ties among our
+  own strategies and beats all baselines, so progress there is invisible to us.
+- Prompt caching for task B (the specification in the cached prefix): about $0.03-0.04 per
+  run, i.e. more improvement rounds for the same money (estimated, not measured).
 - Opponent-aware search inside the strategy using the verified simulator code.
-- Population-based training across more seeds with a larger opponent pool.

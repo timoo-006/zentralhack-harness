@@ -1,6 +1,8 @@
 # harness
 
-Our Zentral Hack 2026 harness. Given a game's written specification, it has the LLM write
+Our Zentral Hack 2026 harness. At evaluation one unattended run per task turns the
+specification of a game it has never seen into one `strategy.py`, which then plays the
+tournament. Given the specification, it has the LLM write
 **several candidate strategies and a simulator of the game**, verifies both, picks the best
 candidate by **self-play**, improves it with the strongest allowed model while time and money
 last, and delivers it wrapped in a **never-forfeit guard**. A valid `strategy.py` is on disk
@@ -8,13 +10,13 @@ from the first second, and the harness always exits 0.
 
 | read | for |
 |------|-----|
-| [`docs/STATUS.md`](docs/STATUS.md) | **start here**: what is built, what we measured, open decisions, the freeze checklist |
-| [`docs/MAC.md`](docs/MAC.md) | continue on a Mac: setup, running, evaluating |
+| [`docs/STATUS.md`](docs/STATUS.md) | **start here**: the current state, the midpoint result, every measured decision, the freeze checklist |
+| [`docs/DEVELOPING.md`](docs/DEVELOPING.md) | set up (macOS or Linux), run, run experiments, evaluate, export, freeze |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | the contract of every module in `src/harness/` |
 | [`docs/PLAN.md`](docs/PLAN.md) | why it is built this way |
-| [`scripts/README.md`](scripts/README.md) | the offline measure loop: make tasks, run, evaluate, compare |
 | [`experiments/README.md`](experiments/README.md) | the exported runs behind every decision, and how to re-evaluate them |
-| [`docs/TASK.md`](docs/TASK.md), [`docs/TASKS.md`](docs/TASKS.md) | the official task; open work packages |
+| [`docs/TASK.md`](docs/TASK.md) | the official task |
+| [`report.md`](report.md), [`docs/presentation/`](docs/presentation/) | the deliverables: written report and talk |
 
 ```
 src/harness/
@@ -36,7 +38,7 @@ testgames/        # our own games (gamma, delta, epsilon, zeta, eta, theta): spe
                   # and baselines each; zeta and theta are held out (never tuned on)
 scripts/          # dev only: make_tasks.py, run_harness.sh, ablate.sh, evaluate.py, export_runs.py
 experiments/      # exported experiment runs (strategies, events, task.json): the evidence
-docs/             # STATUS, MAC, ARCHITECTURE, PLAN, TASK, TASKS
+docs/             # STATUS, DEVELOPING, ARCHITECTURE, PLAN, TASK, presentation/
 tasks/ runs/ runs-exp/  # local and gitignored: tasks, run outputs, experiment outputs
 run.sh            # run it on a task in Docker the way the evaluation does
 Dockerfile        # the sandbox your harness runs in at evaluation time
@@ -155,7 +157,7 @@ uv run --env-file .env harness tasks/alpha
 It writes into `runs/alpha/<time>-<pid>/` (the pid keeps parallel runs of one task apart; the
 commands above work on it too), with `output/` and the working directory `work/`; the log goes
 to your terminal. `scripts/run_harness.sh tasks/alpha 3` starts several runs in parallel (see
-[`scripts/README.md`](scripts/README.md)). To step
+[`docs/DEVELOPING.md`](docs/DEVELOPING.md)). To step
 through it, open this repository in VS Code (with the Python extension), set breakpoints, and
 start **harness (local)** in Run and Debug (F5); it asks for the task directory.
 
@@ -196,8 +198,8 @@ reserves its worst case before it is sent and is refused if that does not fit.
 | tier | picked when | typical task | drafts | simulator | improvement rounds |
 |------|-------------|--------------|--------|-----------|--------------------|
 | `tiny` | budget < $0.10 or deadline < 300 s | A ($0.03, 3 min) | 3x strongest @ low | cheapest @ low | 2 parallel @ low |
-| `mid` | budget < $1.50 | B ($0.50, 10 min) | 3x strongest @ low | strongest @ low | strongest @ medium, one at a time |
-| `large` | budget >= $1.50 | C ($10, 30 min) | 4: strongest, cheapest, cheapest, strongest @ low | cheapest @ medium | 3 parallel @ medium, after an analysis call |
+| `mid` | budget < $1.50 | B ($0.50, 10 min) | 3x strongest @ low | strongest @ low | strongest @ medium, one at a time (@ low when money runs short) |
+| `large` | budget >= $1.50 | C ($10, 30 min) | 4: strongest, cheapest, cheapest, strongest @ low | cheapest @ medium | 3 parallel @ medium, with an analysis call (strongest @ medium) |
 
 "Cheapest" and "strongest" are the least and most expensive of `allowed_models`. The numbers
 behind these choices are in [`docs/STATUS.md`](docs/STATUS.md).
@@ -220,6 +222,7 @@ HARNESS_ABLATE=oneshot uv run --env-file .env harness tasks/beta-B
 | `oneshot` | baseline: one draft, no simulator, no repair; the guard stays on |
 | `polish` | no extra self-play seeds in the time left after the last LLM call |
 | `improve_low` | variant: improvement calls at low effort (cheaper, more rounds) |
+| `rescue` | no low-effort improvement call when the money left no longer covers a full one |
 
 `scripts/ablate.sh` runs whole experiments over these switches.
 
@@ -249,4 +252,4 @@ parallel calls, seeds, repair counts, and the flags `polish` and `robust_rank`.
 
 `harness.log` next to `output/` holds the container's (or, with `run_harness.sh`, the
 process's) output. Evaluate runs with `scripts/evaluate.py`, see
-[`scripts/README.md`](scripts/README.md).
+[`docs/DEVELOPING.md`](docs/DEVELOPING.md).

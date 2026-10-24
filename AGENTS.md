@@ -6,8 +6,8 @@ Read this file fully before changing anything.
 ## Read first
 
 0. [`docs/STATUS.md`](docs/STATUS.md): what is built, what we measured, money rules, next
-   steps. Keep it current when something lands. Claimable work packages, with the paths
-   each may touch: [`docs/TASKS.md`](docs/TASKS.md).
+   steps. Keep it current when something lands. How to set up, run, measure and freeze:
+   [`docs/DEVELOPING.md`](docs/DEVELOPING.md). All work happens on `main`.
 1. [`docs/TASK.md`](docs/TASK.md): the official hackathon task (evaluation tasks, scoring,
    deliverables).
 2. [`docs/PLAN.md`](docs/PLAN.md): our design and milestones. Follow it, and update its status
@@ -107,7 +107,8 @@ tests/                      unit tests (pytest; Linux-only ones skip on Windows)
 testgames/                  our own family games for generalisation tests (dev only)
 scripts/                    dev tooling: make tasks, run batches, evaluate (dev only)
 run.sh                      run a task in Docker exactly like the evaluation
-docs/                       TASK (official), PLAN (design), ARCHITECTURE (contracts), STATUS (now)
+docs/                       TASK (official), PLAN (design), ARCHITECTURE (contracts), STATUS (now),
+                            DEVELOPING (how to run and measure), presentation/
 tasks/, runs/               generated locally, gitignored
 ```
 
@@ -144,7 +145,7 @@ uv run arena run --game arena_games_dev.alpha \
 uv run ruff check . && uv run ruff format .
 ```
 
-Every harness run spends real money from the team's $100 OpenAI budget. Iterate on the A and B
+Every harness run spends real money from the team's OpenAI budget (~150 CHF in total). Iterate on the A and B
 profiles and use C sparingly. Run `./run.sh` (Docker) before relying on a change.
 
 ## Working rules
