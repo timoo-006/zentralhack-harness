@@ -1,8 +1,8 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~12:00.
-> Freeze: **today 16:00**.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~12:55.
+> Freeze: **today 15:30** (moved from 16:00).
 
 ## TL;DR
 
@@ -11,8 +11,8 @@
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$21 spent so far (calibration, first runs,
-  experiments 1-2, held-out exam, task-C check). Rules below.
+- **OpenAI money:** we have ~150 CHF in total. ~$26 spent so far (calibration, first runs,
+  experiments 1-3, held-out exam, task-C check). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
 ## Handover: continue on any machine (Mac guide: [`MAC.md`](MAC.md))
@@ -25,7 +25,7 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 
 1. **Setup** on the Mac: [`MAC.md`](MAC.md) steps 1-5 (`brew install uv coreutils`, Docker
    Desktop, `uv sync`, `.env` with the team key, `uv run pytest -q`, `make_tasks.py`).
-2. **Freeze (mandatory, by 15:45):**
+2. **Freeze (mandatory, by 15:15):**
    ```bash
    git checkout main && git pull
    uv run pytest -q                       # all pass (a few Linux-only tests skip on macOS)
@@ -55,16 +55,38 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 - Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
   (`ruff format .` would otherwise rewrite the prompts' code blocks).
 
-## Experiment 3 (running, 12:05): budget rescue (open proposal 1)
+## Experiment 3 (done, 12:50): budget rescue (open proposal 1) -> adopted, weak evidence
 
-Branch `exp/budget-rescue`: when nothing is in flight and the money left no longer covers a
-full improvement call, send it at low effort with the drafts' token cap. Arms: `full` (rescue
-on) vs `rescue` (`HARNESS_ABLATE=rescue`: off, = `main`). Task B; beta, gamma, epsilon x 2 runs
-per arm; held-out zeta x 1 run per arm. Budget about $5.40.
+When nothing is in flight and the money left no longer covers a full improvement call, send it
+at low effort with the drafts' token cap (`Profile.rescue`, switch `HARNESS_ABLATE=rescue`).
+Commit `2ff8548`, task B, beta/gamma/epsilon x 2 runs per arm, held-out zeta x 1; 14 runs,
+$4.93. Evaluated on macOS (isolated): check, panel 4 seeds, cross-tournament 6 seeds.
 
-Decision rule (fixed before the runs): adopt only if (1) zero `arena check` failures and zero
-forfeits, (2) cross-tournament net >= the off arm on at least 2 of the 3 tuning games and in
-total, (3) zeta not worse, (4) every run within budget and deadline. A tie keeps `main`.
+| | beta | gamma | epsilon | **total** | zeta (held out) |
+|---|---:|---:|---:|---:|---:|
+| net per strategy, rescue on | 0.0 | -0.5 | **+4.0** | **+3.5** | 0.0 |
+| net per strategy, rescue off (= old `main`) | 0.0 | **+0.5** | -4.0 | -3.5 | 0.0 |
+| head-to-head on vs off | 24-0-24 | 22-3-23 | 27-2-19 | 73-5-66 | 6-0-6 |
+
+| per run | rescue on (7 runs) | rescue off (7 runs) |
+|---|---|---|
+| `arena check` | 7/7 PASS, 0 forfeits | 7/7 PASS, 0 forfeits |
+| panel vs baselines | 100% (zeta 96%) | 100% (zeta 96%) |
+| spend, mean (max) | $0.369 ($0.402) of 0.50 | $0.335 ($0.373) |
+| wall, max | 568 s of 600 (one ended at 341 s: polish seed cap reached) | 570 s |
+| improvement calls completed | 16 (3 of them rescues) | 17 |
+| rescue attempts / completed | 13 / 3 (10 still `skipped_budget`) | - |
+| simulator verified | 7/7 first try | 7/7 first try |
+
+Decision by the rule fixed beforehand: criteria 1-4 hold (beta tie, epsilon better, gamma
+worse; total +3.5 vs -3.5; zeta tie; all within budget and deadline), so **rescue is on in
+`main`**. Honest reading: the mechanism rarely fires. With $0.06-0.11 left, even a low-effort
+sol call (real cost $0.059-0.072, mostly input) usually does not fit; the epsilon gain comes
+from a run where the rescue never fired, so most of the difference is noise. In one run
+(gamma) a rescue candidate became the champion. Risk is bounded: it only acts when a full call
+cannot be made, and its candidate must beat the champion under incumbent protection. No
+effect on A (same effort and cap) or C (money never binds). The remaining lever for B money is
+prompt caching (open proposal 2), not measured.
 
 ## Failure mining of experiment 1 (11:40): applied fixes and open proposals
 

@@ -165,7 +165,7 @@ git add experiments && git commit -m "experiments: exp3"
 - Do not tune on the held-out games **zeta** and **theta**: measure only.
 - Never commit `.env`; never print the key into logs or chats.
 
-## 11. Freeze steps (by 15:45, freeze is 16:00)
+## 11. Freeze steps (by 15:15, freeze is 15:30)
 
 Same as the handover section in STATUS.md, for the Mac:
 

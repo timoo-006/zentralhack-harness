@@ -1,0 +1,43 @@
+running /w/tasks/epsilon-B into /w/runs/epsilon-B/20261024-102306-2506 (no Docker)
+[    0.2s $0.0000] fallback_written {}
+[    0.2s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 47.2s $0.0236 (spent $0.0236)
+[   47.4s $0.0236] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 47.2, "cost": 0.02355, "spent": 0.02355}
+[   47.4s $0.0236] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   47.4s $0.0236] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] sim0 gpt-6.1-sol completed 51.0s $0.0569 (spent $0.0804)
+[   51.2s $0.0804] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 51.0, "cost": 0.05687, "spent": 0.08042}
+[   51.4s $0.0804] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_best_response gpt-6.1-sol completed 51.2s $0.0301 (spent $0.1105)
+[   51.4s $0.1105] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 51.2, "cost": 0.0301, "spent": 0.11052}
+[   51.5s $0.1105] candidate {"id": "c2_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   51.6s $0.1105] promoted {"id": "c2_best_response", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 66.2s $0.0340 (spent $0.1445)
+[   66.4s $0.1445] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 66.2, "cost": 0.03398, "spent": 0.1445}
+[   66.5s $0.1445] candidate {"id": "c3_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   67.6s $0.1445] ranking {"rows": [{"id": "c2_best_response", "mean": 0.833, "worst": 0.5, "margin": 1418.1}, {"id": "c3_marginal_greedy", "mean": 0.833, "worst": 0.5, "margin": 1122.0}, {"id": "c1_safe", "mean": 0.333, "wors
+[llm] improve_c2_best_response_0 gpt-6.1-sol completed 121.2s $0.0860 (spent $0.2305)
+[  188.8s $0.2305] llm {"label": "improve_c2_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 121.2, "cost": 0.08603, "spent": 0.23053}
+[  188.9s $0.2305] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  188.9s $0.2305] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  190.0s $0.2305] ranking {"rows": [{"id": "c2_best_response", "mean": 0.766, "worst": 0.5, "margin": 1113.5}, {"id": "c4_improve0", "mean": 0.766, "worst": 0.438, "margin": 894.5}, {"id": "c3_marginal_greedy", "mean": 0.719, 
+[llm] improve_c2_best_response_0 gpt-6.1-sol completed 149.7s $0.1017 (spent $0.3322)
+[  339.7s $0.3322] llm {"label": "improve_c2_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 149.7, "cost": 0.10166, "spent": 0.33218}
+[  342.9s $0.3322] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  342.9s $0.3322] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  401.5s $0.3322] ranking {"rows": [{"id": "c5_improve0", "mean": 0.988, "worst": 0.938, "margin": 1165.9}, {"id": "c4_improve0", "mean": 0.625, "worst": 0.062, "margin": 556.3}, {"id": "c2_best_response", "mean": 0.613, "wors
+[  405.4s $0.3322] promoted {"id": "c5_improve0", "reason": "tournament", "fallback": "c1_safe"}
+[llm] improve_c5_improve0_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3322) worst case $0.1552 > $0.1178 left
+[  405.4s $0.3322] llm {"label": "improve_c5_improve0_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33218}
+[  405.4s $0.3322] improve_round {"round": 3, "added": []}
+[llm] improve_c5_improve0_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3322) worst case $0.1552 > $0.1178 left
+[  405.4s $0.3322] llm {"label": "improve_c5_improve0_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33218}
+[  405.4s $0.3322] improve_round {"round": 4, "added": []}
+[llm] improve_c5_improve0_0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3322) worst case $0.1552 > $0.1178 left
+[  405.4s $0.3322] llm {"label": "improve_c5_improve0_0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.33218}
+[  405.4s $0.3322] improve_round {"round": 5, "added": []}
+[  563.6s $0.3322] polished {"seeds": 11, "matches": 327}
+[  563.6s $0.3322] ranking {"rows": [{"id": "c5_improve0", "mean": 0.958, "worst": 0.857, "margin": 1229.2}, {"id": "c4_improve0", "mean": 0.656, "worst": 0.143, "margin": 635.3}, {"id": "c2_best_response", "mean": 0.614, "wors
+[  566.8s $0.3322] final_probe {"ok": true}
+[  566.8s $0.3322] end {"champion": "c5_improve0", "spent": 0.33218220000000004, "elapsed": 566.751314758}
+strategy written: /w/runs/epsilon-B/20261024-102306-2506/output/strategy.py

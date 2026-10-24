@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792836244.6087017,
+  "wall_s": 563.43,
+  "deadline_s": 600.0,
+  "commit": "2ff8548",
+  "dirty_files": 0,
+  "task_dir": "/w/tasks/beta-B"
+}

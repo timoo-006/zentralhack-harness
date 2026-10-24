@@ -1,0 +1,35 @@
+running /w/tasks/epsilon-B into /w/runs/epsilon-B/20261024-102307-2538 (no Docker)
+[    0.2s $0.0000] fallback_written {}
+[    0.2s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 45.8s $0.0227 (spent $0.0227)
+[   46.0s $0.0227] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 45.8, "cost": 0.02273, "spent": 0.02273}
+[   46.1s $0.0227] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   46.1s $0.0227] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] sim0 gpt-6.1-sol completed 48.0s $0.0530 (spent $0.0758)
+[   48.2s $0.0758] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 48.0, "cost": 0.05302, "spent": 0.07575}
+[   48.3s $0.0758] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 56.5s $0.0295 (spent $0.1052)
+[   56.7s $0.1052] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 56.5, "cost": 0.02948, "spent": 0.10523}
+[   56.8s $0.1052] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   56.9s $0.1052] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_best_response gpt-6.1-sol completed 67.2s $0.0336 (spent $0.1388)
+[   67.4s $0.1388] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 67.2, "cost": 0.03359, "spent": 0.13882}
+[   67.6s $0.1388] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   68.7s $0.1388] ranking {"rows": [{"id": "c3_best_response", "mean": 0.917, "worst": 0.75, "margin": 1558.0}, {"id": "c2_marginal_greedy", "mean": 0.75, "worst": 0.25, "margin": 1127.2}, {"id": "c1_safe", "mean": 0.333, "wor
+[   68.8s $0.1388] promoted {"id": "c3_best_response", "reason": "tournament", "fallback": "c1_safe"}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 117.9s $0.0828 (spent $0.2216)
+[  186.7s $0.2216] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 117.9, "cost": 0.08278, "spent": 0.2216}
+[  188.5s $0.2216] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  188.5s $0.2216] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  208.1s $0.2216] ranking {"rows": [{"id": "c3_best_response", "mean": 0.812, "worst": 0.5, "margin": 1134.0}, {"id": "c4_improve0", "mean": 0.781, "worst": 0.5, "margin": 1174.5}, {"id": "c2_marginal_greedy", "mean": 0.656, "
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 171.4s $0.1071 (spent $0.3287)
+[  379.5s $0.3287] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 171.4, "cost": 0.10708, "spent": 0.32867}
+[  383.5s $0.3287] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  383.5s $0.3287] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  460.6s $0.3287] ranking {"rows": [{"id": "c5_improve0", "mean": 0.975, "worst": 0.875, "margin": 1338.9}, {"id": "c4_improve0", "mean": 0.65, "worst": 0.125, "margin": 707.0}, {"id": "c3_best_response", "mean": 0.65, "worst"
+[  464.3s $0.3287] promoted {"id": "c5_improve0", "reason": "tournament", "fallback": "c1_safe"}
+[  562.2s $0.3287] polished {"seeds": 7, "matches": 210}
+[  562.2s $0.3287] ranking {"rows": [{"id": "c5_improve0", "mean": 0.986, "worst": 0.929, "margin": 1455.1}, {"id": "c3_best_response", "mean": 0.636, "worst": 0.0, "margin": 625.7}, {"id": "c4_improve0", "mean": 0.629, "worst"
+[  565.4s $0.3287] final_probe {"ok": true}
+[  565.4s $0.3287] end {"champion": "c5_improve0", "spent": 0.3286747, "elapsed": 565.3477522160001}
+strategy written: /w/runs/epsilon-B/20261024-102307-2538/output/strategy.py

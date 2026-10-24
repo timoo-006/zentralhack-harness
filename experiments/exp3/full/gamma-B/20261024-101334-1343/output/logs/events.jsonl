@@ -1,0 +1,31 @@
+{"t": 0.22, "event": "fallback_written"}
+{"t": 0.22, "event": "start", "profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "sim_effort": "low", "sim_max_out": 9000, "analysis_model": null, "analysis_effort": "low", "repair_model": "gpt-6.1-sol", "repair_effort": "low", "repair_max_out": 8000, "improve_model": "gpt-6.1-sol", "improve_effort": "medium", "improve_max_out": 10000, "improve_parallel": 1, "call_timeout_s": 300.0, "seeds": 4, "max_sim_repairs": 2, "max_strategy_repairs": 1, "min_improve_s": 130.0, "robust_rank": true, "polish": true, "rescue": true, "ablated": []}, "examples": 2, "obs_keys": ["turn", "n_nodes", "edges", "player_base", "opponent_base", "stock", "stock_max", "regen", "player_units", "opponent_units", "player_profit_last_turn", "opponent_profit_last_turn", "player_cumulative_profit", "opponent_cumulative_profit", "n_invalid_actions_last_turn", "action_format_correct_last_turn"], "deadline_s": 600.0, "budget_usd": 0.5}
+{"t": 38.79, "event": "llm", "label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.6, "cost": 0.02216, "spent": 0.06545}
+{"t": 38.79, "event": "llm", "label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.6, "cost": 0.04329, "spent": 0.06545}
+{"t": 38.82, "event": "candidate", "id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 38.85, "event": "promoted", "id": "c1_safe", "reason": "provisional", "fallback": null}
+{"t": 38.83, "event": "candidate", "id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 38.88, "event": "promoted", "id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+{"t": 40.29, "event": "llm", "label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 40.1, "cost": 0.05052, "spent": 0.11597}
+{"t": 40.49, "event": "sim_checked", "attempt": 0, "repair": 0, "problems": []}
+{"t": 44.17, "event": "llm", "label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 43.9, "cost": 0.05073, "spent": 0.1667}
+{"t": 45.82, "event": "candidate", "id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 66.31, "event": "ranking", "rows": [{"id": "c2_marginal_greedy", "mean": 0.833, "worst": 0.5, "margin": 343.5}, {"id": "c3_best_response", "mean": 0.833, "worst": 0.5, "margin": 211.5}, {"id": "c1_safe", "mean": 0.333, "worst": 0.0, "margin": -62.5}]}
+{"t": 191.95, "event": "llm", "label": "improve_c2_marginal_greedy_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 125.6, "cost": 0.07753, "spent": 0.24423}
+{"t": 193.08, "event": "candidate", "id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 193.08, "event": "improve_round", "round": 1, "added": ["c4_improve0"]}
+{"t": 231.42, "event": "ranking", "rows": [{"id": "c4_improve0", "mean": 0.906, "worst": 0.75, "margin": 279.4}, {"id": "c3_best_response", "mean": 0.688, "worst": 0.25, "margin": 149.1}, {"id": "c2_marginal_greedy", "mean": 0.656, "worst": 0.125, "margin": 248.2}, {"id": "c1_safe", "mean": 0.25, "worst": 0.0, "margin": -139.7}]}
+{"t": 232.89, "event": "promoted", "id": "c4_improve0", "reason": "tournament", "fallback": "c1_safe"}
+{"t": 355.86, "event": "llm", "label": "improve_c4_improve0_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 123.0, "cost": 0.08631, "spent": 0.33055}
+{"t": 358.1, "event": "candidate", "id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 358.1, "event": "improve_round", "round": 2, "added": ["c5_improve0"]}
+{"t": 448.57, "event": "ranking", "rows": [{"id": "c5_improve0", "mean": 0.875, "worst": 0.625, "margin": 237.2}, {"id": "c4_improve0", "mean": 0.8, "worst": 0.375, "margin": 221.4}, {"id": "c3_best_response", "mean": 0.575, "worst": 0.125, "margin": 107.7}, {"id": "c2_marginal_greedy", "mean": 0.55, "worst": 0.125, "margin": 190.2}, {"id": "c1_safe", "mean": 0.2, "worst": 0.0, "margin": -188.8}]}
+{"t": 451.08, "event": "promoted", "id": "c5_improve0", "reason": "tournament", "fallback": "c1_safe"}
+{"t": 451.09, "event": "rescue", "model": "gpt-6.1-sol", "remaining": 0.1195}
+{"t": 500.66, "event": "llm", "label": "improve_c5_improve0_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 49.6, "cost": 0.07184, "spent": 0.40239}
+{"t": 503.05, "event": "candidate", "id": "c6_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 503.05, "event": "improve_round", "round": 3, "added": ["c6_improve0"]}
+{"t": 547.07, "event": "ranking", "rows": [{"id": "c6_improve0", "mean": 0.896, "worst": 0.667, "margin": 169.8}, {"id": "c5_improve0", "mean": 0.785, "worst": 0.333, "margin": 220.2}, {"id": "c4_improve0", "mean": 0.688, "worst": 0.125, "margin": 198.8}, {"id": "c3_best_response", "mean": 0.507, "worst": 0.125, "margin": 97.4}, {"id": "c2_marginal_greedy", "mean": 0.458, "worst": 0.0, "margin": 170.3}, {"id": "c1_safe", "mean": 0.167, "worst": 0.0, "margin": -197.4}]}
+{"t": 549.5, "event": "promoted", "id": "c6_improve0", "reason": "tournament", "fallback": "c1_safe"}
+{"t": 567.73, "event": "final_probe", "ok": true}
+{"t": 567.73, "event": "end", "champion": "c6_improve0", "spent": 0.40238850000000004, "elapsed": 567.7299784669999}

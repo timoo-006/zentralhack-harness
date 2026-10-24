@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792837386.3421547,
+  "wall_s": 566.77,
+  "deadline_s": 600.0,
+  "commit": "2ff8548",
+  "dirty_files": 0,
+  "task_dir": "/w/tasks/epsilon-B"
+}

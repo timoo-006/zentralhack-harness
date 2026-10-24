@@ -1,7 +1,7 @@
 # Tasks: claim one, do it, hand it back
 
 > Work packages anyone (and their Claude Code) can take without stepping on the harness work.
-> Read [`STATUS.md`](STATUS.md) first (5 minutes). Freeze: **today 16:00**.
+> Read [`STATUS.md`](STATUS.md) first (5 minutes). Freeze: **today 15:30** (moved from 16:00).
 
 ## How to claim and hand back
 
@@ -148,5 +148,5 @@ Edit only README.md.
 
 - Is the repository **private**, and is **`nkaslin` invited** (Settings → Access)?
 - How exactly do the organisers want the freeze commit (message, form, time)?
-- At ~15:45 Elias pushes the freeze commit to `main`; send its full hash to the organisers.
+- At ~15:15 Elias pushes the freeze commit to `main`; send its full hash to the organisers.
 - Who presents, and when?
