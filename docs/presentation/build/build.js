@@ -110,11 +110,11 @@ pres.addSection({ title: "Why" });
   // card 3: insight (dark)
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[2], y, w, h, rectRadius: 0.12, fill: { color: INK }, line: { color: INK, width: 0.75 }, shadow: shadow(), objectName: "card insight" });
   s.addText("Our insight", { x: xs[2] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: ORANGE, margin: 0, isTextBox: true });
-  s.addText("Plain code, not the LLM, checks everything it writes.", { x: xs[2] + 0.35, y: y + 2.7, w: w - 0.7, h: 0.8, fontFace: BODY, fontSize: 18, bold: false, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+  s.addText("Everything it writes gets tested by actually running it.", { x: xs[2] + 0.35, y: y + 2.7, w: w - 0.7, h: 0.8, fontFace: BODY, fontSize: 18, bold: false, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
   s.addText("The LLM is the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.95, w: w - 0.7, h: 1.45, fontFace: HEAD, fontSize: 30, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   s.addText("Sources: Zentral Hack 2026 task description; Code World Models for General Game Playing, arXiv 2510.04542.",
     { x: M, y: 6.92, w: 10.5, h: 0.32, fontFace: BODY, fontSize: 10, color: "6B7380", margin: 0, isTextBox: true });
-  s.addNotes("(0:15–0:45) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. And our strategy may not call an LLM during the game anyway: stdlib only, no network. So the LLM is the programmer, not the player, and it never checks its own work: plain code runs everything it writes and keeps only what is proven.");
+  s.addNotes("(0:15–0:45) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. And our strategy may not call an LLM during the game anyway: stdlib only, no network. So the LLM is the programmer, not the player, and we never just ask it whether its code is good: our harness runs everything it writes, in real matches and against the spec’s examples, and keeps only what is proven.");
 }
 
 // ---------------------------------------------------------------- 3 pipeline
