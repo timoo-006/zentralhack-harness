@@ -103,13 +103,20 @@ finish  promote = guard.assemble(champion, fallback=safe candidate), atomic repl
 ```
 
 The profile (how many calls, which model, which effort) is derived from `task.json` (budget,
-deadline, allowed models), never from the task letter:
+deadline, allowed models), never from the task letter. **The tier only picks the plan; the
+spending limit is always the task's own `budget_usd`**, hard-capped at 90% of it ($0.027 for
+A, $0.45 for B, $9 for C): every call reserves its worst case before it is sent and is refused
+if that does not fit. Measured: B runs spend $0.31-0.40, never above $0.45.
 
-| tier | when | drafts | simulator | improvement |
-|------|------|--------|-----------|-------------|
-| tiny (task A) | budget < $0.10 or deadline < 5 min | 3x cheapest @ low | cheapest @ low | 2 parallel @ low, while time lasts |
-| mid (task B) | budget < $1.50 | 3x strongest @ low | strongest @ low | strongest @ medium |
-| large (task C) | otherwise | astra + 2x sol + astra @ low | sol @ medium | 3 parallel per round (astra + 2x sol) |
+| tier | picked when (task.json) | evaluation task | drafts | simulator | improvement |
+|------|-------------------------|-----------------|--------|-----------|-------------|
+| tiny | budget < $0.10 or deadline < 5 min | A ($0.03, 3 min) | 3x cheapest @ low | cheapest @ low | 2 parallel @ low, while time lasts |
+| mid | budget $0.10-1.50 | B ($0.50, 10 min) | 3x strongest @ low | strongest @ low | strongest @ medium, while money lasts |
+| large | budget >= $1.50 | C ($10, 30 min) | astra + 2x sol + astra @ low | sol @ medium | 3 parallel per round (astra + 2x sol) |
+
+After the last LLM call, the time that is left plays more self-play seeds (less noisy
+selection, no money). Self-play uses exactly the delivered file's settings (0.25 s search per
+turn, 0.70 s hard limit), so what wins self-play is what plays in the tournament.
 
 ## What we measured (calibration, beta spec, one-shot strategy, Oct 24)
 

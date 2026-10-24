@@ -29,13 +29,13 @@ from harness.tournament import Tournament
 
 PROMPTS = Path(__file__).with_name("prompts")
 
-# Per-act time the strategies may use for search: low in self-play (many matches on 2 CPUs),
-# higher in the delivered file (1 s limit per act; the guard cuts the core at 0.6 s).
-SELFPLAY_TIME_BUDGET_S = 0.02
+# Self-play runs under the tournament's conditions, so that what wins self-play is exactly
+# what will play: the same search time per act and the same hard limit as the delivered file
+# (arena allows 1.0 s per act including the pipe round trip; a loaded machine needs headroom).
 FINAL_TIME_BUDGET_S = 0.25
-# The delivered file's hard limit per act (arena allows 1.0 s including the pipe round trip;
-# a loaded tournament machine needs headroom).
 FINAL_ACT_LIMIT_S = 0.70
+SELFPLAY_TIME_BUDGET_S = FINAL_TIME_BUDGET_S
+SELFPLAY_ACT_LIMIT_S = FINAL_ACT_LIMIT_S
 
 # A challenger replaces the champion only if its mean per-opponent score is higher by
 # PROMOTE_MARGIN and it does not lose the head-to-head, or if it is higher by CLEAR_MARGIN.
@@ -771,7 +771,8 @@ class Run:
         guarded = self.work / "cands" / f"{cid}.py"
         guarded.write_text(
             guard.assemble(code, strategy_class=SELFPLAY_CLASS, core_class=_core_class(code),
-                           time_budget_s=SELFPLAY_TIME_BUDGET_S),
+                           time_budget_s=SELFPLAY_TIME_BUDGET_S,
+                           act_limit_s=SELFPLAY_ACT_LIMIT_S),
             "utf-8",
         )  # fmt: skip
         self._save_log(f"{cid}.py", code)
