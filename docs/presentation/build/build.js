@@ -78,10 +78,10 @@ pres.addSection({ title: "Why" });
     bold: true, color: ORANGE, charSpacing: 3, margin: 0, isTextBox: true });
   s.addText("Spec in.\nStrategy out.", { x: M, y: 2.0, w: 7.2, h: 2.4, fontFace: HEAD, fontSize: 60, bold: true,
     color: TEXT_L, margin: 0, valign: "top", lineSpacingMultiple: 0.95, isTextBox: true, objectName: "title" });
-  s.addText("An agent harness that writes, verifies and evolves game strategies, for games it has never seen.",
-    { x: M, y: 4.55, w: 6.6, h: 1.0, fontFace: BODY, fontSize: 20, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
-  s.addText("[Team name] · [names]", { x: M, y: 6.75, w: 6, h: 0.35, fontFace: BODY, fontSize: 14, color: FAINT_D, margin: 0, isTextBox: true });
-  s.addNotes("(0:00–0:15) Hi, we are [team]. Our harness gets a game it has never seen, only as a written spec, and has to hand back a strategy that wins. Alone, in a sandbox, on a fixed budget. In three minutes: the idea, how we built it, and what we measured.");
+  s.addText("An agent harness for games it has never seen.",
+    { x: M, y: 4.55, w: 6.6, h: 0.6, fontFace: BODY, fontSize: 20, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+  s.addText("Elias  ·  Isaak  ·  Timo", { x: M, y: 6.6, w: 6, h: 0.45, fontFace: HEAD, fontSize: 18, bold: true, color: MUTED_D, margin: 0, isTextBox: true });
+  s.addNotes("(0:00–0:15) Hi, we are Elias, Isaak and Timo. Our harness gets a game it has never seen, only as a written spec, and has to hand back a strategy that wins. Alone, in a sandbox, on a fixed budget. In three minutes: the idea, how we built it, and what we measured.");
 }
 
 // ---------------------------------------------------------------- 2 insight
@@ -89,31 +89,28 @@ pres.addSection({ title: "Why" });
   const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: "Why" });
   eyebrow(s, "THE TASK · THE INSIGHT", ORANGE_DK);
   s.addText("An unseen game, a fixed budget, only wins count", { placeholder: "title" });
-  const y = 2.05, h = 4.25, w = 3.85, gap = 0.3;
+  const y = 2.35, h = 3.4, w = 3.85, gap = 0.3;
   const xs = [M, M + w + gap, M + 2 * (w + gap)];
   // card 1: the task
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[0], y, w, h, rectRadius: 0.12, fill: { color: CARD }, line: { color: LINE_L, width: 0.75 }, shadow: shadow(), objectName: "card task" });
   s.addText("The task", { x: xs[0] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
-  s.addText("Read a game’s written spec, ship a strategy that wins. Unattended, in a sandbox.", { x: xs[0] + 0.35, y: y + 0.8, w: w - 0.7, h: 0.95, fontFace: BODY, fontSize: 16, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   const tiers = [["A", "$0.03", "3 min"], ["B", "$0.50", "10 min"], ["C", "$10", "30 min"]];
   tiers.forEach(([t, usd, min], i) => {
-    const ty = y + 1.95 + i * 0.52;
-    s.addText(t, { x: xs[0] + 0.35, y: ty, w: 0.45, h: 0.4, fontFace: MONO, fontSize: 16, bold: true, color: ORANGE_DK, margin: 0, isTextBox: true });
-    s.addText(`${usd}  ·  ${min}`, { x: xs[0] + 0.85, y: ty, w: w - 1.2, h: 0.4, fontFace: BODY, fontSize: 18, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
+    const ty = y + 1.05 + i * 0.72;
+    s.addText(t, { x: xs[0] + 0.35, y: ty, w: 0.45, h: 0.4, fontFace: MONO, fontSize: 20, bold: true, color: ORANGE_DK, margin: 0, isTextBox: true });
+    s.addText(`${usd}  ·  ${min}`, { x: xs[0] + 0.85, y: ty, w: w - 1.2, h: 0.45, fontFace: BODY, fontSize: 22, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
   });
-  s.addText("Scored on two unseen games: win +1, draw 0, loss −1.", { x: xs[0] + 0.35, y: y + 3.55, w: w - 0.7, h: 0.5, fontFace: BODY, fontSize: 14, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   // card 2: research
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[1], y, w, h, rectRadius: 0.12, fill: { color: CARD }, line: { color: LINE_L, width: 0.75 }, shadow: shadow(), objectName: "card research" });
   s.addText("What research says", { x: xs[1] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
   s.addText([{ text: "85%", options: { color: BLUE_DK } }, { text: "  vs  ", options: { color: MUTED_L, fontSize: 24 } }, { text: "30%", options: { color: GREY_BAR } }],
     { x: xs[1] + 0.35, y: y + 0.95, w: w - 0.7, h: 0.9, fontFace: HEAD, fontSize: 44, bold: true, margin: 0, isTextBox: true });
-  s.addText("Win rate when the LLM writes a simulator plus search code, versus the LLM playing move by move.", { x: xs[1] + 0.35, y: y + 2.0, w: w - 0.7, h: 1.3, fontFace: BODY, fontSize: 16, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
-  s.addText("Code World Models, Google DeepMind", { x: xs[1] + 0.35, y: y + 3.55, w: w - 0.7, h: 0.5, fontFace: BODY, fontSize: 14, italic: true, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
+  s.addText("LLM writes code  vs.  LLM plays", { x: xs[1] + 0.35, y: y + 2.0, w: w - 0.7, h: 0.5, fontFace: BODY, fontSize: 16, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
+  s.addText("Code World Models, Google DeepMind", { x: xs[1] + 0.35, y: y + 2.75, w: w - 0.7, h: 0.5, fontFace: BODY, fontSize: 14, italic: true, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   // card 3: insight (dark)
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[2], y, w, h, rectRadius: 0.12, fill: { color: INK }, line: { color: INK, width: 0.75 }, shadow: shadow(), objectName: "card insight" });
   s.addText("Our insight", { x: xs[2] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: ORANGE, margin: 0, isTextBox: true });
-  s.addText("Make the LLM the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.9, w: w - 0.7, h: 1.6, fontFace: HEAD, fontSize: 26, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
-  s.addText("And never trust its code before it is verified.", { x: xs[2] + 0.35, y: y + 2.75, w: w - 0.7, h: 1.0, fontFace: BODY, fontSize: 18, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+  s.addText("The LLM is the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.95, w: w - 0.7, h: 2.4, fontFace: HEAD, fontSize: 30, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   s.addText("Sources: Zentral Hack 2026 task description; Code World Models for General Game Playing, arXiv 2510.04542.",
     { x: M, y: 6.92, w: 10.5, h: 0.32, fontFace: BODY, fontSize: 10, color: "6B7380", margin: 0, isTextBox: true });
   s.addNotes("(0:15–0:40) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models show that an LLM writing a simulator and search code wins about 85% of games, against about 30% when it plays move by move. So our insight: the LLM is the programmer, not the player, and nothing it writes is trusted before it is verified.");
@@ -126,31 +123,28 @@ pres.addSection({ title: "How" });
   eyebrow(s, "THE HARNESS", ORANGE);
   s.addText("Many drafts, one verified simulator, one champion", { placeholder: "title" });
   const stages = [
-    ["1", "Write", "3–4 strategy drafts with different personas, and a simulator, in parallel"],
-    ["2", "Verify", "The simulator must reproduce the spec’s worked examples; drafts are probed and repaired"],
-    ["3", "Self-play", "Round robin on the simulator: both seats, many seeds, real time limits"],
-    ["4", "Improve", "The strongest model writes challengers against the champion’s weak spots"],
-    ["5", "Guard", "Hard timer, fallback strategy, output check: a forfeit is impossible"],
+    ["1", "Write", "drafts + a simulator"],
+    ["2", "Verify", "against the spec"],
+    ["3", "Self-play", "real tournament rules"],
+    ["4", "Improve", "challengers vs. champion"],
+    ["5", "Guard", "never a forfeit"],
   ];
-  const y = 2.15, h = 2.55, w = 2.12, arrow = 0.39;
+  const y = 2.95, h = 2.0, w = 2.12, arrow = 0.39;
   stages.forEach(([n, name, desc], i) => {
     const x = M + i * (w + arrow);
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.1, fill: { color: INK2 }, line: { color: i === 4 ? ORANGE : NODE, width: i === 4 ? 1.5 : 0.75 }, objectName: `stage ${name}` });
     s.addText(n, { x: x + 0.2, y: y + 0.22, w: 0.5, h: 0.35, fontFace: MONO, fontSize: 14, bold: true, color: ORANGE, margin: 0, isTextBox: true });
     s.addText(name, { x: x + 0.2, y: y + 0.62, w: w - 0.4, h: 0.45, fontFace: HEAD, fontSize: 20, bold: true, color: TEXT_L, margin: 0, isTextBox: true });
-    s.addText(desc, { x: x + 0.2, y: y + 1.15, w: w - 0.35, h: 1.75, fontFace: BODY, fontSize: 14, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+    s.addText(desc, { x: x + 0.2, y: y + 1.2, w: w - 0.35, h: 0.7, fontFace: BODY, fontSize: 16, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
     if (i < 4) s.addShape(pres.shapes.RIGHT_ARROW, { x: x + w + 0.08, y: y + h / 2 - 0.12, w: arrow - 0.16, h: 0.24, fill: { color: NODE }, line: { color: NODE, width: 0 }, objectName: "arrow" });
   });
   // the loop between self-play and improve
   const x3 = M + 2 * (w + arrow), x4 = M + 3 * (w + arrow);
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x3 + 0.2, y: y + h + 0.22, w: x4 + w - x3 - 0.4, h: 0.42, rectRadius: 0.21, fill: { color: INK }, line: { color: ORANGE, width: 1 }, objectName: "loop" });
   s.addText("↻  repeat while time and money last", { x: x3 + 0.2, y: y + h + 0.22, w: x4 + w - x3 - 0.4, h: 0.42, fontFace: BODY, fontSize: 14, color: ORANGE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  s.addText("spec.md in", { x: M, y: 1.72, w: 2.5, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, margin: 0, isTextBox: true });
-  s.addText("strategy.py out", { x: W - M - 2.5, y: 1.72, w: 2.5, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, align: "right", margin: 0, isTextBox: true });
-  const facts = [
-    ["Budget", "Every call reserves its worst-case cost before it is sent: it cannot overspend."],
-    ["Deadline", "The clock counts from container start; the file on disk is valid at every second."],
-  ];
+  s.addText("spec.md in", { x: M, y: 2.52, w: 2.5, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, margin: 0, isTextBox: true });
+  s.addText("strategy.py out", { x: W - M - 2.5, y: 2.52, w: 2.5, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, align: "right", margin: 0, isTextBox: true });
+  const facts = [];
   facts.forEach(([k, v], i) => {
     const x = M + i * 6.2;
     s.addText([{ text: k + "  ", options: { bold: true, color: TEXT_L } }, { text: v, options: { color: MUTED_D } }],
@@ -164,19 +158,19 @@ pres.addSection({ title: "How" });
   const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: "How" });
   eyebrow(s, "HOW WE BUILT IT", ORANGE_DK);
   s.addText("Built like it works: measure, decide, repeat", { placeholder: "title" });
-  const stats = [["8", "games: 2 dev, 6 our own, 2 of them held out"], ["58", "harness runs, every one measured"], ["≈ $21", "API cost in total"]];
+  const stats = [["8", "games, 2 held out"], ["58", "measured runs"], ["≈ $21", "API cost"]];
   stats.forEach(([big, small], i) => {
     const y = 2.05 + i * 1.5;
     s.addText(big, { x: M, y, w: 3.4, h: 0.75, fontFace: HEAD, fontSize: 40, bold: true, color: ORANGE_DK, margin: 0, isTextBox: true });
     s.addText(small, { x: M, y: y + 0.75, w: 3.4, h: 0.55, fontFace: BODY, fontSize: 14, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   });
   const ex = 4.55, ew = W - M - ex;
-  s.addText("Claude Code as the engineering team: parallel agents wrote and reviewed every module, held to 216 automated tests.",
+  s.addText("Built with Claude Code  ·  216 automated tests",
     { x: ex, y: 2.0, w: ew, h: 0.6, fontFace: BODY, fontSize: 16, color: TEXT_D, margin: 0, valign: "top", isTextBox: true });
   const epochs = [
-    ["EPOCH 1", "Ablation · 24 runs", "Pipeline ≫ one-shot. Improvement rounds: the biggest gain. The sparring draft hurt selection: removed."],
-    ["EPOCH 2", "Tournament conditions · 18 runs", "Self-play now runs with the real time limits. Spare-time seeds and medium-effort improvement: kept."],
-    ["EPOCH 3", "Failure mining · every log", "Two agents mined all runs: 3 defects fixed, 6 ideas queued, each to pass a with/without test."],
+    ["EPOCH 1", "Ablation", "kept only what wins"],
+    ["EPOCH 2", "Tournament conditions", "selection = reality"],
+    ["EPOCH 3", "Failure mining", "3 defects fixed"],
   ];
   epochs.forEach(([tag, title, desc], i) => {
     const y = 2.8 + i * 1.3;
@@ -209,15 +203,14 @@ pres.addSection({ title: "Proof" });
     objectName: "ablation chart",
   });
   const cx = 9.35, cw = W - M - cx;
-  const cards = [["48–0–0", "pipeline vs one-shot, head-to-head on beta (gamma: 46–1–1)"],
-                 ["2 of 3", "games lost by each feature we tried to remove in epoch 2"]];
+  const cards = [["48–0–0", "vs. one-shot, head-to-head"]];
   cards.forEach(([big, small], i) => {
     const y = 2.05 + i * 2.2;
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cx, y, w: cw, h: 1.95, rectRadius: 0.1, fill: { color: CARD }, line: { color: LINE_L, width: 0.75 }, shadow: shadow(), objectName: `callout ${i + 1}` });
     s.addText(big, { x: cx + 0.3, y: y + 0.25, w: cw - 0.6, h: 0.7, fontFace: HEAD, fontSize: 32, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
     s.addText(small, { x: cx + 0.3, y: y + 1.0, w: cw - 0.6, h: 0.8, fontFace: BODY, fontSize: 14, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addText("Net points per strategy (win +1, draw 0, loss −1 per match), summed over 3 games: cross-tournament of the variants, both seats, 6 seeds.",
+  s.addText("Net points, 3 games, +1 / 0 / −1 per match",
     { x: M, y: 6.6, w: 11.4, h: 0.35, fontFace: BODY, fontSize: 11, color: "6B7380", margin: 0, isTextBox: true });
   s.addNotes("(1:45–2:15) This is what the loops told us. Each bar is a variant of our harness in a tournament against the others, scored like the real event. The one-shot baseline, one draft, which is what a typical harness ships, comes last. Without improvement rounds we lose. The sparring draft we believed in made selection worse, so the data removed it. The final pipeline wins: 48 to 0 head-to-head against the one-shot baseline on beta. In epoch 2, every feature we tried to remove again lost on two of three games.");
 }
@@ -227,18 +220,16 @@ pres.addSection({ title: "Proof" });
   const s = pres.addSlide({ masterName: "ACCENT", sectionTitle: "Proof" });
   eyebrow(s, "THE EXAM", "3A2010");
   s.addText("It transfers to games it was never tuned on", { placeholder: "title" });
-  const cols = [["44–1–3", "vs one-shot on a held-out game with hidden demand, random surges and typed units"],
-                ["32–0–16", "on a held-out game with renamed fields and nested-dict actions"],
-                ["53 / 53", "delivered strategies pass the arena conformance check: zero forfeits"]];
+  const cols = [["44–1–3", "held-out game 1"],
+                ["32–0–16", "held-out game 2"],
+                ["53 / 53", "zero forfeits"]];
   const w = 3.85, gap = 0.3;
   cols.forEach(([big, small], i) => {
     const x = M + i * (w + gap);
-    s.addText(big, { x, y: 2.55, w, h: 1.2, fontFace: HEAD, fontSize: 56, bold: true, color: INK, margin: 0, isTextBox: true });
-    s.addShape(pres.shapes.LINE, { x, y: 3.95, w: 1.2, h: 0, line: { color: INK, width: 2 } });
-    s.addText(small, { x, y: 4.2, w: w - 0.2, h: 1.3, fontFace: BODY, fontSize: 18, color: "2A1408", margin: 0, valign: "top", isTextBox: true });
+    s.addText(big, { x, y: 3.0, w, h: 1.2, fontFace: HEAD, fontSize: 56, bold: true, color: INK, margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.LINE, { x, y: 4.4, w: 1.2, h: 0, line: { color: INK, width: 2 } });
+    s.addText(small, { x, y: 4.65, w: w - 0.2, h: 0.6, fontFace: BODY, fontSize: 22, color: "2A1408", margin: 0, valign: "top", isTextBox: true });
   });
-  s.addText("Task C check (sol + astra, 15 min): 100% of matches won against the baselines.",
-    { x: M, y: 6.3, w: 11.5, h: 0.4, fontFace: BODY, fontSize: 14, color: "2A1408", margin: 0, isTextBox: true });
   s.addNotes("(2:15–2:35) The real question is unseen games. Two of our games never touched tuning. On them, the full pipeline beats the one-shot baseline 44 to 1 to 3 and 32 to 0 to 16. And robustness: all 53 strategies from our experiments pass the official conformance check. Zero forfeits.");
 }
 
@@ -254,12 +245,12 @@ pres.addSection({ title: "Proof" });
   s.addText("0 s", { x: x0 - 0.3, y: ay + 0.2, w: 0.6, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, align: "center", margin: 0, isTextBox: true });
   s.addText("deadline 180 s", { x: x1 - 1.8, y: ay + 0.2, w: 1.8, h: 0.3, fontFace: MONO, fontSize: 12, color: FAINT_D, align: "right", margin: 0, isTextBox: true });
   const ev = [
-    [24, "First valid draft takes the lead", true],
-    [35, "Simulator fails a worked example", false],
-    [68, "Repaired simulator passes every check", true],
-    [98, "Self-play ranks 3 drafts, both seats", false],
-    [133, "Improvement round: a challenger joins", true],
-    [141, "Final probe passed: strategy.py out", false],
+    [24, "first draft leads", true],
+    [35, "simulator fails a check", false],
+    [68, "simulator repaired", true],
+    [98, "self-play ranking", false],
+    [133, "a challenger joins", true],
+    [141, "strategy delivered", false],
   ];
   ev.forEach(([t, label, above]) => {
     const cx = X(t);
@@ -269,7 +260,6 @@ pres.addSection({ title: "Proof" });
     s.addText(label, { x: cx - 0.11, y: ly + 0.34, w: 2.35, h: 0.6, fontFace: BODY, fontSize: 14, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   });
   s.addText("Spec in. Strategy out. Never a forfeit.", { x: M, y: 6.05, w: 8.5, h: 0.55, fontFace: HEAD, fontSize: 26, bold: true, color: TEXT_L, margin: 0, isTextBox: true });
-  s.addText("Task A profile in the evaluation’s Docker container: $0.018 of $0.03.", { x: M, y: 6.62, w: 8.5, h: 0.35, fontFace: BODY, fontSize: 14, color: MUTED_D, margin: 0, isTextBox: true });
   s.addNotes("(2:35–3:00) Finally, one real run, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, at 68 it is repaired and passes. Self-play ranks the drafts, an improvement round adds a challenger, and at 141 seconds the champion is delivered, for 1.8 cents. Spec in, strategy out, never a forfeit. Thank you.\n\nLIVE DEMO OPTION: start `./run.sh tasks/beta-A` on a second screen when the pitch begins (about 2.5 minutes, about $0.02); on this slide show its last lines (exit code 0) and `arena check ... PASSED`. If anything goes wrong, this slide is the recorded run.");
 }
 

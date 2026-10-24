@@ -20,7 +20,7 @@
 
 | id | task | paths | owner | state |
 |----|------|-------|-------|-------|
-| T1 | Presentation (3 min pitch) | `docs/presentation/` | Claude (Elias) | done: `pitch.pptx` / `pitch.pdf`; fill in the team name, rehearse |
+| T1 | Presentation (3 min pitch) | `docs/presentation/` | Claude (Elias) | done: `pitch.pptx` / `pitch.pdf`; rehearse |
 | T2 | A fresh exam game nobody has tuned on | `testgames/<new name>/` | | open |
 | T3 | Independent risk review of the harness (read-only) | `docs/review-<name>.md` | | open |
 | T4 | README refresh (the template README describes the old agent) | `README.md` | Claude (Elias) | done |

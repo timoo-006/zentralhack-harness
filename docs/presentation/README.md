@@ -6,7 +6,8 @@
 | `slides.md` | a longer 9-slide draft in Markdown (Marp), kept as a source of extra material |
 | `build/` | the generator: `cd build && npm install && node build.js ../pitch.pptx` |
 
-Before presenting: replace `[Team name] · [names]` on the cover. The PDF is exported from
+Cover: Elias · Isaak · Timo. Slides carry only the core message; the details are in the
+speaker notes (with timings). The PDF is exported from
 PowerPoint (fonts embedded); the PPTX uses Century Gothic, Calibri and Consolas, which ship
 with Office on Windows and macOS.
 
