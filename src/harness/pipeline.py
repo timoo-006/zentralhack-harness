@@ -159,7 +159,7 @@ def make_profile(task: dict, llm: LLM, clock: Clock) -> Profile:
             repair_model=cheap, repair_effort="low", repair_max_out=6000,
             improve_model=strong, improve_effort="low", improve_max_out=6000,
             improve_parallel=2, call_timeout_s=min(90.0, deadline * 0.5), seeds=3,
-            max_sim_repairs=1, max_strategy_repairs=1, min_improve_s=50.0,
+            max_sim_repairs=2, max_strategy_repairs=1, min_improve_s=50.0,
         )  # fmt: skip
     if budget < 1.5:  # cents per call matter: the strong model at low effort, more drafts
         return Profile(
@@ -428,7 +428,8 @@ class Run:
                     with self.lock:
                         self.sim_path = path
                     return
-                if repair == p.max_sim_repairs or self.clock.remaining() < 90:
+                # A repair call (~40 s on the cheapest model) plus a short tournament must fit.
+                if repair == p.max_sim_repairs or self.clock.remaining() < 60:
                     break
                 fix = _read("repair_sim.md").format(code=code, problems=_bullets(problems))
                 r = self.ask(
@@ -655,6 +656,7 @@ class Run:
         best = rows[0][3]
         champ = self.champion.id if self.champion is not None else None
         if best == champ:
+            self.elected = True  # self-play confirmed it: from now on it is the incumbent
             return
         by_id = {i: (m, w) for m, w, _, i in rows}
         if champ in by_id and self.elected:

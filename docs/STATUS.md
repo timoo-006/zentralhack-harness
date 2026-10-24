@@ -61,6 +61,11 @@ Spearman 0.88 (it picks well); 8 of 27 challengers promoted (round 1: 6 of 11; l
   (`Run.elected`).
 - *Task-B call timeout 200 s was too short*: legitimate improvement calls took up to 195 s;
   the one timeout cost $0.15 (a third of the budget) and returned nothing. Now 300 s.
+- *Task A lost its selection when luna's simulator needed two repairs*: one repair was
+  allowed and the next was gated on 90 s left, so 85 s went unused with 3 valid drafts
+  and no tournament. Now 2 repairs and a 60 s gate. Docker check afterwards: repaired
+  simulator, tournament, improvement round, polish; 141/180 s, $0.018, exit 0.
+- Selection logic is covered by `tests/test_selection.py`.
 
 **Open proposals (not measured; only with an ablation on tuning games, rule fixed first):**
 
