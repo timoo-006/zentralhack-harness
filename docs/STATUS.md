@@ -100,7 +100,8 @@ sol call (real cost $0.059-0.072, mostly input) usually does not fit; the epsilo
 from a run where the rescue never fired, so most of the difference is noise. In one run
 (gamma) a rescue candidate became the champion. Risk is bounded: it only acts when a full call
 cannot be made, and its candidate must beat the champion under incumbent protection. No
-effect on A (same effort and cap) or C (money never binds). The remaining lever for B money is
+effect on A (same effort and cap). On C it can act near the end of a run: in the C-lite check
+(13:00) an astra call went out at low effort with $0.81 left instead of being skipped. The remaining lever for B money is
 prompt caching (open proposal 2), not measured.
 
 ## Failure mining of experiment 1 (11:40): applied fixes and open proposals

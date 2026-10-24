@@ -96,6 +96,25 @@ self-play seeds in the time left after the last LLM call (the arm without it los
 three games), and improvement calls at medium rather than low effort (low lost on two of
 three games, tied on the third).
 
+**Experiment 3** (14 task-B runs, incl. the held-out zeta) tested a "budget rescue": task-B
+runs often ended with $0.07-0.14 unspent, because a full improvement call reserves its worst
+case (~$0.15) while it really costs ~$0.09. When a full call no longer fits, the rescue sends
+it at low effort with a smaller token cap. By the decision rule we fixed beforehand it stays
+in (better on one tuning game, tied on one, worse on one; better in total; tied on zeta; all
+14 strategies pass the check, no forfeits, all within budget and deadline), but the effect is
+small: only 3 of 13 rescue attempts fitted, since even a cheap call of the strong model costs
+about $0.06, mostly input.
+
+**Model policy.** Models and efforts follow from `task.json` (budget, deadline, allowed
+models), never from a task name. Task A (cheapest model only): everything at low effort,
+because the deadline binds and the cheap model gets weaker and slower with more effort. Task
+B (cheap + strong): every call goes to the strong model at low effort (drafts, simulator,
+repairs) and medium effort for the improvement rounds, which measurably pay off; the cheap
+model is not used, as its drafts lose. Task C (strong models only): four drafts from both
+models, the simulator and repairs at medium effort, an analysis call and three parallel
+challengers per round, because there time binds before money. A test checks that the cheap
+model never runs above low effort in any profile.
+
 **Held-out exam:** on two of our test games that were never used for tuning, the full pipeline
 beats the one-shot baseline 44-1-3 (theta: hidden demand, random surges, typed units) and
 32-0-16 (zeta: renamed observation fields and a nested-dict action format), and every
