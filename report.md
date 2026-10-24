@@ -91,6 +91,11 @@ gamma). The improvement rounds are the largest single gain. The sparring draft (
 opponent in self-play) did not help and hurt selection on one game, so it was removed. Every
 feature that stayed was measured with and without it.
 
+**Held-out exam:** on two of our test games that were never used for tuning, the full pipeline
+beats the one-shot baseline 44-1-3 (theta: hidden demand, random surges, typed units) and
+32-0-16 (zeta: renamed observation fields and a nested-dict action format), and every
+strategy passes the conformance check.
+
 ## What we would do next
 
 - Opponent-aware search inside the strategy using the verified simulator code.

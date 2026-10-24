@@ -143,6 +143,18 @@ Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improve
 - Mean spend per B run: full $0.34, no improvement $0.14, oneshot $0.03. Several full runs
   ended early because the money ran out, not the time.
 
+## Held-out exam (done, 11:20): does it transfer to untuned games?
+
+zeta and theta were never used for tuning. Task B, 2 runs per arm, commit `aa0297c`:
+
+| game | full vs oneshot (head-to-head, +1/0/-1 matches) | panel vs baselines: full / oneshot |
+|------|------------------------------------------------|-----------------------------------|
+| theta (hidden demand, surges, typed units) | **44-1-3** | 100% / 93% |
+| zeta (renamed fields, nested-dict actions) | **32-0-16** | 94% / 89% |
+
+All 8 strategies pass `arena check`; all runs within budget and deadline. The pipeline's
+advantage over the one-shot baseline holds on games it was not tuned on.
+
 ## How one run works
 
 ```
