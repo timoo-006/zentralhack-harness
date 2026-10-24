@@ -203,7 +203,7 @@ pres.addSection({ title: "Proof" });
     objectName: "ablation chart",
   });
   const cx = 9.35, cw = W - M - cx;
-  const cards = [["48–0–0", "vs. one-shot, head-to-head"]];
+  const cards = [["48–0–0", "wins – draws – losses against the one-shot baseline"]];
   cards.forEach(([big, small], i) => {
     const y = 2.05 + i * 2.2;
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cx, y, w: cw, h: 1.95, rectRadius: 0.1, fill: { color: CARD }, line: { color: LINE_L, width: 0.75 }, shadow: shadow(), objectName: `callout ${i + 1}` });
@@ -222,7 +222,9 @@ pres.addSection({ title: "Proof" });
   s.addText("It transfers to games it was never tuned on", { placeholder: "title" });
   const cols = [["44–1–3", "held-out game 1"],
                 ["32–0–16", "held-out game 2"],
-                ["53 / 53", "zero forfeits"]];
+                ["53 / 53", "strategies passed, zero forfeits"]];
+  s.addText("Wins – draws – losses against the one-shot baseline, on 2 games never used for tuning",
+    { x: M, y: 1.75, w: 11.5, h: 0.45, fontFace: BODY, fontSize: 20, color: "2A1408", margin: 0, isTextBox: true });
   const w = 3.85, gap = 0.3;
   cols.forEach(([big, small], i) => {
     const x = M + i * (w + gap);
@@ -236,7 +238,7 @@ pres.addSection({ title: "Proof" });
 // ---------------------------------------------------------------- 7 demo
 {
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Proof" });
-  eyebrow(s, "DEMO · ONE REAL RUN", ORANGE);
+  eyebrow(s, "DEMO · ONE REAL RUN, FROM SPEC TO STRATEGY.PY", ORANGE);
   s.addText("141 seconds, 1.8 cents, one champion", { placeholder: "title" });
   const x0 = 0.9, x1 = 12.4, ay = 3.7, T = 180, sx = (x1 - x0) / T;
   const X = (t) => x0 + t * sx;
