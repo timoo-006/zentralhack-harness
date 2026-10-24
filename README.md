@@ -1,21 +1,46 @@
 # harness
 
-The starting point for your Zentral Hack 2026 harness. Create your own repository from this
-template (**Use this template** on GitHub) and make it better.
+Our Zentral Hack 2026 harness. Given a game's written specification, it has the LLM write
+**several candidate strategies and a simulator of the game**, verifies both, picks the best
+candidate by **self-play**, improves it with the strongest allowed model while time and money
+last, and delivers it wrapped in a **never-forfeit guard**. A valid `strategy.py` is on disk
+from the first second, and the harness always exits 0.
 
-It is deliberately minimal: one model (always the cheapest allowed one), one tool (`bash`) and
-a loop that stops when the model answers without calling the tool. It reads a game's `spec.md`
-and asks the model to write a strategy. It has no budget management, no retries, no fallback
-strategy, no conformance check, no simulator. Building those (or something better) is the hackathon.
+| read | for |
+|------|-----|
+| [`docs/STATUS.md`](docs/STATUS.md) | **start here**: what is built, what we measured, open decisions, the freeze checklist |
+| [`docs/MAC.md`](docs/MAC.md) | continue on a Mac: setup, running, evaluating |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | the contract of every module in `src/harness/` |
+| [`docs/PLAN.md`](docs/PLAN.md) | why it is built this way |
+| [`scripts/README.md`](scripts/README.md) | the offline measure loop: make tasks, run, evaluate, compare |
+| [`experiments/README.md`](experiments/README.md) | the exported runs behind every decision, and how to re-evaluate them |
+| [`docs/TASK.md`](docs/TASK.md), [`docs/TASKS.md`](docs/TASKS.md) | the official task; open work packages |
 
 ```
 src/harness/
-  __main__.py  # the `harness` command: connects the task and output paths to the agent
-  agent.py     # the agent: model choice, settings, the loop (Responses API), the bash tool
-  pricing.py   # what a call costs, as the evaluation counts it
-  prompt.md    # the system prompt
-run.sh         # run it on a task locally, the way the evaluation does
-Dockerfile     # the sandbox your harness runs in at evaluation time
+  __main__.py     # the `harness` command: paths, SIGTERM handler, t=0 fallback file, exit 0
+  pipeline.py     # one run: profiles from task.json, stages, ablation switches, constants
+  clock.py        # deadline clock, counted from container start
+  budget.py       # worst-case reservation per LLM call, 90% of budget_usd
+  llm.py          # Responses API client: 4 concurrent, retries, transcript, extract_code
+  pricing.py      # what a call costs, as the evaluation counts it
+  specdoc.py      # deterministic spec parse: example observations, observation keys, constants
+  guard.py        # assembles the delivered file: core + fallback, timers, literal check
+  sandbox.py      # probe and match runner for untrusted code (subprocesses, stdlib only)
+  runner_child.py # the stdlib-only child script that sandbox.py starts
+  tournament.py   # incremental round-robin self-play, robust ranking, text report
+  prompts/        # system.md, playbook.md (lessons), simulator.md, strategy.md, repair_*.md,
+                  # improve.md, analysis.md, personas.json
+  agent.py, prompt.md  # the template's one-model agent: unused, kept until cleanup
+tests/            # unit tests per module; tests/fixtures/ has broken strategies and sims
+testgames/        # our own games (gamma, delta, epsilon, zeta, eta, theta): spec, simulator
+                  # and baselines each; zeta and theta are held out (never tuned on)
+scripts/          # dev only: make_tasks.py, run_harness.sh, ablate.sh, evaluate.py, export_runs.py
+experiments/      # exported experiment runs (strategies, events, task.json): the evidence
+docs/             # STATUS, MAC, ARCHITECTURE, PLAN, TASK, TASKS
+tasks/ runs/ runs-exp/  # local and gitignored: tasks, run outputs, experiment outputs
+run.sh            # run it on a task in Docker the way the evaluation does
+Dockerfile        # the sandbox your harness runs in at evaluation time
 .vscode/launch.json  # run or debug it without Docker in VS Code
 ```
 
@@ -63,8 +88,8 @@ More about what goes in and out:
 are enforced**: other models are refused, and once the budget is spent every further call
 fails (spending past it is recorded and may be penalised). **During development nothing
 enforces them**, so develop as if it did: keep to the allowed models and track your spend.
-`harness.pricing.cost(response.usage, task["prices"][model])` gives what a call costs; the
-template's loop already adds it up and prints it.
+`harness.pricing.cost(response.usage, task["prices"][model])` gives what a call costs;
+`harness.budget.Budget` adds it up for every call and the harness logs the spend.
 
 Use the openai SDK as the template does: `OpenAI()` reads the key and endpoint from the
 environment (your own key in development, one for the run at evaluation), so the same code
@@ -99,9 +124,10 @@ uv run arena make-task --game arena_games_dev.alpha --budget-usd 1 --deadline-s 
 ```
 
 `run.sh` builds the image and runs it with the evaluation's mounts, limits and deadline. Only
-the budget is not enforced (see above). Each run gets its own directory; the newest is
-`runs/alpha/latest/`, with the strategy and transcript in `output/` and the container's output
-in `harness.log`.
+the budget is not enforced (see above). It works from Linux, macOS and Git Bash on Windows. Each
+run gets its own directory `runs/alpha/<time>/`; the newest is `runs/alpha/latest/`, with the
+strategy and logs (`logs/events.jsonl`, `transcript.jsonl`, `candidates/`, `tournament.txt`) in
+`output/` and the container's output in `harness.log`.
 
 Then check the strategy and play it against the game's baselines:
 
@@ -127,18 +153,21 @@ For quicker iterations, run the same agent directly on your machine:
 uv run --env-file .env harness tasks/alpha
 ```
 
-It writes into `runs/alpha/<time>/` like `run.sh` (so the commands above work on it too), with
-`output/` and the agent's working directory `work/`; the log goes to your terminal. To step
+It writes into `runs/alpha/<time>-<pid>/` (the pid keeps parallel runs of one task apart; the
+commands above work on it too), with `output/` and the working directory `work/`; the log goes
+to your terminal. `scripts/run_harness.sh tasks/alpha 3` starts several runs in parallel (see
+[`scripts/README.md`](scripts/README.md)). To step
 through it, open this repository in VS Code (with the Python extension), set breakpoints, and
 start **harness (local)** in Run and Debug (F5); it asks for the task directory.
 
 This is not the evaluation's environment, so check with `run.sh` before you rely on it:
 
-- **The model's bash commands run on your machine, as you**, with no container around them:
-  they can read and change anything you can. Watch what it does.
-- No deadline, no CPU or memory limits, and your machine's tools rather than the image's.
-  `python3` is your system's, not the harness's virtualenv (which has arena and the dev games
-  installed; the container has neither).
+- The strategies and simulators the LLM writes run on your machine, as you, in subprocesses
+  with a time limit but no container around them.
+- No CPU or memory limits, and your machine's Python and OS rather than the image's. The
+  deadline clock counts from the process start, not from a container start. The guard's timer
+  and arena's isolated runner need Linux or macOS; on Windows use WSL or Docker for anything
+  real.
 
 ### Updating arena and the dev games
 
@@ -156,9 +185,72 @@ this only affects your local runs. You can also read the installed code offline 
 ## Settings
 
 The evaluation runs `harness` without arguments (`harness TASK_DIR` is only for local runs, see
-above), so there are no command-line options. The settings are constants at the top of
-`src/harness/agent.py`: `REASONING_EFFORT` (`medium`), `MAX_STEPS` (30) and the
-bash tool's limits. The model is chosen there too (`cheapest_model`): always the cheapest of
-the task's `allowed_models`, by input plus output price in `task.json`'s `prices`. Every model
-response, its token usage, the spend so far and the tool results are appended to
-`logs/transcript.jsonl` in the output directory.
+above), so there are no command-line options and no configuration file. What a run does is
+decided by `task.json`, by constants in code and, for development only, by one environment
+variable.
+
+**Profile tiers, derived from `task.json`.** `make_profile` in `src/harness/pipeline.py` picks a
+plan from the task's `budget_usd`, `deadline_s` and `allowed_models`, never from a task name.
+The spending limit is always the task's own budget, hard-capped at 90% of it: every call
+reserves its worst case before it is sent and is refused if that does not fit.
+
+| tier | picked when | typical task | drafts | simulator | improvement rounds |
+|------|-------------|--------------|--------|-----------|--------------------|
+| `tiny` | budget < $0.10 or deadline < 300 s | A ($0.03, 3 min) | 3x strongest @ low | cheapest @ low | 2 parallel @ low |
+| `mid` | budget < $1.50 | B ($0.50, 10 min) | 3x strongest @ low | strongest @ low | strongest @ medium, one at a time |
+| `large` | budget >= $1.50 | C ($10, 30 min) | 4: strongest, cheapest, cheapest, strongest @ low | cheapest @ medium | 3 parallel @ medium, after an analysis call |
+
+"Cheapest" and "strongest" are the least and most expensive of `allowed_models`. The numbers
+behind these choices are in [`docs/STATUS.md`](docs/STATUS.md).
+
+**Development switches: `HARNESS_ABLATE`.** A comma-separated list that switches features off
+(`improve_low` changes one), so each feature is kept only on measured evidence. The evaluation
+sets no such variable, so it always runs the full harness. Unknown names are ignored.
+
+```bash
+HARNESS_ABLATE=oneshot uv run --env-file .env harness tasks/beta-B
+```
+
+| switch | effect |
+|--------|--------|
+| `sparring` | no cheap naive draft in self-play (this is already the default) |
+| `improve` | no improvement rounds |
+| `selfplay` | no simulator, so no self-play and no improvement: the first valid draft wins |
+| `repair` | no repair calls for strategies or simulators |
+| `analysis` | no strategic analysis call (only the `large` tier makes one) |
+| `robust_rank` | rank by raw standings: no per-opponent ranking, no incumbent protection |
+| `oneshot` | baseline: one draft, no simulator, no repair; the guard stays on |
+| `polish` | no extra self-play seeds in the time left after the last LLM call |
+| `improve_low` | variant: improvement calls at low effort (cheaper, more rounds) |
+
+`scripts/ablate.sh` runs whole experiments over these switches.
+
+**Constants at the top of `pipeline.py`.**
+
+| constant | value | meaning |
+|----------|-------|---------|
+| `FINAL_TIME_BUDGET_S` | 0.25 | search time per `act` in the delivered file (the strategy's `TIME_BUDGET`) |
+| `FINAL_ACT_LIMIT_S` | 0.70 | hard limit per `act` in the delivered file (arena allows 1.0 s) |
+| `SELFPLAY_TIME_BUDGET_S`, `SELFPLAY_ACT_LIMIT_S` | same two | self-play uses the delivered file's settings |
+| `PROMOTE_MARGIN` | 0.03 | a challenger needs this much more mean per-opponent score and must not lose the head-to-head |
+| `CLEAR_MARGIN` | 0.12 | ... or this much more, whatever the head-to-head says |
+| `MAX_POLISH_SEEDS` | 24 | cap on the extra self-play seeds from leftover time |
+| `SPARRING_PERSONA` | `sparring_naive` | persona of the optional naive sparring draft |
+| `SELFPLAY_CLASS` | `Strategy` | class name of internal self-play files; only the delivered file uses `strategy_class` |
+
+The rest are fields of `Profile`, filled in by `make_profile`: models, efforts, token caps,
+parallel calls, seeds, repair counts, and the flags `polish`, `robust_rank` and `sparring`.
+
+**Where the logs go.** In the container `/output/logs/`; locally
+`runs/<task>/<time>-<pid>/output/logs/`:
+
+| file | content |
+|------|---------|
+| `events.jsonl` | every pipeline decision, with time and spend (start, stages, promotions, errors) |
+| `transcript.jsonl` | every LLM call: model, effort, status, usage, cost, spend so far, input and output |
+| `candidates/` | all generated strategy and simulator sources, by id |
+| `tournament.txt` | the last self-play report |
+
+`harness.log` next to `output/` holds the container's (or, with `run_harness.sh`, the
+process's) output. Evaluate runs with `scripts/evaluate.py`, see
+[`scripts/README.md`](scripts/README.md).

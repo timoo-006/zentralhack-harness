@@ -41,7 +41,9 @@ from pathlib import Path
 from make_tasks import GAMES, REPO
 
 RUN_NAME = re.compile(r"^\d{8}-\d{6}$")  # runs/<task>/<YYYYmmdd-HHMMSS>/
-LINUX = sys.platform.startswith("linux")
+# Isolated play (arena: process groups, signals, rlimits) needs POSIX: Linux and macOS.
+# Elsewhere (Windows) the script re-runs itself in WSL with --wsl, or plays in-process.
+LINUX = os.name == "posix"
 WSL_PY = "/root/venv-harness/bin/python"
 
 

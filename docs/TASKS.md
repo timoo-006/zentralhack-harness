@@ -20,10 +20,10 @@
 
 | id | task | paths | owner | state |
 |----|------|-------|-------|-------|
-| T1 | Presentation (5-7 min) | `docs/presentation/` | | open |
+| T1 | Presentation (5-7 min) | `docs/presentation/` | Claude (Elias) | draft in progress: review and present it |
 | T2 | A fresh exam game nobody has tuned on | `testgames/<new name>/` | | open |
 | T3 | Independent risk review of the harness (read-only) | `docs/review-<name>.md` | | open |
-| T4 | README refresh (the template README describes the old agent) | `README.md` | | open |
+| T4 | README refresh (the template README describes the old agent) | `README.md` | Claude (Elias) | in progress |
 | T5 | Freeze logistics with the organisers | (no files) | | open |
 
 ---
