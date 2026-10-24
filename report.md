@@ -54,13 +54,42 @@ finish  final probe of the delivered file; atomic replace only after checks pass
   The mid model at low effort writes strategies as strong as at medium effort for half
   the cost, so the mid budget buys more candidates and improvement rounds instead.
 - **Lessons file.** Nothing persists between evaluation runs, so "learning across games"
-  happens offline: we ran the harness on the dev games and on our own test games with
+  happens offline: we ran the harness on the dev games and on six test games of our own with
   different mechanics (`testgames/`), and distilled what made strategies lose into
   `src/harness/prompts/playbook.md`, which every call carries.
+- **Against overfitting.** We tune on six games and only measure on two held-out ones. In a
+  run, every opponent weighs the same in the ranking, the worst pairing breaks ties, and a
+  challenger must beat the champion by a margin. Self-play runs with exactly the delivered
+  file's time settings, so what wins self-play is what plays in the tournament.
 
 ## Measurements
 
-(filled in from `runs/eval_log.jsonl`)
+All numbers from our own runs (details and raw tables: `docs/STATUS.md`).
+
+**Calibration** (one-shot strategy from the beta spec, then a round robin with beta's
+baselines): the cheapest model is fast but weak, and at high effort it reasoned past a 40k
+token cap without answering. The mid model at low effort (49 s, $0.04) was as strong as at
+medium effort and as the priciest model (104 vs 104 vs 106 wins of 128). So the profiles buy
+more drafts and improvement rounds, not more effort per draft.
+
+**End to end:** in Docker, exactly like the evaluation, a task-A run finishes in 155 of 180 s
+for $0.020, and its luna-only strategy goes 39-1-8 against beta's four baselines. Task-B runs
+take 300-560 s and spend $0.31-0.40 of $0.50.
+
+**Ablation (experiment 1, 24 task-B runs on three games, one feature switched off per arm):**
+cross-tournament of the arms' strategies, +1/0/-1 per match like the official scoring.
+
+| arm | beta | gamma | epsilon | total (net per strategy) |
+|-----|-----:|------:|--------:|------:|
+| full pipeline | +48.0 | +32.5 | -17.0 | +63.5 |
+| without sparring draft | +48.0 | +28.5 | +36.5 | **+113** |
+| without improvement rounds | -48.5 | -14.5 | +2.0 | -61 |
+| one-shot baseline (one draft + guard) | -47.5 | -46.5 | -21.5 | -115.5 |
+
+The pipeline beats the one-shot baseline in almost every match (48-0-0 on beta, 46-1-1 on
+gamma). The improvement rounds are the largest single gain. The sparring draft (a cheap naive
+opponent in self-play) did not help and hurt selection on one game, so it was removed. Every
+feature that stayed was measured with and without it.
 
 ## What we would do next
 
