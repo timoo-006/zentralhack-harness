@@ -6,7 +6,8 @@ Read this file fully before changing anything.
 ## Read first
 
 0. [`docs/STATUS.md`](docs/STATUS.md): what is built, what we measured, money rules, next
-   steps. Keep it current when something lands.
+   steps. Keep it current when something lands. Claimable work packages, with the paths
+   each may touch: [`docs/TASKS.md`](docs/TASKS.md).
 1. [`docs/TASK.md`](docs/TASK.md): the official hackathon task (evaluation tasks, scoring,
    deliverables).
 2. [`docs/PLAN.md`](docs/PLAN.md): our design and milestones. Follow it, and update its status

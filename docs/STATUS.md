@@ -15,6 +15,11 @@
   experiment 1). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
+## Want to help? → [`TASKS.md`](TASKS.md)
+
+Claimable work packages (presentation, a fresh exam game, a read-only risk review, README,
+freeze logistics), each with its own paths and a ready-to-paste prompt for Claude Code.
+
 ## Branches
 
 - **`main` = the harness** (fast-forwarded from `feat/harness-v1` at 10:45; the planned
