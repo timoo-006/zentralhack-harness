@@ -264,8 +264,8 @@ How to set up, run and measure is in [`DEVELOPING.md`](DEVELOPING.md). The metho
 ## 11 Background research
 
 - **Code World Models for General Game Playing** (DeepMind, ICLR 2026): the LLM writes the
-  simulator plus value and inference functions, MCTS plays; ~85% win rate vs ~30% for the LLM
-  as a policy. <https://arxiv.org/abs/2510.04542>
+  simulator plus value and inference functions, MCTS plays; per the abstract it outperforms or
+  matches Gemini 2.5 Pro in 9 of the 10 games considered. <https://arxiv.org/abs/2510.04542>
 - **GIF-MCTS** (NeurIPS 2024): generate, improve and fix code world models against
   trajectories; code is public. <https://arxiv.org/abs/2405.15383>
 - **Agents of Change / HexMachina** (Catan): separate environment discovery from strategy

@@ -72,10 +72,12 @@ token cap without answering. The mid model at low effort (49 s, $0.04) was as st
 medium effort and as the priciest model (104 vs 104 vs 106 wins of 128). So the profiles buy
 more drafts and improvement rounds, not more effort per draft.
 
-**End to end:** in Docker, exactly like the evaluation, a task-A run finishes in 155 of 180 s
-for $0.020, and its luna-only strategy goes 39-1-8 against beta's four baselines. Task-B runs
-take 300-575 s and spend $0.31-0.40 of $0.50; a C-lite run ($2, 900 s) takes 865 s for $1.18.
-All five Docker checks run today (A, B, C-lite) exit 0 and pass the conformance check.
+**End to end:** a task-A run finishes in 146 of 180 s for $0.017, and its luna-only strategy
+goes 39-1-8 against beta's four baselines; in Docker, exactly like the evaluation, task A takes
+141-155 s for $0.014-0.020. Task-B runs take 300-580 s and spend $0.31-0.40 of $0.50; a C-lite
+run ($2, 900 s) takes 865 s for $1.18, and a real task-C run of the final code in Docker ($10,
+1800 s) takes 1761 s for $1.69. Every Docker run today (A, B, C-lite, C) exits 0 and its
+strategy passes the conformance check.
 
 **Midpoint evaluation by the organisers** (task B, beta and a hidden game h1, four teams, five
 runs each): we placed second of four. All ten of our runs were valid and stayed within budget

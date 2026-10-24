@@ -34,8 +34,9 @@
 | B | delta (with the fix) | 560 / 600 s | $0.393 | PASS | 21-0-3; 44-1-15 vs the pre-fix runs |
 | C-lite | beta | 865 / 900 s | $1.181 | PASS | 32-0-0 |
 
-- **Money:** about $37 of the team's ~150 CHF spent (today's experiments about $16). At the
-  evaluation the organisers pay.
+- **Money:** about $45 of the team's ~150 CHF spent (logged runs $34.9 + calibration $0.8,
+  plus runs whose logs are not on one machine: the teammate's Docker runs and the last task-C
+  runs). At the evaluation the organisers pay.
 
 ## Freeze checklist (by 15:15)
 
@@ -97,6 +98,11 @@ Everything below was checked on raw data by independent agents (Opus, xhigh), re
   `fd424dd` bounds** (hard exit at deadline - 4 s, tested: hanging pipeline, SIGTERM, PID-1
   clock). Known limit: a C call holding the GIL blocks both watchdog and SIGTERM (not in our
   code paths).
+- **Real task C of the merged code in Docker** ($10, 1800 s): 1761 s, $1.69, simulator
+  repaired, two improvement rounds (the round-2 challenger wins every pairing), conformance
+  PASS. The same check on the old code (`4f49004`) shows why the simulator fix matters: there
+  delta-B and theta-B rejected correct simulators, had no self-play and shipped their first
+  draft (0-12 against a delta baseline); the fixed delta run beats those strategies 52-1-7.
 - **Data hygiene**: all 198 experiment runs sit in the arm whose settings they logged (0
   misfiled; a run-folder race in `ablate.sh` only left one run unmoved, fixed by hand).
 - **Decision**: no code change; the freeze is `fd424dd` + docs, games and evidence, after
