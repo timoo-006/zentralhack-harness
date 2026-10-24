@@ -76,6 +76,13 @@ def install_sigterm_handler(on_term: Callable[[], None], *, timeout_s: float = 1
     # timeout_s for it (the signal can interrupt the main thread while it holds a lock that
     # on_term needs), flush stdout/stderr, then os._exit(0). A second SIGTERM while on_term
     # runs is ignored. A no-op off the main thread or where SIGTERM cannot be handled.
+
+def start_watchdog(clock: Clock, *, lead_s: float = 4.0, exit=os._exit) -> threading.Timer
+    # Hard stop: a daemon timer calls exit(0) lead_s before the deadline (hard_remaining()),
+    # whatever the run is doing. The stages stop by themselves margin_s (12 s) earlier; this
+    # is the backstop for anything that blocks (a timeout is an invalid run at evaluation).
+    # Safe because the strategy file is valid at every moment. __main__ starts it right after
+    # the t=0 fallback file and the SIGTERM handler.
 ```
 
 `__main__` imports `clock` before the heavy imports, so the age is measured as early as

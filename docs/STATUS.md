@@ -12,18 +12,24 @@
   simulator, verifies both, selects by self-play, improves the champion, and delivers it
   wrapped in a never-forfeit guard. Models and efforts follow from `task.json` (README,
   "Settings"); the spending limit is always 90% of the task's `budget_usd`.
-- **Since the midpoint evaluation** (commit `793a5b5`), `main` changed in three ways:
+- **Since the midpoint evaluation** (commit `793a5b5`), `main` changed in four ways:
   1. **simulator-check fix** (14:00, the only change with clear evidence): correct simulators
      of games with hidden information were rejected, so those runs had no self-play;
   2. **budget rescue** (experiment 3, adopted by its rule, weak evidence);
-  3. cleanup with no change in play (template agent and sparring code removed, macOS fixes).
+  3. **deadline watchdog** (14:20): a hard exit with code 0 four seconds before the deadline,
+     whatever the run is doing (a timeout is an invalid run; the strategy file is always
+     valid). Proof: a pipeline that hangs forever exits at 16 s of a 20 s deadline, code 0.
+     The cost limit was hard already: one API call site, worst case reserved first, 90% of
+     `budget_usd`; in 297 calls the real input was at most 0.87x the estimate;
+  4. cleanup with no change in play (template agent and sparring code removed, macOS fixes).
   Rejected and removed again: game plan first and five drafts (experiment 4).
-- **Tests:** 385/385 on Linux (Docker), 374 pass + 10 skip on macOS.
+- **Tests:** 387/387 on Linux (Docker), 377 pass + 10 skip on macOS.
 - **Docker runs of today's code** (like the evaluation):
 
 | task | game | wall | spend | check | vs baselines |
 |---|---|---:|---:|---|---|
 | A | delta (with the fix) | 146 / 180 s | $0.024 | PASS | 16-0-8 |
+| A | delta (with the watchdog) | 138 / 180 s | $0.022 | PASS | 15-0-9 (watchdog did not fire) |
 | B | beta | 575 / 600 s | $0.340 | PASS | 32-0-0 |
 | B | delta (with the fix) | 560 / 600 s | $0.393 | PASS | 21-0-3; 44-1-15 vs the pre-fix runs |
 | C-lite | beta | 865 / 900 s | $1.181 | PASS | 32-0-0 |
