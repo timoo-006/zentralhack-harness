@@ -55,6 +55,21 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 - Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
   (`ruff format .` would otherwise rewrite the prompts' code blocks).
 
+## Experiment 4 (running, 13:05): game plan first, more drafts
+
+Midpoint report (B, beta + hidden h1): our best h1 strategy was the best of the whole field
+(94.8%), but 2 of our 5 h1 runs were weak (29%, 38%): the problem is variance between runs.
+Two variants on branch `exp/plan-drafts`, each against `main` (`full`):
+`plan` (the strong model writes a game plan with `analysis.md` at medium effort first, the
+drafts wait for it, at most 150 s, and are written from it) and `drafts5` (5 drafts, not 3).
+Task B, all 8 games x 1 run per arm (24 runs, about $9).
+
+Decision rule (fixed before the runs): a variant replaces `main` only if (1) zero check
+failures and forfeits, (2) cross-tournament net per strategy >= `full` on at least 4 of the 6
+tuning games and in total over them, (3) held-out zeta + theta together not worse, (4) all
+runs within budget and deadline. If both pass, the higher tuning total wins (the combination
+is not measured, so not adopted). A tie keeps `main`.
+
 ## Experiment 3 (done, 12:50): budget rescue (open proposal 1) -> adopted, weak evidence
 
 When nothing is in flight and the money left no longer covers a full improvement call, send it
