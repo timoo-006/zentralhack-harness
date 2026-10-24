@@ -1,7 +1,7 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`feat/harness-v1`** (not yet merged into `main`). Last update: Sat 24 Oct, ~09:45.
+> **`feat/harness-v1`** (not yet merged into `main`). Last update: Sat 24 Oct, ~10:40.
 > Freeze: **today 16:00**.
 
 ## TL;DR
@@ -12,7 +12,9 @@
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$0.80 spent so far (calibration). Rules below.
+- **OpenAI money:** we have ~150 CHF in total. ~$6.60 spent so far (calibration, first runs,
+  experiment 1). Rules below.
+- **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
 ## Branches, and how we pick the freeze
 
@@ -34,22 +36,60 @@
 
 | part | files | state |
 |------|-------|-------|
-| entry point, SIGTERM, t=0 fallback | `src/harness/__main__.py` | written |
-| pipeline + task profiles | `src/harness/pipeline.py` | written, not yet run end-to-end |
-| deadline clock (counts from container start) | `src/harness/clock.py` | being built + reviewed |
-| budget (worst-case reservation per call) | `src/harness/budget.py` | being built + reviewed |
-| LLM client (4 concurrent, retries, transcript) | `src/harness/llm.py` | being built + reviewed |
-| spec parser (example observations, schema) | `src/harness/specdoc.py` | being built + reviewed |
-| never-forfeit guard (assembles the final file) | `src/harness/guard.py` | being built + reviewed |
-| sandbox + match runner (subprocess, stdlib only) | `src/harness/sandbox.py`, `runner_child.py` | being built + reviewed |
-| self-play tournament (incremental, win rate) | `src/harness/tournament.py` | being built + reviewed |
-| prompts + playbook (the "lessons file") | `src/harness/prompts/*` | written, under review |
-| our own test games (6, different mechanics) | `testgames/{gamma,delta,epsilon,zeta,eta,theta}` | being built + verified |
-| dev tooling (make tasks, run, evaluate) | `scripts/*` | being built |
+| entry point, SIGTERM, t=0 fallback | `src/harness/__main__.py` | done, runs in Docker |
+| pipeline + task profiles + ablation switches | `src/harness/pipeline.py` | done, tuned on first runs |
+| deadline clock (counts from container start) | `src/harness/clock.py` | done + reviewed (7 fixes) |
+| budget (worst-case reservation per call) | `src/harness/budget.py` | done + reviewed |
+| LLM client (4 concurrent, retries, transcript) | `src/harness/llm.py` | done + reviewed |
+| spec parser (example observations, schema) | `src/harness/specdoc.py` | done + reviewed (5 fixes) |
+| never-forfeit guard (assembles the final file) | `src/harness/guard.py` | done + reviewed (8 fixes) |
+| sandbox + match runner (subprocess, stdlib only) | `src/harness/sandbox.py`, `runner_child.py` | done + reviewed |
+| self-play tournament (incremental, robust ranking) | `src/harness/tournament.py` | done + reviewed |
+| prompts + playbook (the "lessons file") | `src/harness/prompts/*` | done + reviewed |
+| our own test games (6, different mechanics) | `testgames/{gamma,delta,epsilon,zeta,eta,theta}` | done, each verified by an independent simulator |
+| dev tooling (make tasks, run, evaluate, ablate) | `scripts/*` | done + reviewed (9 fixes) |
 | report (deliverable) | `report.md` | draft |
+
+Tests: 199/199 on Linux (WSL), incl. real `arena check` (isolated) of deliberately broken
+strategies (raise, sleep, infinite loop, numpy import, print flood, non-literal output).
 
 The template's `agent.py` / `prompt.md` (one model, one bash tool) are replaced by the
 pipeline and will be removed at integration.
+
+## First results
+
+| run | where | time | spend | outcome |
+|-----|-------|-----:|------:|---------|
+| beta-A | WSL | 146 / 180 s | $0.017 / 0.03 | simulator OK first try; check PASS; **39-1-8 vs beta's 4 baselines** |
+| beta-A | **Docker** (like the evaluation) | 155 / 180 s | $0.020 / 0.03 | exit 0; simulator repaired once from its failed selftest |
+| beta-B | WSL | 530 / 600 s | $0.33 / 0.50 | best_response won self-play (0.94); first challenger won every pairing (1.00) and was promoted |
+
+Fixed from these runs: a float residue in the budget made a run sit idle for ~285 s; token
+caps were 3-5x the real output (blocked parallel calls); the sparring draft was repaired
+with the expensive model.
+
+## Experiment 1: is each feature worth it? (done, 10:35)
+
+Same tasks, same commit (`61610da`), one feature switched off per arm (`HARNESS_ABLATE`),
+task profile B, 2 runs per arm and game, 24 runs, $5.31 in total. Cross-tournament between the
+arms' strategies (+1/0/-1 per match, both seats, 6 seeds, an arm never meets itself):
+
+| game | full | no sparring | no improvement | oneshot (baseline) |
+|------|-----:|------------:|---------------:|-------------------:|
+| beta (net per strategy) | **+48.0** | **+48.0** | -48.5 | -47.5 |
+| gamma (net per strategy) | **+32.5** | +28.5 | -14.5 | -46.5 |
+| epsilon | (evaluator did not know the new test games yet: being re-run) | | | |
+
+Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improvement
+**48-0-0**, **30-6-12**; no sparring 24-0-24, 24-2-22.
+
+- **The pipeline is worth it**: against the one-shot baseline (one sol draft + guard, what a
+  typical team ships) it wins almost every match.
+- **Improvement rounds are worth it**: they are the biggest single gain.
+- **The sparring draft has no measurable effect** (also not against the baselines: gamma
+  94% vs 97%). Decision pending the epsilon numbers.
+- Mean spend per B run: full $0.34, no improvement $0.14, oneshot $0.03. Several full runs
+  ended early because the money ran out, not the time.
 
 ## How one run works
 
