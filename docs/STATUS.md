@@ -14,6 +14,22 @@
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
 - **OpenAI money:** we have ~150 CHF in total. ~$0.80 spent so far (calibration). Rules below.
 
+## Branches, and how we pick the freeze
+
+- **`main`**: yours, use it however you like.
+- **`feat/harness-v1`**: the pipeline harness described here, developed separately.
+- **~15:00 shoot-out.** Every contender runs on the same tasks, and the results decide what
+  goes into `main`:
+  1. `scripts/make_tasks.py` (same task dirs for everyone: beta-B, alpha-B, two test games,
+     beta-A), 3 runs per harness per task (`scripts/run_harness.sh TASK N`).
+  2. `arena check` on every produced strategy: **any forfeit disqualifies a harness**.
+  3. `scripts/evaluate.py --cross --group v1='runs/...' --group main='runs/...'`:
+     cross-tournament between the two harnesses' strategies, scored +1/0/-1 like the
+     official rules. Same-harness pairings are excluded, as at the evaluation.
+  4. The winner is merged into `main` (or `main` is reset to it). The freeze commit is
+     pushed by 15:45 and sent to the organisers.
+- Ideas from the losing side can still be ported if there is time (e.g. prompts).
+
 ## What is built (and by whom)
 
 | part | files | state |

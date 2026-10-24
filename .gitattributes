@@ -1,0 +1,4 @@
+# Keep LF everywhere: run.sh and scripts/*.sh must run in WSL and in the Linux container.
+* text=auto eol=lf
+*.png binary
+*.pdf binary
