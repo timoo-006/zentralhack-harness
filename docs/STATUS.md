@@ -55,6 +55,17 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 - Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
   (`ruff format .` would otherwise rewrite the prompts' code blocks).
 
+## Experiment 3 (running, 12:05): budget rescue (open proposal 1)
+
+Branch `exp/budget-rescue`: when nothing is in flight and the money left no longer covers a
+full improvement call, send it at low effort with the drafts' token cap. Arms: `full` (rescue
+on) vs `rescue` (`HARNESS_ABLATE=rescue`: off, = `main`). Task B; beta, gamma, epsilon x 2 runs
+per arm; held-out zeta x 1 run per arm. Budget about $5.40.
+
+Decision rule (fixed before the runs): adopt only if (1) zero `arena check` failures and zero
+forfeits, (2) cross-tournament net >= the off arm on at least 2 of the 3 tuning games and in
+total, (3) zeta not worse, (4) every run within budget and deadline. A tie keeps `main`.
+
 ## Failure mining of experiment 1 (11:40): applied fixes and open proposals
 
 Two read-only agents analysed all experiment-1 logs (tuning games only) and replayed every
