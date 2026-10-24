@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "description": "Builds docs/presentation/pitch.pptx",
+  "dependencies": { "pptxgenjs": "3.12.0" }
+}
