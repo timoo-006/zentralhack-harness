@@ -1,13 +1,12 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`feat/harness-v1`** (not yet merged into `main`). Last update: Sat 24 Oct, ~10:40.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~10:40.
 > Freeze: **today 16:00**.
 
 ## TL;DR
 
-- `main` = the template + Timo's docs (`TASK.md`, `PLAN.md`, `AGENTS.md`). No harness code.
-- `feat/harness-v1` = the harness built on Timo's `PLAN.md`: a deterministic pipeline that
+- `main` = the harness, built on Timo's `PLAN.md`: a deterministic pipeline that
   has the LLM write **several strategies + a simulator**, verifies both, picks the winner by
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
@@ -16,21 +15,15 @@
   experiment 1). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
-## Branches, and how we pick the freeze
+## Branches
 
-- **`main`**: yours, use it however you like.
-- **`feat/harness-v1`**: the pipeline harness described here, developed separately.
-- **~15:00 shoot-out.** Every contender runs on the same tasks, and the results decide what
-  goes into `main`:
-  1. `scripts/make_tasks.py` (same task dirs for everyone: beta-B, alpha-B, two test games,
-     beta-A), 3 runs per harness per task (`scripts/run_harness.sh TASK N`).
-  2. `arena check` on every produced strategy: **any forfeit disqualifies a harness**.
-  3. `scripts/evaluate.py --cross --group v1='runs/...' --group main='runs/...'`:
-     cross-tournament between the two harnesses' strategies, scored +1/0/-1 like the
-     official rules. Same-harness pairings are excluded, as at the evaluation.
-  4. The winner is merged into `main` (or `main` is reset to it). The freeze commit is
-     pushed by 15:45 and sent to the organisers.
-- Ideas from the losing side can still be ported if there is time (e.g. prompts).
+- **`main` = the harness** (fast-forwarded from `feat/harness-v1` at 10:45; the planned
+  shoot-out is not needed: nothing else was built on `main`).
+- Development continues on **`feat/harness-v1`**; `main` is fast-forwarded to it at each
+  checkpoint (always a tested, committed state). The freeze commit will be on `main`.
+- **Teammates:** `git pull` on `main`, put documents and the presentation under `docs/`
+  (or `presentation/`), commit and push to `main` as usual. Please do not edit
+  `src/harness/`, `tests/` or `scripts/` without telling us: those are tested together.
 
 ## What is built (and by whom)
 
