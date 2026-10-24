@@ -38,9 +38,12 @@
 2. Tell Elias, then `git push origin main`; `git rev-parse HEAD` is the freeze hash: send the
    full hash to the organisers.
 3. The organiser account `nkaslin` needs access to the repository (GitHub: Settings, Access).
-4. `report.md` is the written deliverable; the presentation draft is
-   `docs/presentation/slides.md` (9 slides, about 6 minutes): decide who presents.
-5. Not done, and not for the freeze: a fresh exam game nobody tuned on (`testgames/<new>/`)
+4. `report.md` is the written deliverable. The talk is Elias's 3-minute pitch,
+   `docs/presentation/pitch.pptx` / `pitch.pdf` (7 slides, speaker notes): rehearse, decide
+   who presents. `slides.md` (9 slides) is the longer draft with today's results.
+5. Check that the repository is private and how the organisers want the freeze commit
+   (message, form, time).
+6. Not done, and not for the freeze: a fresh exam game nobody tuned on (`testgames/<new>/`)
    and an independent read-only risk review (`docs/review-<name>.md`).
 
 ## Midpoint evaluation (organisers, 10:39 UTC): what it says
