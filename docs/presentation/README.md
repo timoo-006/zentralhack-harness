@@ -11,7 +11,7 @@ speaker notes (with timings). The PDF is exported from
 PowerPoint (fonts embedded); the PPTX uses Century Gothic, Calibri and Consolas, which ship
 with Office on Windows and macOS.
 
-**Demo (3 minutes total, so no live wait):** slide 7 shows a real recorded run. Optional live
+**Closing slide:** a real recorded run (no live demo). The former optional live
 version: start `./run.sh tasks/beta-A` on a second screen when the pitch begins (~2.5 min,
 ~$0.02) and show `exit code 0` plus `arena check ... PASSED` on the last slide.
 

@@ -183,13 +183,14 @@ pres.addSection({ title: "How" });
   s.addNotes("(1:30–2:15) We built the harness the way it works itself. Claude Code was our engineering team: parallel agents wrote and reviewed every module, held to 416 tests. Then we ran loops. Besides the two dev games we built eight games of our own with new mechanics, and kept four of them out of all tuning, as an honest exam. Each epoch: switch features off one at a time, measure, keep only what wins. After the organisers' midpoint evaluation, Timo's two experiments rejected two ideas and traced our weak runs to the simulator check, which we fixed. More than 120 measured runs, about 45 dollars in total.");
 }
 
-pres.addSection({ title: "Demo" });
+pres.addSection({ title: "Close" });
 // ---------------------------------------------------------------- 7 demo
 {
-  const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Demo" });
-  eyebrow(s, "DEMO · ONE REAL RUN, FROM SPEC TO STRATEGY.PY", ORANGE);
-  s.addText("141 seconds, 1.8 cents, one champion", { placeholder: "title" });
-  const x0 = 0.9, x1 = 12.4, ay = 3.7, T = 180, sx = (x1 - x0) / T;
+  const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Close" });
+  eyebrow(s, "ONE REAL RUN, FROM SPEC TO STRATEGY.PY", ORANGE);
+  s.addText("Spec in. Strategy out. Never a forfeit.", { placeholder: "title" });
+  s.addText("Thank you for listening!", { x: M, y: 1.62, w: 9, h: 0.55, fontFace: HEAD, fontSize: 26, bold: true, color: ORANGE, margin: 0, isTextBox: true });
+  const x0 = 0.9, x1 = 12.4, ay = 4.0, T = 180, sx = (x1 - x0) / T;
   const X = (t) => x0 + t * sx;
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x0, y: ay - 0.05, w: x1 - x0, h: 0.1, rectRadius: 0.05, fill: { color: LINE_D }, line: { color: LINE_D, width: 0 }, objectName: "axis" });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x0, y: ay - 0.05, w: X(141) - x0, h: 0.1, rectRadius: 0.05, fill: { color: ORANGE }, line: { color: ORANGE, width: 0 }, objectName: "progress" });
@@ -210,8 +211,10 @@ pres.addSection({ title: "Demo" });
     s.addText(`${t} s`, { x: cx - 0.11, y: ly, w: 1.2, h: 0.32, fontFace: MONO, fontSize: 14, bold: true, color: ORANGE, margin: 0, isTextBox: true });
     s.addText(label, { x: cx - 0.11, y: ly + 0.34, w: 2.35, h: 0.6, fontFace: BODY, fontSize: 14, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addText("Spec in. Strategy out. Never a forfeit.", { x: M, y: 6.05, w: 8.5, h: 0.55, fontFace: HEAD, fontSize: 26, bold: true, color: TEXT_L, margin: 0, isTextBox: true });
-  s.addNotes("(2:15–3:00) Finally, one real run, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, at 68 it is repaired and passes. Self-play ranks the drafts, an improvement round adds a challenger, and at 141 seconds the champion is delivered, for 1.8 cents. Spec in, strategy out, never a forfeit. Thank you.\n\nLIVE DEMO OPTION: start `./run.sh tasks/beta-A` on a second screen when the pitch begins (about 2.5 minutes, about $0.02); on this slide show its last lines (exit code 0) and `arena check ... PASSED`. If anything goes wrong, this slide is the recorded run.");
+  s.addText([{ text: "141 seconds, 1.8 cents, one champion.  ", options: { bold: true, color: TEXT_L } },
+              { text: "A real task-A run in the evaluation’s container: drafts written, the simulator checked against the spec and repaired, drafts ranked by self-play, a challenger tried, the champion delivered well before the deadline.", options: { color: MUTED_D } }],
+    { x: M, y: 6.0, w: W - 2 * M, h: 0.75, fontFace: BODY, fontSize: 15, margin: 0, valign: "top", isTextBox: true });
+  s.addNotes("(2:15–3:00) To close, this is what one real run looks like, recorded in the evaluation’s Docker container on the task-A budget. After 24 seconds the first valid draft leads. At 35 seconds the simulator fails a worked example from the spec, so it is not trusted; at 68 it is repaired and passes. Then the drafts play each other and get ranked, an improvement round adds a challenger, and at 141 of 180 seconds the champion is delivered, for 1.8 of 3 cents. Every step is checked by plain code, and the file on disk is a valid strategy at every second. Spec in, strategy out, never a forfeit. Thank you for listening!");
 }
 
 (async () => {
