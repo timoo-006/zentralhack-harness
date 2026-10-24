@@ -5,6 +5,7 @@ from types import SimpleNamespace as NS
 import pytest
 
 from harness import pipeline
+from harness.budget import Budget
 from harness.llm import LLM
 
 LUNA, SOL, ASTRA = "gpt-6-luna", "gpt-6.1-sol", "gpt-6-astra"
@@ -58,3 +59,33 @@ def test_luna_only_runs_at_low_effort(task: str, flags: str | None) -> None:
 def test_unknown_flags_are_ignored() -> None:
     assert _profile("B", "no_such_flag, ,improve_low").ablated == ("improve_low",)
     assert _profile("B", "no_such_flag").__dict__ == _profile("B").__dict__
+
+
+def _challenger_call(remaining: float, flags: str | None = None, in_flight: bool = False):
+    """The (effort, max_out) of the leading improvement call of a B run with this much left."""
+    run = pipeline.Run.__new__(pipeline.Run)  # no LLM, no sandbox: only the call's settings
+    run.profile = _profile("B", flags)
+    run.budget = Budget(0.5, PRICES)
+    run.budget.spent = run.budget.limit - remaining
+    if in_flight:
+        run.budget.reserve(LUNA, 10, 10)
+    run.system, run.spec, run.analysis = "system", "spec", "(none)"
+    run.champion = NS(id="c1", source="class Strategy: pass\n")
+    run.tournament = NS(report=lambda focus=None: "report")
+    run.event = lambda kind, **data: None
+    asked = []
+    run.ask = lambda label, model, prompt, effort, max_out: (
+        asked.append((effort, max_out)) or NS(ok=False)
+    )
+    run.challenger(0, "focus")
+    return asked[0]
+
+
+def test_low_effort_rescue_when_a_full_improvement_call_no_longer_fits() -> None:
+    p = _profile("B")
+    full, rescue = (p.improve_effort, p.improve_max_out), ("low", p.cand_max_out)
+    assert full != rescue
+    assert _challenger_call(0.40) == full
+    assert _challenger_call(0.08) == rescue  # a full call's worst case is ~$0.10 here
+    assert _challenger_call(0.08, "rescue") == full  # switched off
+    assert _challenger_call(0.08, in_flight=True) == full  # wait for in-flight calls instead

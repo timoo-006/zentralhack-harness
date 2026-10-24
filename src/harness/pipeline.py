@@ -76,6 +76,7 @@ class Profile:
     min_improve_s: float  # time an improvement round needs (call + checks + matches)
     robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
     polish: bool = True  # time left after the last call: more self-play seeds, re-rank
+    rescue: bool = True  # money left for less than a full improvement call: a low-effort one
     ablated: tuple[str, ...] = ()
 
 
@@ -91,6 +92,7 @@ ABLATIONS = {
     "oneshot": "baseline: one draft, no simulator, no repair (guard still on)",
     "polish": "no extra self-play seeds in the time left after the last LLM call",
     "improve_low": "variant: improvement calls at low effort (cheaper, more rounds)",
+    "rescue": "no low-effort improvement call when the money left no longer covers a full one",
 }
 
 
@@ -109,6 +111,8 @@ def apply_ablations(p: Profile, flags: str | None) -> Profile:
             p.analysis_model = None
         if name == "polish":
             p.polish = False
+        if name == "rescue":
+            p.rescue = False
         if name == "improve_low":
             p.improve_effort = "low"
         if name == "robust_rank":
@@ -458,7 +462,18 @@ class Run:
         )  # fmt: skip
         # The strongest model leads; parallel challengers use the cheaper one (diversity, cost).
         model = p.improve_model if k == 0 else p.cheap
-        r = self.ask(f"improve_{champ.id}_{k}", model, prompt, p.improve_effort, p.improve_max_out)
+        effort, max_out = p.improve_effort, p.improve_max_out
+        need = estimate_tokens(self.system + self.spec + prompt)
+        if (
+            p.rescue
+            and self.budget.in_flight() == 0
+            and not self.budget.can_afford(model, need, max_out)
+        ):
+            # The worst case of a full call (~$0.15 on B) is far above its real cost (~$0.09),
+            # so B runs stranded $0.07-0.14: a low-effort call with the drafts' cap still fits.
+            effort, max_out = "low", min(max_out, p.cand_max_out)
+            self.event("rescue", model=model, remaining=round(self.budget.remaining(), 4))
+        r = self.ask(f"improve_{champ.id}_{k}", model, prompt, effort, max_out)
         code = extract_code(r.text) if r.ok else None
         if code is None:
             return None
