@@ -1,0 +1,33 @@
+running /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/gamma-B into /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/gamma-B/20261024-110321-3016 (no Docker)
+[    1.1s $0.0000] fallback_written {}
+[    1.1s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_marginal_greedy gpt-6.1-sol completed 37.7s $0.0229 (spent $0.0229)
+[   38.9s $0.0229] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 37.7, "cost": 0.02289, "spent": 0.02289}
+[   39.7s $0.0229] candidate {"id": "c1_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   39.9s $0.0229] promoted {"id": "c1_marginal_greedy", "reason": "provisional", "fallback": null}
+[llm] cand_safe gpt-6.1-sol completed 39.7s $0.0226 (spent $0.0455)
+[   40.9s $0.0455] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 39.7, "cost": 0.02261, "spent": 0.0455}
+[   41.2s $0.0455] candidate {"id": "c2_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_best_response gpt-6.1-sol completed 48.2s $0.0303 (spent $0.0758)
+[   49.4s $0.0758] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 48.2, "cost": 0.03028, "spent": 0.07578}
+[   50.0s $0.0758] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0 gpt-6.1-sol completed 62.0s $0.0494 (spent $0.1252)
+[   63.2s $0.1252] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 62.0, "cost": 0.04942, "spent": 0.1252}
+[   65.8s $0.1252] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[   98.1s $0.1252] ranking {"rows": [{"id": "c3_best_response", "mean": 0.875, "worst": 0.625, "margin": 179.5}, {"id": "c1_marginal_greedy", "mean": 0.792, "worst": 0.375, "margin": 227.6}, {"id": "c2_safe", "mean": 0.333, "wo
+[  100.8s $0.1252] promoted {"id": "c3_best_response", "reason": "tournament", "fallback": "c2_safe"}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 105.5s $0.0727 (spent $0.1979)
+[  206.3s $0.1979] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 105.5, "cost": 0.07271, "spent": 0.19792}
+[  209.4s $0.1979] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  209.4s $0.1979] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  254.2s $0.1979] ranking {"rows": [{"id": "c4_improve0", "mean": 1.0, "worst": 1.0, "margin": 243.1}, {"id": "c3_best_response", "mean": 0.656, "worst": 0.0, "margin": 122.7}, {"id": "c1_marginal_greedy", "mean": 0.594, "wors
+[  256.9s $0.1979] promoted {"id": "c4_improve0", "reason": "tournament", "fallback": "c2_safe"}
+[llm] improve_c4_improve0_0 gpt-6.1-sol completed 96.7s $0.0779 (spent $0.2758)
+[  353.6s $0.2758] llm {"label": "improve_c4_improve0_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 96.7, "cost": 0.07788, "spent": 0.2758}
+[  360.9s $0.2758] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  360.9s $0.2758] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  457.8s $0.2758] ranking {"rows": [{"id": "c5_improve0", "mean": 0.938, "worst": 0.688, "margin": 204.8}, {"id": "c4_improve0", "mean": 0.863, "worst": 0.312, "margin": 192.1}, {"id": "c3_best_response", "mean": 0.525, "worst
+[  462.6s $0.2758] promoted {"id": "c5_improve0", "reason": "tournament", "fallback": "c2_safe"}
+[  467.4s $0.2758] final_probe {"ok": true}
+[  467.4s $0.2758] end {"champion": "c5_improve0", "spent": 0.275798, "elapsed": 467.43477510699904}
+strategy written: /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/runs/gamma-B/20261024-110321-3016/output/strategy.py

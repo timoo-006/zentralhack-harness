@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792833184.244752,
+  "wall_s": 310.86,
+  "deadline_s": 600.0,
+  "commit": "ae79b77",
+  "dirty_files": 0,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/epsilon-B"
+}

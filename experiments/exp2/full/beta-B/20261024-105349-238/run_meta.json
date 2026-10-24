@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792832029.4229307,
+  "wall_s": 564.45,
+  "deadline_s": 600.0,
+  "commit": "aa0297c",
+  "dirty_files": 0,
+  "task_dir": "/mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness/tasks/beta-B"
+}

@@ -91,6 +91,11 @@ gamma). The improvement rounds are the largest single gain. The sparring draft (
 opponent in self-play) did not help and hurt selection on one game, so it was removed. Every
 feature that stayed was measured with and without it.
 
+**Experiment 2** (18 more task-B runs) kept two features on the same evidence: playing extra
+self-play seeds in the time left after the last LLM call (the arm without it lost on two of
+three games), and improvement calls at medium rather than low effort (low lost on two of
+three games, tied on the third).
+
 **Held-out exam:** on two of our test games that were never used for tuning, the full pipeline
 beats the one-shot baseline 44-1-3 (theta: hidden demand, random surges, typed units) and
 32-0-16 (zeta: renamed observation fields and a nested-dict action format), and every

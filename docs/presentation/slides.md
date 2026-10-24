@@ -150,13 +150,11 @@ Experiment 1: 24 task-B runs, 3 games, one feature off per arm; cross-tournament
 
 | experiment | result |
 |-----|--------|
-| **Experiment 2 (polish, improve_low): results pending** | *PLACEHOLDER: numbers arrive from `docs/STATUS.md` once the runs are evaluated* |
+| **Experiment 2** (18 B runs): extra self-play seeds in spare time; improvement effort | both kept: the arm without polish and the low-effort arm each lost on 2 of 3 games, tied on beta (STATUS.md, "Experiment 2") |
 
 > Notes: (50 s) Sources: docs/STATUS.md "Held-out exam" and "Task C check". All 8 held-out
 > strategies pass the conformance check and every run stayed within budget and deadline.
-> EDIT BEFORE PRESENTING: fill in the Experiment 2 row (spare-time seeds "polish" and
-> cheaper improvement calls "improve_low") from STATUS.md, or delete the row if it is not
-> in by then. Do not quote numbers that are not in STATUS.md.
+> Notes: Experiment 2 confirmed the defaults; the decision rules were fixed before the results.
 
 ---
 

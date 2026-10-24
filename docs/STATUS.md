@@ -1,7 +1,7 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:05.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:35.
 > Freeze: **today 16:00**.
 
 ## TL;DR
@@ -11,59 +11,37 @@
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$6.60 spent so far (calibration, first runs,
-  experiment 1). Rules below.
+- **OpenAI money:** we have ~150 CHF in total. ~$21 spent so far (calibration, first runs,
+  experiments 1-2, held-out exam, task-C check). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
-## If Elias' Claude stops (session limit): how to finish
+## Handover: continue on any machine (Mac guide: [`MAC.md`](MAC.md))
 
-Everything that matters is committed; `main` is a tested, freezable state at all times. Only
-experiment *results* live outside git (`runs-exp/` on Elias' machine, gitignored). Any Claude
-Code (or a human) can continue from here on Elias' machine:
+**State at 11:35:** all experiments are done and exported to [`experiments/`](../experiments/)
+(re-evaluable anywhere); every decision is recorded on this page; `main` is a tested state
+that can be frozen as it is. Nothing depends on Elias' laptop any more.
 
-**1. Experiments running at 11:05** (started from commit `aa0297c`, results in `runs-exp/`):
+**For the next Claude / person, in this order:**
 
-| dir | arms | question | decision rule |
-|-----|------|----------|---------------|
-| `runs-exp/exp2` | `full`, `polish` (= no polish), `improve_low` on beta-B, gamma-B, epsilon-B, 2 runs | spare-time seeds; cheaper improvement calls | keep polish unless `polish` arm beats `full` (net) on >= 2 of 3 games; set mid-tier `improve_effort="low"` only if `improve_low` beats `full` on >= 2 of 3 games |
-| `runs-exp/exp2h` | `full`, `oneshot` on **zeta-B, theta-B** (held out) | does it transfer to untuned games? | report only (no tuning on these!) |
-| `runs-exp/clite` | `full` on beta-C-lite, gamma-C-lite | does the large profile (task C, 55%) work? | must: exit 0, check PASS, spend <= $1.80, wall < 900 s, no `error` events |
+1. **Setup** on the Mac: [`MAC.md`](MAC.md) steps 1-5 (`brew install uv coreutils`, Docker
+   Desktop, `uv sync`, `.env` with the team key, `uv run pytest -q`, `make_tasks.py`).
+2. **Freeze (mandatory, by 15:45):**
+   ```bash
+   git checkout main && git pull
+   uv run pytest -q                       # all pass (a few Linux-only tests skip on macOS)
+   ./run.sh tasks/beta-A                  # Docker, like the evaluation: exit 0, strategy written (~$0.02)
+   uv run python scripts/evaluate.py --seeds 4 --no-log runs/beta-A/<that run>   # check PASS
+   git rev-parse HEAD                     # send the full hash to the organisers (TASKS.md T5)
+   ```
+   `nkaslin` must have access to the repository; `report.md` is already complete.
+3. **Optional, only with measurement** (same rules as experiments 1-2: fix the decision rule
+   first, compare with `scripts/ablate.sh` on tuning games only, never on zeta/theta):
+   the failure-mining proposals below, if any; tasks T2/T3 on [`TASKS.md`](TASKS.md).
+4. **Do not** change `src/harness/` in the last hour without a full test run and one Docker
+   run afterwards.
 
-Evaluate (Windows Git Bash, repo root; takes a few minutes each):
-
-```bash
-# exp2 tuning games (cross-tournament between arms + panel vs baselines)
-uv run python scripts/evaluate.py --wsl --cross --seeds 6 --cross-seeds 6 --workers 12 --no-log \
-  --group full='runs-exp/exp2/full/*/*' --group nopolish='runs-exp/exp2/polish/*/*' \
-  --group improvelow='runs-exp/exp2/improve_low/*/*'
-# held-out exam
-uv run python scripts/evaluate.py --wsl --cross --seeds 6 --cross-seeds 6 --workers 12 --no-log \
-  --group full='runs-exp/exp2h/full/*/*' --group oneshot='runs-exp/exp2h/oneshot/*/*'
-# C-lite: check, panel, spend and time
-uv run python scripts/evaluate.py --wsl --seeds 6 --workers 12 --no-log 'runs-exp/clite/full/*/*'
-```
-
-Read the `| group | W-D-L | net | net/strategy |` rows per game. Apply a decision in
-`src/harness/pipeline.py`: `Profile.polish` default, or `improve_effort` in the `mid` profile
-of `make_profile`. Then `uv run pytest -q`, commit on `feat/harness-v1`, write the numbers into
-this file (an "Experiment 2" section like "Experiment 1").
-
-**2. Open proposals:** a read-only failure-mining workflow (2 agents) was analysing the
-experiment-1 logs; if its proposals are not in this file yet, skip them: the harness is
-complete without them.
-
-**3. Freeze checklist (by 15:45):**
-
-```bash
-uv run pytest -q                                   # all pass (Linux-only ones skip on Windows)
-wsl -d Ubuntu-24.04 -- bash -lc 'cd /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness && /root/venv-harness/bin/python -m pytest -q tests/'
-./run.sh tasks/beta-A                              # Docker, like the evaluation: exit 0, strategy written
-git checkout main && git merge --ff-only feat/harness-v1 && git push origin main
-git rev-parse HEAD                                 # send this full hash to the organisers (T5)
-```
-
-Also: `report.md` must be committed (fill in "Measurements" from this file), and the
-organiser account `nkaslin` must have access to the repository.
+**Template leftovers:** `src/harness/agent.py` and `prompt.md` are unused (nothing imports
+them); deleting them is cosmetic and safe.
 
 ## Want to help? → [`TASKS.md`](TASKS.md)
 
@@ -142,6 +120,23 @@ Head-to-head, full vs: oneshot **48-0-0** (beta), **46-1-1** (gamma); no improve
   directions that agree across games, not single cells.
 - Mean spend per B run: full $0.34, no improvement $0.14, oneshot $0.03. Several full runs
   ended early because the money ran out, not the time.
+
+## Experiment 2 (done, 11:30): polish and cheaper improvement calls
+
+Commit `aa0297c` (self-play under tournament conditions, sparring off), task B, 2 runs per
+arm and game, 18 runs. Cross-tournament net per strategy:
+
+| arm | beta | gamma | epsilon |
+|-----|-----:|------:|--------:|
+| **full** (polish on, improvement @ medium) | 0.0 | **+6.0** | **+22.0** |
+| no polish | 0.0 | -5.5 | -15.5 |
+| improvement @ low effort | 0.0 | -0.5 | -6.5 |
+
+Decisions (rules fixed before the results): **polish stays on** (the no-polish arm beats full
+on no game), **improvement stays at medium effort** (low beats full on no game). No code
+change. Beta is a three-way tie (24-0-24 everywhere: the strategies are nearly equal there).
+All 18 strategies pass `arena check`, all runs within budget and deadline, and the full arm
+wins 100% of its matches against the baselines on all three games.
 
 ## Held-out exam (done, 11:20): does it transfer to untuned games?
 
