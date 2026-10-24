@@ -18,6 +18,7 @@ library only, and loads under arena's worker (exec of its source in an unregiste
 """
 
 import ast
+import keyword
 import os
 import tempfile
 from pathlib import Path
@@ -88,7 +89,7 @@ def assemble(
 
     `assemble(None)` (no core, no fallback) is the t=0 fallback: its `act` always returns None.
     """
-    if not strategy_class.isidentifier():
+    if not strategy_class.isidentifier() or keyword.iskeyword(strategy_class):
         strategy_class = "Strategy"
     lines = [line if line.startswith("#") else f"# {line}" for line in header.splitlines()]
     head = "\n".join(lines) + "\n" if lines else ""
@@ -208,6 +209,8 @@ def _plain(value):
         text = repr(value)
         if len(text) > _MAX_REPLY_CHARS:
             return False, None
+        if not text.isascii() and len(text.encode("utf-8", "replace")) > _MAX_REPLY_CHARS:
+            return False, None  # arena's reply limit counts bytes
         copy = _ast.literal_eval(text)
         if not bool(copy == value):  # NaN, or a type whose repr is not its value
             return False, None
@@ -227,7 +230,7 @@ def _call(fn, args, limit, check):
     timed = False
     prev_handler = None
     prev_timer = (0.0, 0.0)
-    out, err = _sys.stdout, _sys.stderr
+    out, err, inp = _sys.stdout, _sys.stderr, _sys.stdin
     t0 = _time.perf_counter()
     try:
         if limit > 0 and _can_time():
@@ -235,6 +238,7 @@ def _call(fn, args, limit, check):
             prev_timer = _signal.setitimer(_signal.ITIMER_REAL, limit, _REPEAT_S)
             timed = True
         _sys.stdout = _sys.stderr = _SINK
+        _sys.stdin = None  # arena's protocol pipe: untrusted code must not read it
         _STATE["armed"] = timed
         try:
             result = fn(*args)
@@ -268,10 +272,18 @@ def _call(fn, args, limit, check):
                     )
             except BaseException:
                 pass
-        _sys.stdout, _sys.stderr = out, err
+        _sys.stdout, _sys.stderr, _sys.stdin = out, err, inp
     if isinstance(error, _GuardTimeout):
         status = "timeout"
     return status, value, error, _time.perf_counter() - t0
+
+
+_GUARD_CODES.add(_call.__code__)  # exempt already while the embedded sources load
+
+
+def _act_of(strategy, obs):
+    """strategy.act(obs): inside the timed call, so a missing or broken `act` is caught too."""
+    return strategy.act(obs)
 
 
 def _describe(status, error, secs, limit):
@@ -408,7 +420,7 @@ class _HzGuard:
                 except Exception:
                     saved = None
             limit = _ACT_LIMIT_S * _CORE_SHARE
-            status, value, error, secs = _call(core.act, (obs,), limit, True)
+            status, value, error, secs = _call(_act_of, (core, obs), limit, True)
             if secs > st["max_core_s"]:
                 st["max_core_s"] = secs
             if status == "ok":
@@ -432,7 +444,7 @@ class _HzGuard:
                     fobs = obs
             left = _ACT_LIMIT_S - (_time.perf_counter() - t0)
             if left >= _MIN_FALLBACK_S:
-                status, value, error, secs = _call(fallback.act, (fobs,), left, True)
+                status, value, error, secs = _call(_act_of, (fallback, fobs), left, True)
                 if status == "ok":
                     st["fallback_used"] += 1
                     return value

@@ -6,6 +6,7 @@ raises; whatever cannot be parsed simply stays empty.
 """
 
 import ast
+import bisect
 import copy
 import json
 import operator
@@ -133,9 +134,7 @@ def _parse(text: str, info: SpecInfo) -> None:
     schemas = [it.schema for it in items if it.schema]
     info.schemas = [list(s) for s in schemas]
     found = [
-        it
-        for it in items
-        if it.origin in ("expr", "assign", "segment") and _is_str_dict(it.value)
+        it for it in items if it.origin in ("expr", "assign", "segment") and _is_str_dict(it.value)
     ]
     dicts = [it.value for it in found]
     # Dicts bound to CONSTANT names are tables (unit types, costs), not observations.
@@ -143,7 +142,7 @@ def _parse(text: str, info: SpecInfo) -> None:
     target, keys = _choose_keys(dicts, free, schemas)
     info.obs_keys = keys
     if target is not None:
-        examples = [d for d in dicts if frozenset(d) == target][: MAX_EXAMPLES * 2]
+        examples = [d for d in dicts if frozenset(d) == target]
         info.example_observations = _dedupe(_fill_ellipsis(examples))[:MAX_EXAMPLES]
 
     seen: set[str] = set()
@@ -530,21 +529,28 @@ def _has_ellipsis(v: Any, depth: int = 0) -> bool:
 def _fill_ellipsis(examples: list[dict]) -> list[dict]:
     """Replace values containing Ellipsis by the same key's value from the nearest other
     example (earlier ones first); drop an example if some key has no donor."""
+    # per key: the indices of the examples whose value for it has no Ellipsis (ascending)
+    clean: dict[str, list[int]] = {}
+    for j, ex in enumerate(examples):
+        for k, v in ex.items():
+            if not _has_ellipsis(v):
+                clean.setdefault(k, []).append(j)
     out = []
     for i, ex in enumerate(examples):
         fixed: dict | None = {}
-        for k, v in ex.items():
-            if not _has_ellipsis(v):
-                fixed[k] = copy.deepcopy(v)
-                continue
-            donors = [*range(i - 1, -1, -1), *range(i + 1, len(examples))]
-            for j in donors:
-                if k in examples[j] and not _has_ellipsis(examples[j][k]):
-                    fixed[k] = copy.deepcopy(examples[j][k])
-                    break
+        for k in ex:
+            idx = clean.get(k, [])
+            pos = bisect.bisect_left(idx, i)
+            if pos < len(idx) and idx[pos] == i:
+                j = i  # its own value is complete
+            elif pos > 0:
+                j = idx[pos - 1]  # the nearest earlier example
+            elif pos < len(idx):
+                j = idx[pos]  # the nearest later example
             else:
                 fixed = None
                 break
+            fixed[k] = copy.deepcopy(examples[j][k])
         if fixed is not None:
             out.append(fixed)
     return out

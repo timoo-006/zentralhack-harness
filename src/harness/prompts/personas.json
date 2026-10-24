@@ -18,5 +18,9 @@
   {
     "name": "adaptive",
     "persona": "Opponent classifier with regime switching on top of a solid marginal-value allocator. Keep a short history of the opponent's observed positions and scores and classify them each turn: idle (never moves), static (moved once, now holds), greedy chaser (moves toward high values or toward your units), aggressive contester, or random. Base plan: allocate units greedily by marginal net value over the turns they will be in place, after travel, counting all costs and the opponent's share. Adjust it: against idle or static opponents take every profitable node with the minimum units needed and avoid useless fights; against chasers prefer nodes they ignore and pre-position where value is about to appear; against contesters concentrate where you can dominate and leave them the rest. Also adapt to the score: when clearly ahead late in the game, cut marginal units and avoid swings; when behind, contest the opponent's richest nodes. Default to the base plan when the classification is unsure."
+  },
+  {
+    "name": "sparring_naive",
+    "persona": "Write the straightforward strategy a typical competitor would write in an hour: correct and legal, but simple. Each turn, send units toward the nodes with the highest value right now, spread roughly in proportion to that value, along shortest paths. Respect the action format and the movement rules exactly and never raise, but do not model the opponent, do not plan ahead beyond the current turn, and only avoid costs that are obvious. This strategy is a sparring partner that stands in for the average opponent, so keep it plain and fast."
   }
 ]

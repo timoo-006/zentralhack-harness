@@ -22,7 +22,8 @@ def test_import_mono_is_in_the_past():
 
 
 def test_elapsed_and_remaining_are_monotonic():
-    c = Clock(100.0, margin_s=10.0)
+    # a long deadline: the clock counts from import, and the test session may be long by now
+    c = Clock(100_000.0, margin_s=10.0)
     e1, r1, h1 = c.elapsed(), c.remaining(), c.hard_remaining()
     time.sleep(0.02)
     e2, r2, h2 = c.elapsed(), c.remaining(), c.hard_remaining()
@@ -30,9 +31,9 @@ def test_elapsed_and_remaining_are_monotonic():
     assert r2 <= r1 and h2 <= h1
     assert e2 - e1 >= 0.015
     assert 10.0 <= c.hard_remaining() - c.remaining() < 10.01
-    assert c.remaining() <= 90.0
+    assert c.remaining() <= 99_990.0
     assert 0.0 <= c.frac() < 1.0
-    assert abs(c.frac() - c.elapsed() / 100.0) < 1e-3
+    assert abs(c.frac() - c.elapsed() / 100_000.0) < 1e-3
 
 
 def test_remaining_can_go_negative():
@@ -215,3 +216,56 @@ def test_sigterm_exits_even_if_on_term_hangs(tmp_path):
     p.terminate()
     assert p.wait(timeout=10) == 0
     assert time.monotonic() - t0 < 5
+
+
+@pytest.mark.skipif(not LINUX, reason="SIGTERM handlers only run on POSIX")
+@pytest.mark.parametrize("block", ["future", "subprocess", "join", "busy"])
+def test_sigterm_while_main_thread_waits_like_the_pipeline(tmp_path, block):
+    # The pipeline's main thread spends its time in future.result(), subprocess waits and
+    # joins while worker threads (LLM calls) run: SIGTERM must still exit 0 promptly.
+    marker = tmp_path / "marker"
+    code = textwrap.dedent(
+        f"""
+        import subprocess, threading, time
+        from concurrent.futures import ThreadPoolExecutor
+        from harness.clock import install_sigterm_handler
+
+        def on_term():
+            open({str(marker)!r}, "w").write("done")
+
+        def spin():
+            end = time.monotonic() + 30
+            while time.monotonic() < end:
+                sum(range(1000))
+
+        install_sigterm_handler(on_term)
+        pool = ThreadPoolExecutor(max_workers=4)
+        futs = [pool.submit(spin) for _ in range(4)]
+        print("ready", flush=True)
+        if {block!r} == "future":
+            futs[0].result()
+        elif {block!r} == "subprocess":
+            subprocess.run(["sleep", "30"])
+        elif {block!r} == "join":
+            t = threading.Thread(target=spin)
+            t.start()
+            t.join()
+        else:
+            spin()
+        """
+    )
+    p = subprocess.Popen(
+        [sys.executable, "-c", code],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env={"PYTHONPATH": SRC},
+    )
+    assert p.stdout.readline().strip() == "ready"
+    time.sleep(0.2)
+    t0 = time.monotonic()
+    p.terminate()
+    rc = p.wait(timeout=20)
+    assert rc == 0, p.stderr.read()
+    assert time.monotonic() - t0 < 5
+    assert marker.read_text() == "done"

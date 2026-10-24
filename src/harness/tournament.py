@@ -11,6 +11,7 @@ from pathlib import Path
 from harness.sandbox import MatchResult, play_matches
 
 _PROBLEM_KEYS = ("forfeits", "exceptions", "timeouts", "malformed", "illegal")
+MAX_KILLS = 2  # a match cut off this often by the time budget is given up (invalid)
 _GUARD_KEYS = ("core_exceptions", "core_timeouts", "core_bad_output", "fallback_used", "none_used")
 
 
@@ -62,6 +63,7 @@ class Tournament:
         self._done: dict[tuple[str, str, int], MatchResult] = {}
         self._match_secs = 0.0  # wall seconds x workers used, over _match_count matches
         self._match_count = 0
+        self._kills: dict[tuple[str, str, int], int] = {}  # cut off while being played
 
     def add(self, entry_id: str, strategy_path: Path | None) -> None:
         """Add an entry (None only for 'idle'). Re-adding an id with a new file replays it."""
@@ -94,6 +96,9 @@ class Tournament:
             todo = self.pending()
             if not todo:
                 return
+            # Matches that were cut off while being played go last: a match too slow for the
+            # budget must not block every later run (and the new entries' pairings).
+            todo.sort(key=lambda p: self._kills.get(p, 0))
             left = budget_s - (time.monotonic() - t0)
             per_match = self._per_match_s()
             if per_match is None:
@@ -132,9 +137,15 @@ class Tournament:
             finished = 0
             killed = False
             for key, r in zip(batch, results, strict=True):
-                if r.sim_error is not None and r.sim_error.startswith("timeout"):
-                    killed = True  # cut by our own deadline: not cached, retried next run
+                err = r.sim_error or ""
+                if err.startswith("not started") or (err == "timeout" and not r.in_progress):
+                    killed = True  # never played: not cached, retried next run
                     continue
+                if err.startswith("timeout"):
+                    killed = True  # cut by our own deadline while being played
+                    self._kills[key] = self._kills.get(key, 0) + 1
+                    if self._kills[key] < MAX_KILLS:
+                        continue  # retried (last) next run; cached as invalid after MAX_KILLS
                 finished += 1
                 self._done[key] = r
                 self.results.append(r)
@@ -307,11 +318,19 @@ class Tournament:
                     out.append(
                         f"First error of {eid} (seed {r.seed}, seat {seat}): {_clip(err, 600)}"
                     )
-        if invalid:
-            r = invalid[0]
+        cut = [r for r in invalid if (r.sim_error or "").startswith("timeout")]
+        crashed = [r for r in invalid if not (r.sim_error or "").startswith("timeout")]
+        if crashed:
+            r = crashed[0]
             out.append(
                 f"First simulator error ({r.players[0]} vs {r.players[1]}, seed {r.seed}): "
                 f"{_clip(r.sim_error or '', 800)}"
+            )
+        if cut:
+            r = cut[0]
+            out.append(
+                f"{len(cut)} match(es) never finished within the time budget (a strategy or the "
+                f"simulator is too slow), e.g. {r.players[0]} vs {r.players[1]}, seed {r.seed}"
             )
         return (["Problems:", *out]) if out else []
 

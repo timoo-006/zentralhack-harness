@@ -190,9 +190,7 @@ class ThetaGame(Game):
         """Nodes with at least one of the player's units, and their neighbours."""
         fleet = self.units[player_id]
         occupied = [any(fleet[t][v] > 0 for t in UNIT_TYPES) for v in range(self.n_nodes)]
-        return [
-            occupied[v] or any(occupied[u] for u in self.graph[v]) for v in range(self.n_nodes)
-        ]
+        return [occupied[v] or any(occupied[u] for u in self.graph[v]) for v in range(self.n_nodes)]
 
     def observe(self, player_id: int) -> dict:
         opponent_id = 1 - player_id
@@ -267,9 +265,7 @@ class ThetaGame(Game):
     def _upkeep(self, player_id: int) -> float:
         base = self.bases[player_id]
         fleet = self.units[player_id]
-        return sum(
-            UNIT_UPKEEP[t] * (UNITS_PER_PLAYER[t] - fleet[t][base]) for t in UNIT_TYPES
-        )
+        return sum(UNIT_UPKEEP[t] * (UNITS_PER_PLAYER[t] - fleet[t][base]) for t in UNIT_TYPES)
 
     def _revenue(self) -> list[float]:
         demand = self.demand[self.turn]

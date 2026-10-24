@@ -11,6 +11,7 @@ checks.
 
 import ast
 import json
+import os
 import threading
 import time
 import traceback
@@ -32,6 +33,15 @@ PROMPTS = Path(__file__).with_name("prompts")
 # higher in the delivered file (1 s limit per act; the guard cuts the core at 0.6 s).
 SELFPLAY_TIME_BUDGET_S = 0.02
 FINAL_TIME_BUDGET_S = 0.25
+
+# A challenger replaces the champion only if its mean per-opponent score is higher by
+# PROMOTE_MARGIN and it does not lose the head-to-head, or if it is higher by CLEAR_MARGIN.
+PROMOTE_MARGIN = 0.03
+CLEAR_MARGIN = 0.12
+
+# A cheap draft of what a typical competitor writes, as a sparring partner in self-play:
+# the real field is mostly other LLM-written strategies, many of them naive.
+SPARRING_PERSONA = "sparring_naive"
 
 
 @dataclass
@@ -62,6 +72,46 @@ class Profile:
     max_sim_repairs: int
     max_strategy_repairs: int
     min_improve_s: float  # time an improvement round needs (call + checks + matches)
+    sparring: bool = True  # a cheap naive draft joins self-play
+    robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
+    ablated: tuple[str, ...] = ()
+
+
+# Development only: HARNESS_ABLATE=sparring,improve,... switches features off, so that every
+# feature is kept on measured evidence (same tasks, with vs without, cross-tournament). The
+# evaluation sets no such variable, so it always runs the full harness.
+ABLATIONS = {
+    "sparring": "no sparring draft in self-play",
+    "improve": "no improvement rounds",
+    "selfplay": "no simulator: no self-play, no improvement (first valid draft wins)",
+    "repair": "no repair calls for strategies or simulators",
+    "analysis": "no strategic analysis call",
+    "robust_rank": "rank by raw standings, no incumbent protection",
+    "oneshot": "baseline: one draft, no simulator, no repair (guard still on)",
+}
+
+
+def apply_ablations(p: Profile, flags: str | None) -> Profile:
+    names = tuple(sorted({f.strip() for f in (flags or "").split(",") if f.strip()}))
+    for name in names:
+        if name not in ABLATIONS:
+            continue
+        if name in ("sparring", "oneshot"):
+            p.sparring = False
+        if name in ("improve", "selfplay", "oneshot"):
+            p.improve_model = None
+        if name in ("selfplay", "oneshot"):
+            p.sim_model = None
+        if name in ("repair", "oneshot"):
+            p.max_strategy_repairs = p.max_sim_repairs = 0
+        if name in ("analysis", "oneshot"):
+            p.analysis_model = None
+        if name == "robust_rank":
+            p.robust_rank = False
+        if name == "oneshot":
+            p.n_candidates = 1
+    p.ablated = tuple(n for n in names if n in ABLATIONS)
+    return p
 
 
 def make_profile(task: dict, llm: LLM, clock: Clock) -> Profile:
@@ -86,21 +136,21 @@ def make_profile(task: dict, llm: LLM, clock: Clock) -> Profile:
     if budget < 0.1 or deadline < 300:  # a few cents, a few minutes: fast cheap drafts
         return Profile(
             name="tiny", cheap=cheap, strong=strong, n_candidates=3,
-            cand_models=[strong], cand_effort="low", cand_max_out=10000,
-            sim_model=cheap, sim_effort="low", sim_max_out=12000,
+            cand_models=[strong], cand_effort="low", cand_max_out=6000,
+            sim_model=cheap, sim_effort="low", sim_max_out=8000,
             analysis_model=None, analysis_effort="low",
-            repair_model=cheap, repair_effort="low", repair_max_out=10000,
-            improve_model=strong, improve_effort="low", improve_max_out=10000,
+            repair_model=cheap, repair_effort="low", repair_max_out=6000,
+            improve_model=strong, improve_effort="low", improve_max_out=6000,
             improve_parallel=2, call_timeout_s=min(90.0, deadline * 0.5), seeds=3,
             max_sim_repairs=1, max_strategy_repairs=1, min_improve_s=50.0,
         )  # fmt: skip
     if budget < 1.5:  # cents per call matter: the strong model at low effort, more drafts
         return Profile(
             name="mid", cheap=cheap, strong=strong, n_candidates=3,
-            cand_models=[strong], cand_effort="low", cand_max_out=10000,
-            sim_model=strong, sim_effort="low", sim_max_out=14000,
+            cand_models=[strong], cand_effort="low", cand_max_out=6000,
+            sim_model=strong, sim_effort="low", sim_max_out=9000,
             analysis_model=None, analysis_effort="low",
-            repair_model=strong, repair_effort="low", repair_max_out=12000,
+            repair_model=strong, repair_effort="low", repair_max_out=8000,
             improve_model=strong, improve_effort="medium", improve_max_out=14000,
             improve_parallel=1, call_timeout_s=200.0, seeds=4,
             max_sim_repairs=2, max_strategy_repairs=1, min_improve_s=130.0,
@@ -146,7 +196,9 @@ class Run:
         self.llm = LLM(task, self.budget, self.clock, log_dir / "transcript.jsonl")
         self.cls = task.get("strategy_class") or "Strategy"
         self.info = parse_spec(spec)
-        self.profile = make_profile(task, self.llm, self.clock)
+        self.profile = apply_ablations(
+            make_profile(task, self.llm, self.clock), os.environ.get("HARNESS_ABLATE")
+        )
         self.lock = threading.RLock()
         self.cands: dict[str, Candidate] = {}
         self.champion: Candidate | None = None
@@ -201,9 +253,15 @@ class Run:
         futures = []
         if p.sim_model:
             futures.append(self.pool.submit(self._guarded, self.build_simulator))
-        for i, persona in enumerate(self.personas[: p.n_candidates]):
+        main = [x for x in self.personas if x.get("name") != SPARRING_PERSONA]
+        for i, persona in enumerate(main[: p.n_candidates]):
             model = p.cand_models[i % len(p.cand_models)]
             futures.append(self.pool.submit(self._guarded, self.new_candidate, persona, model))
+        sparring = [x for x in self.personas if x.get("name") == SPARRING_PERSONA]
+        if sparring and p.sim_model and p.sparring:  # only useful when there is self-play
+            futures.append(
+                self.pool.submit(self._guarded, self.new_candidate, sparring[0], p.cheap, "low")
+            )
         if p.analysis_model:
             futures.append(self.pool.submit(self._guarded, self.analyse))
         # Whatever misses the cut is not waited for: the run has to finish.
@@ -354,13 +412,16 @@ class Run:
             problems += self._sim_vs_candidates(path)
         return problems
 
-    def new_candidate(self, persona: dict, model: str) -> Candidate | None:
+    def new_candidate(
+        self, persona: dict, model: str, effort: str | None = None
+    ) -> Candidate | None:
         p = self.profile
         prompt = _read("strategy.md").format(
             persona=persona.get("persona", ""), time_budget=FINAL_TIME_BUDGET_S,
             analysis=self.analysis,
         )  # fmt: skip
-        r = self.ask(f"cand_{persona.get('name')}", model, prompt, p.cand_effort, p.cand_max_out)
+        label = f"cand_{persona.get('name')}"
+        r = self.ask(label, model, prompt, effort or p.cand_effort, p.cand_max_out)
         code = extract_code(r.text) if r.ok else None
         if code is None:
             return None
@@ -496,21 +557,73 @@ class Run:
         with self.lock:
             if c.persona == self._safe_name() and self.fallback is None:
                 self.fallback = c
-            if self.champion is None or (
-                self.tournament is None and self.champion.persona == self._safe_name()
-            ):
-                self._promote(c, reason="first valid")
+            if self.tournament is not None:
+                return  # from here on the tournament decides
+            if self.champion is None or self._rank(c) < self._rank(self.champion):
+                self._promote(c, reason="provisional")
+
+    def _rank(self, c: Candidate) -> int:
+        """Provisional preference before any self-play: main personas, then safe, sparring."""
+        if c.persona == SPARRING_PERSONA:
+            return 2
+        return 1 if c.persona == self._safe_name() else 0
+
+    def ranking(self) -> list[tuple[float, float, float, str]]:
+        """(mean, worst, margin, id) per candidate in the tournament, best first.
+
+        Against overfitting to the pool: every opponent weighs the same (a strategy cannot
+        climb by farming one weak opponent many times), the worst pairing breaks ties (a
+        robust strategy beats a brilliant-but-exploitable one), score margin comes last.
+        """
+        t = self.tournament
+        if t is None:
+            return []
+        standings = t.standings()
+        margin = {s.id: s.mean_margin for s in standings}
+        ids = [s.id for s in standings]
+        rows = []
+        for cid in ids:
+            if cid not in self.cands:
+                continue  # idle and other non-candidates are opponents only
+            per_opponent = []
+            for other in ids:
+                if other == cid:
+                    continue
+                w, d, lo = t.head_to_head(cid, other)
+                if w + d + lo:
+                    per_opponent.append((w + 0.5 * d) / (w + d + lo))
+            if per_opponent:
+                mean = sum(per_opponent) / len(per_opponent)
+                rows.append((mean, min(per_opponent), margin.get(cid, 0.0), cid))
+        rows.sort(reverse=True)
+        return rows
 
     def promote_best(self) -> None:
-        if self.tournament is None:
+        if not self.profile.robust_rank and self.tournament is not None:  # ablation baseline
+            top = [s for s in self.tournament.standings() if s.id in self.cands]
+            if top and (self.champion is None or top[0].id != self.champion.id):
+                self._promote(self.cands[top[0].id], reason="tournament (raw standings)")
             return
-        standings = [s for s in self.tournament.standings() if s.id in self.cands]
-        if not standings:
+        rows = self.ranking()
+        if not rows:
             return
-        best = self.cands[standings[0].id]
-        self.event("standings", table=[s.__dict__ for s in self.tournament.standings()])
-        if self.champion is None or best.id != self.champion.id:
-            self._promote(best, reason="tournament")
+        self.event("ranking", rows=[{"id": i, "mean": round(m, 3), "worst": round(w, 3),
+                                     "margin": round(g, 1)} for m, w, g, i in rows])  # fmt: skip
+        best = rows[0][3]
+        champ = self.champion.id if self.champion is not None else None
+        if best == champ:
+            return
+        by_id = {i: (m, w) for m, w, _, i in rows}
+        if champ in by_id:
+            # Incumbent protection against selection noise: a challenger must be better by
+            # a margin and must not lose the head-to-head, unless it is clearly better.
+            gain = by_id[best][0] - by_id[champ][0]
+            w, _, lo = self.tournament.head_to_head(best, champ)
+            if gain < PROMOTE_MARGIN or (lo > w and gain < CLEAR_MARGIN):
+                self.event("kept_champion", champion=champ, challenger=best, gain=round(gain, 3),
+                           h2h=[w, lo])  # fmt: skip
+                return
+        self._promote(self.cands[best], reason="tournament")
 
     def _promote(self, c: Candidate, reason: str) -> None:
         fb = self.fallback if self.fallback is not None and self.fallback.id != c.id else None

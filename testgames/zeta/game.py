@@ -158,7 +158,8 @@ def generate_instance(seed: int) -> Instance:
 
 
 def _plain_int(value: Any) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
+    """Exactly `int`: bool, numpy integers and other int subclasses are malformed."""
+    return type(value) is int
 
 
 class ZetaGame(Game):
@@ -232,25 +233,25 @@ class ZetaGame(Game):
         self.rejected = [0, 0]
         for player_id in range(2):
             action = actions[player_id] if player_id < len(actions) else None
-            self.format_ok[player_id] = self._check_action_format(action)
-            if not self.format_ok[player_id]:
+            moves = self._parse_action(action)
+            self.format_ok[player_id] = moves is not None
+            if moves is None:
                 continue  # malformed action: the whole turn is a no-op for this player
             # Only units present at the start of the turn can move: one link per turn.
             movable = list(self.units[player_id])
-            for from_node, targets in action.items():
-                for to_node, count in targets.items():
-                    valid = (
-                        0 <= from_node < self.n_nodes
-                        and 0 <= to_node < self.n_nodes
-                        and to_node in self.graph[from_node]
-                        and 0 <= count <= movable[from_node]
-                    )
-                    if not valid:
-                        self.rejected[player_id] += 1
-                        continue
-                    movable[from_node] -= count
-                    self.units[player_id][from_node] -= count
-                    self.units[player_id][to_node] += count
+            for from_node, to_node, count in moves:
+                valid = (
+                    0 <= from_node < self.n_nodes
+                    and 0 <= to_node < self.n_nodes
+                    and to_node in self.graph[from_node]
+                    and 0 <= count <= movable[from_node]
+                )
+                if not valid:
+                    self.rejected[player_id] += 1
+                    continue
+                movable[from_node] -= count
+                self.units[player_id][from_node] -= count
+                self.units[player_id][to_node] += count
 
         revenue = self._revenue()
         for player_id in range(2):
@@ -282,14 +283,17 @@ class ZetaGame(Game):
         return revenue
 
     @staticmethod
-    def _check_action_format(action: Any) -> bool:
-        """Shape only: {int: {int: int}}. Legality of each entry is checked in step()."""
-        if not isinstance(action, dict):
-            return False
+    def _parse_action(action: Any) -> list[tuple[int, int, int]] | None:
+        """Shape only: exactly {int: {int: int}} (no subclasses). Returns the moves in dict
+        order, or None if the action is malformed. Legality is checked in step()."""
+        if type(action) is not dict:
+            return None
+        moves = []
         for from_node, targets in action.items():
-            if not _plain_int(from_node) or not isinstance(targets, dict):
-                return False
+            if not _plain_int(from_node) or type(targets) is not dict:
+                return None
             for to_node, count in targets.items():
                 if not _plain_int(to_node) or not _plain_int(count):
-                    return False
-        return True
+                    return None
+                moves.append((from_node, to_node, count))
+        return moves

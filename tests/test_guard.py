@@ -1,6 +1,7 @@
 """Tests for harness.guard: the never-forfeit wrapper around LLM-written strategy code."""
 
 import ast
+import os
 import signal
 import subprocess
 import sys
@@ -316,6 +317,7 @@ def _arena_cli() -> Path:
 
 
 @linux_only
+@pytest.mark.skipif(os.environ.get("HARNESS_FAST_TESTS") == "1", reason="slow (~4 min)")
 def test_every_guarded_bad_core_passes_arena_check(tmp_path):
     """MUST PASS: guard.assemble(bad core, fallback=greedy) never forfeits in arena's worker."""
     cli = _arena_cli()
@@ -345,3 +347,144 @@ def test_every_guarded_bad_core_passes_arena_check(tmp_path):
         outcomes = list(pool.map(check, jobs))
     failed = [(n, out) for n, code, out in outcomes if code != 0 or "PASSED" not in out]
     assert not failed, failed
+
+
+# ------------------------------------------------------------------ review: adversarial
+
+
+def test_core_without_a_working_act_falls_back(tmp_path):
+    fallback = (
+        "class Strategy:\n    def __init__(self, pid): pass\n    def act(self, obs): return []\n"
+    )
+    for core in (
+        "class Strategy:\n    def __init__(self, p): pass\n    def get_action(self, o): return 1\n",
+        "class Strategy:\n    act = None\n    def __init__(self, pid): pass\n",
+        "class Strategy:\n"
+        "    def __init__(self, pid): pass\n"
+        "    @property\n"
+        "    def act(self):\n"
+        "        raise RuntimeError('no act today')\n",
+    ):
+        path = write_guarded(tmp_path, "noact", core, fallback_src=fallback)
+        s = load_like_arena(path)(0)
+        assert s.act({}) == [] and s.act({}) == []
+        stats = s.guard_stats()
+        assert stats["core_exceptions"] == 2 and stats["fallback_used"] == 2, stats
+        assert stats["first_core_traceback"]
+
+
+def test_broken_fallback_act_gives_none(tmp_path):
+    path = write_guarded(
+        tmp_path, "nofb", None, fallback_src="class Strategy:\n    def __init__(self, p): pass\n"
+    )
+    s = load_like_arena(path)(0)
+    assert s.act({}) is None
+    assert s.guard_stats()["fallback_failures"] == 1
+
+
+def test_reply_limit_counts_utf8_bytes(tmp_path):
+    core = (
+        "class Strategy:\n"
+        "    def __init__(self, pid): self.n = 0\n"
+        "    def act(self, obs):\n"
+        "        self.n += 1\n"
+        "        return '\u00e9' * 600_000 if self.n == 1 else 'e' * 600_000\n"
+    )
+    s = load_like_arena(write_guarded(tmp_path, "utf8", core))(0)
+    assert s.act({}) is None  # 1.2 MB as UTF-8: arena would reject the reply
+    assert s.act({}) == "e" * 600_000
+    assert s.guard_stats()["core_bad_output"] == 1
+
+
+def test_keyword_strategy_class_still_gives_a_valid_file(tmp_path):
+    src = assemble(None, strategy_class="class")
+    compile(src, "kw.py", "exec")
+    assert "class Strategy(_HzGuard)" in src
+
+
+def test_future_import_survives_sanitize(tmp_path):
+    core = (
+        '"""doc"""\n'
+        "from __future__ import annotations\n"
+        "class Strategy:\n"
+        "    def __init__(self, pid) -> None: pass\n"
+        "    def act(self, obs: dict) -> list[int]:\n"
+        "        try:\n"
+        "            return [1]\n"
+        "        except:\n"
+        "            return []\n"
+    )
+    s = load_like_arena(write_guarded(tmp_path, "fut", core))(0)
+    assert s.act({}) == [1]
+
+
+@linux_only
+def test_core_stuck_in_finally_and_reraise_is_still_cut(tmp_path, beta_obs):
+    core = (
+        "import time\n"
+        "class Strategy:\n"
+        "    def __init__(self, pid): pass\n"
+        "    def act(self, obs):\n"
+        "        try:\n"
+        "            while True:\n"
+        "                try:\n"
+        "                    time.sleep(0.01)\n"
+        "                except BaseException:\n"
+        "                    continue\n"
+        "        finally:\n"
+        "            while True:\n"
+        "                pass\n"
+    )
+    path = write_guarded(tmp_path, "fin", core, fallback_src=fixture_src("greedy_beta"))
+    s = load_like_arena(path)(0)
+    for _ in range(3):
+        t0 = time.perf_counter()
+        assert isinstance(s.act(dict(beta_obs)), list)
+        assert time.perf_counter() - t0 < 0.85
+    assert s.guard_stats()["core_timeouts"] == 3
+
+
+@linux_only
+def test_slow_import_and_init_stay_within_arena_start_limit(tmp_path):
+    core = (
+        "import time\n"
+        "time.sleep(30)\n"
+        "class Strategy:\n"
+        "    def __init__(self, pid): pass\n"
+        "    def act(self, obs): return 1\n"
+    )
+    slow_init = (
+        "import time\n"
+        "class Strategy:\n"
+        "    def __init__(self, pid): time.sleep(30)\n"
+        "    def act(self, obs): return 2\n"
+    )
+    t0 = time.perf_counter()
+    s = load_like_arena(write_guarded(tmp_path, "slowimp", core, fallback_src=slow_init))(0)
+    assert time.perf_counter() - t0 < 8.6
+    assert s.act({}) is None
+    stats = s.guard_stats()
+    assert "timeout" in stats["first_core_traceback"]
+    assert "timeout" in stats["fallback_init_error"]
+
+
+@linux_only
+def test_core_reading_stdin_cannot_desync_arenas_worker(tmp_path):
+    """In arena's worker stdin is the protocol pipe: a core reading it would block and forfeit."""
+    from arena.core import Entrant
+    from arena.match import play_match
+    from arena_games_dev.beta.game import BetaGame
+
+    core = (
+        "import sys\n"
+        "class Strategy:\n"
+        "    def __init__(self, pid): pass\n"
+        "    def act(self, obs):\n"
+        "        return [sys.stdin.readline()] or input()\n"
+    )
+    path = write_guarded(tmp_path, "stdin_core", core, fallback_src=fixture_src("greedy_beta"))
+    cand = Entrant("cand", f"{path}:Strategy")
+    idle = Entrant("idle", "arena.strategies:Idle", trusted=True)
+    r = play_match(BetaGame, [cand, idle], 0, isolate=True)
+    assert r.forfeit is None, r.error
+    assert r.winner == 0

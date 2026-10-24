@@ -1,7 +1,7 @@
 """Run untrusted code (generated strategies and simulators) in child processes.
 
-Every function here starts `runner_child.py` under `python -I -S` (standard library only, as in
-the tournament), hands it a job file and reads back one JSON object. Nothing here raises on a
+Every function here starts `runner_child.py` under `python -s -S -P` (standard library only, as
+in the tournament), hands it a job file and reads back one JSON object. Nothing here raises on a
 bad strategy or simulator: failures come back as data (tracebacks, sim_error, problems).
 """
 
@@ -56,6 +56,7 @@ class MatchResult:
     player_stats: list[dict] = field(default_factory=list)
     # per seat: {max_act_s, mean_act_s, exceptions, timeouts, forfeit_turn, first_error,
     #            malformed, illegal, guard_stats (dict | None)}
+    in_progress: bool = False  # sim_error 'timeout' and the child was killed during this match
 
     @classmethod
     def from_dict(cls, d: dict) -> "MatchResult":
@@ -88,6 +89,24 @@ def _invalid(a: str, b: str, seed: int, error: str) -> MatchResult:
     return MatchResult([a, b], seed, None, None, 0, error, [_empty_stats(), _empty_stats()])
 
 
+def _read_progress(path: Path) -> list[dict]:
+    """The complete result lines a killed child left behind (a cut-off last line is dropped)."""
+    out: list[dict] = []
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except Exception:
+        return out
+    for line in lines:
+        try:
+            d = json.loads(line)
+        except ValueError:
+            break
+        if not isinstance(d, dict):
+            break
+        out.append(d)
+    return out
+
+
 def _kill(proc: subprocess.Popen) -> None:
     """Kill the child and whatever it spawned (its own process group on POSIX)."""
     try:
@@ -114,8 +133,11 @@ def _run_child(
             kwargs: dict[str, Any] = {}
             if os.name == "posix":
                 kwargs["start_new_session"] = True
+            # -s -S -P is -I without -E: the same isolation (no site-packages, no user site,
+            # no script dir on sys.path; the environment is ours), but PYTHONHASHSEED=0 holds,
+            # as in arena's workers, so str hashing and set order are reproducible.
             proc = subprocess.Popen(
-                [sys.executable, "-I", "-S", str(RUNNER), job_path],
+                [sys.executable, "-s", "-S", "-P", str(RUNNER), job_path],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=errf,
@@ -221,7 +243,9 @@ def play_matches(
 
     entries: id -> strategy file; the id 'idle' (or a None path) plays None every turn. The
     pairings are split over `workers` child processes; a child that crashes or exceeds
-    `timeout_s` returns sim_error results for the matches it did not finish.
+    `timeout_s` returns sim_error results for the matches it did not finish: 'timeout' when it
+    was killed (in_progress=True on the match it was playing), the crash report for the match
+    it was playing and 'not started: ...' for the rest when it died.
     """
     pairings = [(str(a), str(b), int(s)) for a, b, s in pairings]
     if not pairings:
@@ -270,13 +294,12 @@ def play_matches(
             if data is not None and isinstance(data.get("results"), list):
                 done = data["results"]
             else:
-                try:
-                    lines = Path(progress_path).read_text(encoding="utf-8").splitlines()
-                    done = [json.loads(line) for line in lines if line.strip()]
-                except Exception:
-                    done = []
+                done = _read_progress(Path(progress_path))
                 if error is None:
                     error = (data or {}).get("error") or "child returned no results"
+            if error is not None and error.startswith("timeout"):
+                error = "timeout"  # the contract's marker: not the simulator's fault
+            error = error or "child returned too few results"
             for k, i in enumerate(chunk):
                 if k < len(done):
                     try:
@@ -284,14 +307,27 @@ def play_matches(
                         continue
                     except Exception:
                         pass
-                results[i] = _invalid(*pairings[i], error or "child returned too few results")
+                if k <= len(done):  # the match being played when the child stopped
+                    results[i] = _invalid(*pairings[i], error)
+                    results[i].in_progress = True
+                else:  # never started: worth playing again
+                    note = "timeout" if error == "timeout" else f"not started: {error}"
+                    results[i] = _invalid(*pairings[i], note)
         finally:
             try:
                 os.unlink(progress_path)
             except OSError:
                 pass
 
-    threads = [threading.Thread(target=run_chunk, args=(c,), daemon=True) for c in chunks]
+    def run_chunk_safe(chunk: list[int]) -> None:
+        try:
+            run_chunk(chunk)
+        except Exception as e:  # e.g. no space for the progress file: never raise
+            for i in chunk:
+                if results[i] is None:
+                    results[i] = _invalid(*pairings[i], f"not started: sandbox error: {e}")
+
+    threads = [threading.Thread(target=run_chunk_safe, args=(c,), daemon=True) for c in chunks]
     for t in threads:
         t.start()
     for t in threads:

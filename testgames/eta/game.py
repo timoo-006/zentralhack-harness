@@ -90,9 +90,7 @@ class EtaGame(Game):
             self.graph[v].add(u)
 
         # units[player_id][unit_id] = [node, energy]
-        self.units = [
-            [[BASES[p], BATTERY_MAX] for _ in range(UNITS_PER_PLAYER)] for p in range(2)
-        ]
+        self.units = [[[BASES[p], BATTERY_MAX] for _ in range(UNITS_PER_PLAYER)] for p in range(2)]
         self.profit_last_turn = [0.0, 0.0]
         self.cumulative_profit = [0.0, 0.0]
         self.n_invalid_actions_last_turn = [0, 0]

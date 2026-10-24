@@ -12,6 +12,7 @@ import json
 import math
 import random
 import re
+import textwrap
 import threading
 import time
 from dataclasses import dataclass
@@ -182,10 +183,13 @@ class LLM:
             return done("skipped_time", error="no free request slot in time")
         cost = 0.0
         errors: list[str] = []
+        # `timeout_s` bounds the whole request incl. retries (from here: the slot wait does
+        # not count), so a timed-out attempt is not retried with a fresh `timeout_s`.
+        end = time.monotonic() + (timeout_s or math.inf)
         try:
             for attempt in range(1, self.MAX_ATTEMPTS + 1):
                 rec["attempts"] = attempt
-                timeout = self._timeout(timeout_s)
+                timeout = self._timeout(timeout_s, end)
                 if timeout < self.MIN_CALL_S:
                     self.budget.release(r)
                     return done("skipped_time" if not errors else "error", cost=cost,
@@ -212,20 +216,25 @@ class LLM:
                     if not isinstance(e, RETRYABLE) or attempt == self.MAX_ATTEMPTS:
                         return done("error", cost=cost, error="; ".join(errors))
                     backoff = _backoff(e, attempt)
-                    if self._timeout(timeout_s) - backoff < self.MIN_CALL_S:
+                    if self._timeout(timeout_s, end) - backoff < self.MIN_CALL_S:
                         return done("error", cost=cost, error="; ".join(errors) + "; no time")
                     time.sleep(backoff)
                     r = self.budget.reserve(model, n_in, max_output_tokens)
                     if r is None:
                         return done("error", cost=cost, error="; ".join(errors) + "; no budget")
                     continue
-                return self._finish(response, r, cost, errors, done)
+                try:
+                    return self._finish(response, r, cost, errors, done)
+                except Exception as e:  # an odd response object: the request was made
+                    cost += self.budget.settle(r, None)  # no-op if _finish already settled
+                    errors.append(f"attempt {attempt}: bad response: {_describe(e)}")
+                    return done("error", cost=cost, error="; ".join(errors))
         finally:
             self._release()
         return done("error", cost=cost, error="; ".join(errors) or "no attempt made")
 
     def _finish(self, response, r: Reservation, cost: float, errors: list[str], done) -> LLMResult:
-        usage = _usage_dict(getattr(response, "usage", None))
+        usage = _usage_dict(_get(response, "usage"))
         cost += self.budget.settle(r, usage)  # usage None: the full reservation stays spent
         try:
             text = response.output_text or ""
@@ -233,23 +242,24 @@ class LLM:
                 text = str(text)
         except Exception:
             text = ""
-        raw = getattr(response, "status", None)
+        raw = _get(response, "status")
         status = raw if isinstance(raw, str) else "completed"
         if status == "completed":
             return done("completed", ok=True, text=text, usage=usage, cost=cost,
                         error="; ".join(errors) or None)  # fmt: skip
-        details = _jsonable(getattr(response, "incomplete_details", None))
+        details = _jsonable(_get(response, "incomplete_details"))
         if status == "incomplete":
             return done("incomplete", ok=True, text=text, usage=usage, cost=cost,
                         error=f"incomplete: {details}")  # fmt: skip
-        err = _jsonable(getattr(response, "error", None))
+        err = _jsonable(_get(response, "error"))
         return done("error", text=text, usage=usage, cost=cost,
                     error=f"response status {status!r}: {err or details}")  # fmt: skip
 
-    def _timeout(self, timeout_s: float | None) -> float:
-        """The request timeout: the caller's, cut to the time left on the clock."""
+    def _timeout(self, timeout_s: float | None, end: float = math.inf) -> float:
+        """The request timeout: the caller's (what is left of it by `end`, across retries),
+        cut to the time left on the clock."""
         window = self.clock.remaining() - self.CLOCK_SLACK_S
-        return min(timeout_s or math.inf, window)
+        return min(timeout_s or math.inf, end - time.monotonic(), window)
 
     def _acquire(self, wait_s: float) -> bool:
         deadline = time.monotonic() + wait_s
@@ -334,6 +344,14 @@ def _input_text(x) -> str:
     return json.dumps(x, default=str)
 
 
+def _get(obj, name: str):
+    """`obj.name`, or None if it is missing or its getter raises."""
+    try:
+        return getattr(obj, name, None)
+    except Exception:
+        return None
+
+
 def _usage_dict(usage) -> dict | None:
     if usage is None:
         return None
@@ -378,7 +396,11 @@ def _backoff(e: BaseException, attempt: int) -> float:
 
 
 def _describe(e: BaseException) -> str:
-    return f"{type(e).__name__}: {e}"[:2000]
+    try:
+        msg = str(e)
+    except Exception:  # a broken __str__ must not leak the reservation
+        msg = "<unprintable>"
+    return f"{type(e).__name__}: {msg}"[:2000]
 
 
 # -------------------------------------------------------------------- code extraction
@@ -390,17 +412,18 @@ _LANG = re.compile(r"[A-Za-z0-9_+#.-]*")  # the info string's first word
 def extract_code(text: str) -> str | None:
     """The Python file in an LLM answer.
 
-    The longest fenced ```python / ```py / bare ``` block (blocks that parse are preferred
-    over ones that do not; an unclosed last fence counts, as in a truncated answer). With no
-    such fence: the whole text if it parses as Python and defines a class. None otherwise.
+    The longest fenced ```python / ```py / bare ``` block, preferring blocks that define a
+    class (the file, not a usage snippet: a file with a syntax error still beats a snippet,
+    so a repair sees the error), then blocks that parse; an unclosed last fence counts, as in
+    a truncated answer, and an indented block (in a list item) is dedented. With no such
+    fence: the whole text if it parses as Python and defines a class. None otherwise.
     """
     if not text:
         return None
     text = text.replace("\r\n", "\n").replace("\r", "\n")
-    blocks = _fenced_python(text)
+    blocks = [b if _parses(b) else textwrap.dedent(b) for b in _fenced_python(text)]
     if blocks:
-        parsed = [b for b in blocks if _parses(b)]
-        best = max(parsed or blocks, key=len)
+        best = max(blocks, key=_rank)
         return best.strip("\n") + "\n"
     stripped = text.strip()
     try:
@@ -445,3 +468,15 @@ def _parses(src: str) -> bool:
         return True
     except Exception:
         return False
+
+
+_CLASS = re.compile(r"^[ \t]*class[ \t]+[A-Za-z_]\w*[ \t]*[:(]", re.MULTILINE)
+
+
+def _rank(src: str) -> tuple[bool, bool, int]:
+    """Sort key of a candidate block: (defines a class, parses, length)."""
+    try:
+        tree = ast.parse(src)
+    except Exception:
+        return _CLASS.search(src) is not None, False, len(src)
+    return any(isinstance(n, ast.ClassDef) for n in ast.walk(tree)), True, len(src)

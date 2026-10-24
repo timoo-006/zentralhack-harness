@@ -78,14 +78,20 @@ class GreedyCapture(_MapAware):
     """Captures the nodes it does not own, cheapest and most valuable first; idle units go home.
 
     Every node it does not own needs one unit more than the opponent has on it or heading to
-    it, minus its own units already there or heading there. Free units (on the base, or on
-    a node it already owns that no opponent unit is heading to) are paired greedily with the
-    needy nodes by value * turns left after capture / (travel time + 1). Units with nothing
-    to do walk home. Every unit moves one edge along a shortest path by travel time.
+    it, but a node the opponent is on or heading to is only attacked if its value pays the
+    upkeep of that squad. Units that lead on a node they do not own yet stay there; on an
+    owned node, as many units stay as the opponent has on it or heading to it (a tie keeps
+    the node), if the node's value pays their upkeep. All other units are free. Free units
+    are paired greedily (best first) with the nodes still in need, scored by
+    value * min(turns left after capture, HORIZON) minus the upkeep of the whole squad there
+    and back, divided by (travel time + 1); pairs that do not pay are skipped. Units with
+    nothing to do walk home. Every unit moves one edge along a shortest path by travel time.
 
-    What it ignores: defending ahead of time, the upkeep of the walk, and the opponent's
-    reaction.
+    What it ignores: sending defenders to a threatened node, how long a capture will last,
+    and the opponent's reaction.
     """
+
+    HORIZON = 20
 
     def act(self, obs: dict) -> list[tuple[int, int, int]]:
         self._setup(obs)
@@ -104,28 +110,32 @@ class GreedyCapture(_MapAware):
         for _, to_node, count, _ in obs["opponent_transits"]:
             threat[to_node] += count
 
-        need = [0] * n
-        for node in range(n):
-            if node in (base, obs["opponent_base"]) or owned[node] or value[node] == 0:
-                continue
-            need[node] = max(0, theirs[node] + threat[node] + 1 - mine[node] - heading[node])
-
         free = [0] * n
-        free[base] = mine[base]
+        squad = [0] * n  # units a capture of the node needs in total
+        need = [0] * n  # of those, still missing
         for node in range(n):
-            if node == base or mine[node] == 0:
-                continue
-            if owned[node] and threat[node] == 0 and theirs[node] == 0:
-                free[node] = mine[node]  # captured and safe: done here
-            elif owned[node]:
-                free[node] = max(0, mine[node] - theirs[node] - threat[node])
-            elif node == obs["opponent_base"] or value[node] == 0:
+            if node == base:
                 free[node] = mine[node]
+                continue
+            enemy = theirs[node] + threat[node]
+            if owned[node]:  # a tie keeps the node: hold it if that pays, free the rest
+                keep = enemy if enemy * UPKEEP <= value[node] else 0
+                free[node] = max(0, mine[node] - keep)
+                continue
+            leading = mine[node] > theirs[node]
+            if not leading:
+                free[node] = mine[node]
+            if value[node] == 0 or (enemy > 0 and (enemy + 1) * UPKEEP > value[node]):
+                free[node] = mine[node]  # nothing to win, or a fight that does not pay
+                continue
+            squad[node] = enemy + 1
+            here = mine[node] if leading else 0
+            need[node] = max(0, squad[node] - here - heading[node])
 
         def score(src: int, dst: int) -> float:
             d = self.dist[src][dst]
-            turns_owned = N_TURNS - turn - d - 1
-            return (value[dst] * turns_owned - UPKEEP * 2 * d) / (d + 1)
+            turns_owned = min(N_TURNS - turn - d - 1, self.HORIZON)
+            return (value[dst] * turns_owned - UPKEEP * squad[dst] * (2 * d + 2)) / (d + 1)
 
         pairs = sorted(
             (-score(src, dst), self.dist[src][dst], src, dst)
@@ -143,7 +153,8 @@ class GreedyCapture(_MapAware):
                 continue
             free[src] -= k
             need[dst] -= k
-            orders[(src, self._next_hop(src, dst))] += k
+            if src != dst:
+                orders[(src, self._next_hop(src, dst))] += k
 
         for node in range(n):
             if node != base and free[node] > 0:

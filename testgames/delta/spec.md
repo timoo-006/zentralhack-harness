@@ -378,8 +378,9 @@ uses the turn-0 demand:
 | P1     | 12.6    | 8        | 16.0   | 0      | 0.0       | -3.4   | 16.6        |
 
 Both players lost money on turn 0: player 0 sent 3 drones where 1 would have served the same
-demand, and bought a drone it cannot use before turn 1. With negative money it cannot buy again
-until it has earned at least 15.0 more. Player 0's observation on turn 1 is then:
+demand, and bought a drone it cannot use before turn 1. With money -3.7 it cannot buy again
+until its money is back to at least 15.0, i.e. until it has earned 18.7 more. Player 0's
+observation on turn 1 is then:
 
 ```python
 {

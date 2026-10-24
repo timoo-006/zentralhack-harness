@@ -261,7 +261,9 @@ class EpsilonGame(Game):
 
         # 4. Payout: owned values minus upkeep of every unit not on its own base.
         for player_id in range(2):
-            revenue = float(sum(v for v, o in zip(self.values, self.owner) if o == player_id))
+            revenue = float(
+                sum(v for v, o in zip(self.values, self.owner, strict=True) if o == player_id)
+            )
             away = self.UNITS_PER_PLAYER - self.units[player_id][self.bases[player_id]]
             self.profit_last_turn[player_id] = revenue - self.UPKEEP * away
             self.cumulative_profit[player_id] += self.profit_last_turn[player_id]

@@ -35,7 +35,8 @@ def main() -> None:
         if not (task_dir / "spec.md").is_file() or not (task_dir / "task.json").is_file():
             parser.error(f"{task_dir}: no spec.md/task.json")
         run_dir = Path("runs").resolve() / task_dir.resolve().name
-        run_dir /= datetime.now().strftime("%Y%m%d-%H%M%S")
+        # The pid keeps parallel runs of one task apart (experiments start many at once).
+        run_dir /= datetime.now().strftime("%Y%m%d-%H%M%S") + f"-{os.getpid()}"
         run_dir.mkdir(parents=True)
         latest = run_dir.parent / "latest"  # runs/<task>/latest: the newest run
         try:

@@ -2,7 +2,7 @@
 
 Standard library only, and it must never import harness or anything third-party: it runs as
 
-    python -I -S runner_child.py job.json
+    python -s -S -P runner_child.py job.json       (-I minus -E, so PYTHONHASHSEED=0 holds)
 
 so that a strategy importing a third-party package fails here exactly as it would in the
 tournament. It prints exactly one JSON object on the original stdout; whatever the untrusted
@@ -27,6 +27,7 @@ Observations travel as repr() strings, so tuples and lists stay distinct.
 """
 
 import ast
+import gc
 import importlib.util
 import json
 import math
@@ -324,14 +325,16 @@ def play_one(job: dict, sim_cls, classes: dict, pairing: list, index: int) -> di
         entry = classes.get(eid)
         if entry is None:  # idle: always None, never forfeits
             continue
-        cls, load_error = entry
+        cls, load_error, load_secs = entry
         if cls is None:
             stats[seat]["forfeit_turn"] = 0
-            stats[seat]["exceptions"] += 1
+            stats[seat]["exceptions" if "timeout" not in str(load_error) else "timeouts"] += 1
             stats[seat]["first_error"] = f"load failed: {load_error}"[-TB_CHARS:]
             continue
         OUTPUT.key = (index, seat)
-        status, inst, error, _ = timed_call(cls, (seat,), init_limit)
+        # arena's init_timeout covers import and __init__ together
+        limit = max(0.1, init_limit - load_secs)
+        status, inst, error, _ = timed_call(cls, (seat,), limit)
         OUTPUT.key = None
         if status != "ok":
             stats[seat]["forfeit_turn"] = 0
@@ -441,27 +444,43 @@ def play_one(job: dict, sim_cls, classes: dict, pairing: list, index: int) -> di
     return result
 
 
-def run_matches(job: dict) -> dict:
+def load_entries(job: dict, pairing: list, index: int) -> dict:
+    """Fresh strategy classes for one match, as arena starts a fresh worker for every match.
+
+    {id: None (idle) | (cls | None, error | None, load seconds)}. Module-level state of a
+    strategy (caches, counters) thus never leaks from one match into the next.
+    """
     init_limit = float(job.get("init_timeout_s", 10.0))
+    entries = job.get("entries", {})
+    classes: dict = {}
+    for seat, eid in enumerate(pairing[:2]):
+        path = entries.get(eid)
+        if eid in classes or path is None:
+            classes.setdefault(eid, None)
+            continue
+        OUTPUT.key = (index, seat)
+        t0 = time.perf_counter()
+        cls, error = load_class(
+            path, job.get("strategy_class", "Strategy"), f"_hz_entry_{seat}", True, init_limit
+        )
+        OUTPUT.key = None
+        classes[eid] = (cls, error, time.perf_counter() - t0)
+    return classes
+
+
+def run_matches(job: dict) -> dict:
     sim_cls, sim_error = load_class(
         job["sim_path"], job.get("sim_class", "Game"), "_hz_sim", True, SIM_CALL_LIMIT_S
     )
     job["_sim_load_error"] = sim_error
-    classes: dict = {}
-    for k, (eid, path) in enumerate(sorted(job.get("entries", {}).items())):
-        if path is None:
-            classes[eid] = None
-            continue
-        cls, error = load_class(
-            path, job.get("strategy_class", "Strategy"), f"_hz_entry_{k}", True, init_limit
-        )
-        classes[eid] = (cls, error)
     progress_path = job.get("progress_path")
     progress = open(progress_path, "a", encoding="utf-8") if progress_path else None
     results = []
     try:
         for index, pairing in enumerate(job.get("pairings", [])):
+            before = set(sys.modules)
             try:
+                classes = load_entries(job, pairing, index)
                 res = play_one(job, sim_cls, classes, pairing, index)
             except BaseException:
                 res = {
@@ -473,6 +492,11 @@ def run_matches(job: dict) -> dict:
                     "sim_error": f"runner error: {traceback.format_exc()[-TB_CHARS:]}",
                     "player_stats": [new_seat_stats(), new_seat_stats()],
                 }
+            finally:
+                classes = None
+                for name in [m for m in sys.modules if m.startswith("_hz_") and m not in before]:
+                    sys.modules.pop(name, None)  # this match's strategy modules: drop them
+                gc.collect()
             results.append(res)
             if progress is not None:
                 progress.write(json.dumps(res) + "\n")

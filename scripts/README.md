@@ -30,8 +30,11 @@ uv run python scripts/evaluate.py --wsl --cross \
 
 `evaluate.py` prints markdown tables on stdout: check (PASS / FAIL (reason) / MISSING), W-D-L,
 net and score against the baselines, results per baseline, the cross tournament per strategy
-and per group, and spend/calls/wall time with flags BUDGET, DEADLINE, SIGTERM. It appends one
-JSON line per strategy to `runs/eval_log.jsonl` (time, eval commit, run commit, all numbers);
+and per group, and spend/calls/wall time with flags BUDGET, DEADLINE, SIGTERM, FORFEITS(n)
+(panel/cross forfeits) and COSTLOG(n) (calls whose usage costs more than the harness logged;
+spend is re-priced from usage). Isolated strategies run under the venv's base Python (no
+third-party packages, like the evaluation; `--python ''` = the venv's). It appends one JSON
+line per strategy to `runs/eval_log.jsonl` (time, eval commit, run commit, all numbers);
 `--no-log` skips that. A draw is |s0 - s1| <= 1% of |s0| + |s1|, and a forfeit loses.
-Other options: `--game` (override the game), `--check-seeds`, `--cross-seeds`, `--seed-start`,
-`--skip-check`, `--skip-panel`, and `--strict` (exit 1 on a failed check, budget or deadline).
+Other options: `--game`, `--check-seeds`, `--cross-seeds`, `--seed-start`, `--skip-check`,
+`--skip-panel`, `--strict` (exit 1 on a failed check, any forfeit, budget or deadline).

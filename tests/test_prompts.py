@@ -59,10 +59,11 @@ def test_no_dev_game_specifics(name: str) -> None:
 
 def test_personas() -> None:
     personas = json.loads(_read("personas.json"))
-    assert isinstance(personas, list) and 4 <= len(personas) <= 5
+    assert isinstance(personas, list) and 4 <= len(personas) <= 8
     names = [p["name"] for p in personas]
     assert len(set(names)) == len(names)
     assert "safe" in names
+    assert "sparring_naive" in names  # pipeline.SPARRING_PERSONA: self-play sparring partner
     for p in personas:
         assert set(p) == {"name", "persona"}
         assert isinstance(p["name"], str) and re.fullmatch(r"[a-z_]+", p["name"])

@@ -269,3 +269,118 @@ def test_empty_fields() -> None:
     info = parse_spec("no code at all, just `prose`.")
     assert info == SpecInfo()
     assert "unknown" in describe_obs_keys(info)
+
+
+# ------------------------------------------------- adversarial: choosing the observation
+
+
+OBS_SCHEMA = """
+```python
+{
+    "turn": int,
+    "units": list[int],
+    "score": float,
+    "map": list[tuple[int, int]],
+}
+```
+
+```python
+{"turn": 0, "units": [3, 0], "score": 0.0, "map": [(0, 1)]}
+```
+"""
+
+
+@pytest.mark.parametrize(
+    "actions",
+    [
+        # a dict-shaped action with a schema and more block-level examples than observations
+        '```python\n{"moves": list[tuple[int, int, int]], "build": int}\n```\n'
+        '```python\n{"moves": [], "build": 0}\n{"moves": [(0, 1, 2)], "build": 1}\n'
+        '{"moves": [(1, 0, 2)], "build": 2}\n```\n',
+        # the same with a 3-key action record
+        '```python\n{"unit": int, "from": int, "to": int}\n```\n'
+        '```python\n{"unit": 1, "from": 0, "to": 1}\n{"unit": 2, "from": 0, "to": 1}\n```\n',
+    ],
+)
+def test_action_dicts_do_not_displace_the_observation(actions: str) -> None:
+    for spec in (OBS_SCHEMA + actions, actions + OBS_SCHEMA):
+        info = parse_spec(spec)
+        assert info.obs_keys == ["turn", "units", "score", "map"]
+        assert info.example_observations == [
+            {"turn": 0, "units": [3, 0], "score": 0.0, "map": [(0, 1)]}
+        ]
+
+
+def test_constant_tables_are_not_observations() -> None:
+    spec = (
+        "```python\n"
+        'UNIT_CAPACITY = {"light": 3, "heavy": 8, "fast": 2}\n'
+        'UNIT_SPEED = {"light": 1, "heavy": 1, "fast": 2}\n'
+        'UNIT_COST = {"light": 1.0, "heavy": 3.0, "fast": 2.0}\n'
+        "```\n\n"
+        '```python\n{"turn": 0, "units": [], "score": 0.0, "map": [(0, 1)]}\n```\n'
+    )
+    info = parse_spec(spec)
+    assert info.obs_keys == ["turn", "units", "score", "map"]
+    assert len(info.example_observations) == 1
+    assert info.constants["UNIT_SPEED"] == {"light": 1, "heavy": 1, "fast": 2}
+    # with nothing else to go on, a constant table is still better than nothing
+    info = parse_spec("```python\nCOST = {'a': 1, 'b': 2, 'c': 3}\n```")
+    assert info.obs_keys == ["a", "b", "c"]
+
+
+def test_partial_examples_keep_the_schema_keys() -> None:
+    spec = (
+        '```python\n{"turn": int, "a": int, "b": list[int], "c": float, "d": bool}\n```\n'
+        '```python\n{"turn": 3, "a": 1, "b": [1]}  # other fields omitted\n```\n'
+    )
+    info = parse_spec(spec)
+    assert info.obs_keys == ["turn", "a", "b", "c", "d"]  # contract: the schema's keys
+    assert info.example_observations == []  # a partial dict is no observation to probe with
+
+
+@pytest.mark.parametrize("lang", ["json", "python", ""])
+def test_schema_written_as_type_name_strings(lang: str) -> None:
+    body = '{"turn": "int", "units": "list[int]", "score": "float | None", "ok": "bool"}'
+    info = parse_spec(f"```{lang}\n{body}\n```\n")
+    assert info.obs_keys == ["turn", "units", "score", "ok"]
+    assert info.example_observations == []
+    # ordinary string values are data, not types
+    info = parse_spec(f'```{lang}\n{{"phase": "setup", "name": "x", "kind": "strategy"}}\n```\n')
+    assert len(info.example_observations) == 1
+
+
+def test_many_examples_are_capped_and_fast() -> None:
+    import time
+
+    rows = "".join(f"{{'t': {i}, 'a': [...], 'b': [...]}}\n" for i in range(3000))
+    spec = f"```python\n{rows}{{'t': -1, 'a': [1], 'b': [2]}}\n```"
+    t = time.perf_counter()
+    info = parse_spec(spec)
+    assert time.perf_counter() - t < 3.0
+    assert 1 <= len(info.example_observations) <= 32
+    assert not any(_contains_ellipsis(o) for o in info.example_observations)
+
+
+@pytest.mark.parametrize(
+    "expr",
+    ["-" * 200_000 + "1", "1+" * 100_000 + "1", "a" + ".b" * 100_000, "not " * 50_000 + "1"],
+    ids=["unary", "binop", "attribute", "not"],
+)
+@pytest.mark.parametrize("lang", ["python", ""])
+def test_pathological_expressions(expr: str, lang: str) -> None:
+    info = parse_spec(f"```{lang}\nx = {expr}\n```\n```python\n{{'a': 1, 'b': 2, 'c': 3}}\n```")
+    assert info.example_observations == [{"a": 1, "b": 2, "c": 3}]
+
+
+@pytest.mark.parametrize("game", ["gamma", "delta"])
+def test_own_test_games(game: str) -> None:
+    path = Path(__file__).resolve().parents[1] / "testgames" / game / "spec.md"
+    if not path.is_file():
+        pytest.skip(f"testgames/{game} not present")
+    info = parse_spec(path.read_text(encoding="utf-8"))
+    assert info.obs_keys and len(info.obs_keys) >= 9
+    assert len(info.example_observations) >= 2
+    for obs in info.example_observations:
+        assert list(obs) == info.obs_keys
+        assert not _contains_ellipsis(obs)

@@ -147,16 +147,19 @@ def _windows_path(p: str) -> str:
 
 
 def make_run(path: Path, group: str, tasks_dir: Path, game: str | None) -> Run:
+    path = path.resolve()  # runs/<task>/latest is a link: use the run directory it names
+    in_run = path.is_file() and path.parent.name == "output"
     if path.is_file():  # a bare strategy file: .../output/strategy.py or anything
         strategy = path
-        run_dir = path.parent.parent if path.parent.name == "output" else path.parent
+        run_dir = path.parent.parent if in_run else path.parent
     else:
         run_dir = path
         strategy = None
     meta = _read_json(run_dir / "run_meta.json")
     task_name = run_dir.parent.name if RUN_NAME.match(run_dir.name) else run_dir.name
     task = {}
-    candidates = [tasks_dir / task_name / "task.json"]
+    # the run's own copy (run_harness.sh), then tasks/<task>/, then where the run read it from
+    candidates = [run_dir / "task.json", tasks_dir / task_name / "task.json"]
     if meta.get("task_dir"):
         candidates.append(Path(_windows_path(meta["task_dir"])) / "task.json")
     for c in candidates:
@@ -167,7 +170,7 @@ def make_run(path: Path, group: str, tasks_dir: Path, game: str | None) -> Run:
         s = run_dir / "output" / (task.get("strategy_file") or "strategy.py")
         strategy = s if s.is_file() else None
     run = Run(
-        id=f"{task_name}/{run_dir.name}" if path.is_dir() else f"{task_name}/{path.stem}",
+        id=f"{task_name}/{run_dir.name}" if path.is_dir() or in_run else f"{task_name}/{path.stem}",
         group=group,
         path=run_dir,
         strategy=strategy,
@@ -227,6 +230,7 @@ def read_logs(run_dir: Path, task: dict, meta: dict) -> dict:
     statuses: Counter[str] = Counter()
     by_model: dict[str, dict] = {}
     spent_sum = spent_max = llm_secs = 0.0
+    underlogged = 0  # calls whose logged cost is below what their usage costs
     for row in rows:
         status = str(row.get("status") or "completed")
         statuses[status] += 1
@@ -234,9 +238,14 @@ def read_logs(run_dir: Path, task: dict, meta: dict) -> dict:
             spent_max = max(spent_max, _num(row.get(key)) or 0.0)
         if status.startswith("skipped"):
             continue
+        # Re-price every call from its usage, independently of the harness's own accounting
+        # (what the gateway charges); a logged cost may be higher (kept reservations).
         c = _num(row.get("cost"))
-        if c is None and "spent_usd" not in row:
-            c = _recost(row, task.get("prices") or {})
+        rc = _recost(row, task.get("prices") or {})
+        if rc is not None:
+            if c is not None and rc > c + 1e-9 + 1e-6 * rc:
+                underlogged += 1
+            c = rc if c is None else max(c, rc)
         m = by_model.setdefault(str(row.get("model")), {"calls": 0, "cost": 0.0})
         m["calls"] += 1
         m["cost"] += c or 0.0
@@ -252,7 +261,8 @@ def read_logs(run_dir: Path, task: dict, meta: dict) -> dict:
         for key in ("elapsed", "elapsed_s", "t", "time_s", "time"):
             ev_time = max(ev_time, _num(e.get(key)) or 0.0)
         name = " ".join(str(e.get(k, "")) for k in ("event", "stage", "type", "kind", "name"))
-        promotions += "promot" in name.lower()
+        name = name.lower()
+        promotions += "promot" in name and "reject" not in name  # not promote_rejected
 
     wall, source = _num(meta.get("wall_s")), "run_meta"
     if wall is None and ev_time:
@@ -266,6 +276,7 @@ def read_logs(run_dir: Path, task: dict, meta: dict) -> dict:
         "spend_usd": round(spend, 6),
         "budget_usd": budget,
         "within_budget": None if budget is None else spend <= budget,
+        "cost_underlogged": underlogged,
         "calls": sum(m["calls"] for m in by_model.values()),
         "skipped_calls": sum(n for s, n in statuses.items() if s.startswith("skipped")),
         "statuses": dict(statuses),
@@ -309,7 +320,20 @@ def _limits(turn_timeout: float):
     return Limits(turn_timeout=turn_timeout)
 
 
-def check_one(ref: str, target: str, seeds: list[int], turn_timeout: float, isolate: bool):
+def bare_python() -> str | None:
+    """The interpreter isolated strategies run under: this venv's base Python, which has no
+    third-party packages, like the evaluation's bare Python 3.13. Otherwise a strategy that
+    imports e.g. pydantic passes here and forfeits there. None: this interpreter."""
+    base = getattr(sys, "_base_executable", None)
+    if LINUX and sys.prefix != sys.base_prefix and base and os.access(base, os.X_OK):
+        return base
+    return None
+
+
+def check_one(
+    ref: str, target: str, seeds: list[int], turn_timeout: float, isolate: bool,
+    python: str | None = None,
+):  # fmt: skip
     """arena check: the strategy in every seat against idle; it must never forfeit."""
     try:
         from arena.conformance import check_strategy
@@ -319,7 +343,9 @@ def check_one(ref: str, target: str, seeds: list[int], turn_timeout: float, isol
 
         game_cls = load_game(ref)
         if isolate:
-            report = check_strategy(game_cls, target, seeds=seeds, limits=_limits(turn_timeout))
+            report = check_strategy(
+                game_cls, target, seeds=seeds, limits=_limits(turn_timeout), python=python
+            )
             matches = report["matches"]
         else:  # Windows: same matches in this interpreter (no time limits, no isolation)
             cand, idle = Entrant("candidate", target), Entrant("idle", "arena.strategies:Idle")
@@ -401,7 +427,8 @@ def evaluate_game(key: str, runs: list[Run], args, isolate: bool) -> dict:
     game_cls = package.GAME
     playable = [r for r in runs if r.strategy is not None]
     seeds = list(range(args.seed_start, args.seed_start + args.seeds))
-    entrants = {r.id: Entrant(r.id, r.target) for r in playable}
+    python = args.python if isolate else None  # the baselines keep this one (they need arena)
+    entrants = {r.id: Entrant(r.id, r.target, python=python) for r in playable}
     info: dict = {}
 
     if not args.skip_panel and playable:
@@ -481,9 +508,23 @@ def _check_cell(r: Run) -> str:
     return f"FAIL ({r.check['reason']}, {r.check['forfeits']}/{r.check['matches']})"
 
 
+def _forfeits(r: Run) -> int:
+    """Matches the strategy forfeited in the panel and the cross tournament."""
+    return sum(t.forfeits for t in (r.panel, r.cross) if t)
+
+
+def _check_ok(r: Run) -> bool | None:
+    """Check passed; None if it was not run."""
+    if r.strategy is None:
+        return False
+    return None if r.check is None else bool(r.check["passed"])
+
+
 def markdown(by_game: dict[str, list[Run]], infos: dict[str, dict], args, isolate: bool) -> str:
     out = []
     mode = "isolated" if isolate else "IN-PROCESS (no time limits: not conformance-grade)"
+    if isolate:
+        mode += f", strategies under {args.python or sys.executable}"
     for key, runs in by_game.items():
         info = infos.get(key, {})
         out.append(f"## {key}: {len(runs)} run(s), {mode}, seeds {args.seeds}\n")
@@ -505,6 +546,10 @@ def markdown(by_game: dict[str, list[Run]], infos: dict[str, dict], args, isolat
                 flags.append("SIGTERM")
             if lg["sigkill"]:
                 flags.append("SIGKILL")
+            if lg["cost_underlogged"]:
+                flags.append(f"COSTLOG({lg['cost_underlogged']})")  # usage costs more than logged
+            if _forfeits(r):
+                flags.append(f"FORFEITS({_forfeits(r)})")  # in panel/cross, beyond the check
             wall = "?" if lg["wall_s"] is None else f"{lg['wall_s']:.0f}"
             cells = [
                 r.id, r.group, _check_cell(r),
@@ -571,7 +616,7 @@ def markdown(by_game: dict[str, list[Run]], infos: dict[str, dict], args, isolat
             walls = [r.logs["wall_s"] for r in rs if r.logs["wall_s"] is not None]
             out.append(
                 f"| {g} | {key} | {len(rs)} | {_frac([r.strategy is not None for r in rs])}"
-                f" | {_frac([bool(r.check and r.check['passed']) for r in rs])}"
+                f" | {_frac([_check_ok(r) for r in rs])}"
                 f" | {(sum(p.score for p in panels) / len(panels)) if panels else 0:.0%}"
                 f" | {sum(p.net for p in panels):+d}"
                 f" | {_frac([r.logs['within_budget'] for r in rs])}"
@@ -609,6 +654,7 @@ def write_log(path: Path, runs: list[Run], args, isolate: bool) -> None:
                 "eval_dirty": dirty,
                 "platform": platform.system(),
                 "isolated": isolate,
+                "strategy_python": args.python if isolate else None,
                 "id": r.id,
                 "group": r.group,
                 "run_dir": str(r.path.resolve()),
@@ -676,6 +722,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-check", action="store_true")
     parser.add_argument("--skip-panel", action="store_true")
     parser.add_argument("--in-process", action="store_true", help="never isolate (fast, unsafe)")
+    parser.add_argument(
+        "--python",
+        help="interpreter for isolated strategies (default: the venv's base Python, no "
+        "third-party packages, like the evaluation; '' = this interpreter)",
+    )
     parser.add_argument("--wsl", action="store_true", help="Windows: re-run inside WSL")
     parser.add_argument("--wsl-distro", default="Ubuntu-24.04")
     parser.add_argument("--log", type=Path, default=REPO / "runs" / "eval_log.jsonl")
@@ -688,6 +739,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.wsl and not LINUX:
         return reexec_in_wsl(argv, args.wsl_distro)
     isolate = LINUX and not args.in_process
+    args.python = (bare_python() if args.python is None else args.python) or None
     if not LINUX and not args.in_process:
         _say(
             "WARNING: isolated play needs Linux; playing IN-PROCESS instead (no act time limit, "
@@ -730,14 +782,20 @@ def main(argv: list[str] | None = None) -> int:
         seeds = list(range(args.check_seeds))
         _say(f"check: {len(todo)} strateg{'y' if len(todo) == 1 else 'ies'}")
         with ProcessPoolExecutor(max(1, args.workers), mp_context=get_context("spawn")) as pool:
+            python = args.python if isolate else None
             futures = [
                 pool.submit(
-                    check_one, game_ref(r.game), r.target, seeds, args.turn_timeout, isolate
+                    check_one, game_ref(r.game), r.target, seeds, args.turn_timeout, isolate, python
                 )
                 for r in todo
             ]
             for r, fut in zip(todo, futures, strict=True):
-                r.check = fut.result()
+                try:
+                    r.check = fut.result()
+                except Exception:  # e.g. an in-process strategy killed the pool's process
+                    r.check = {"passed": False, "matches": 0, "forfeits": 0,
+                               "reason": "evaluator error",
+                               "error": traceback.format_exc()[-2000:]}  # fmt: skip
 
     infos: dict[str, dict] = {}
     for key, game_runs in by_game.items():
@@ -756,6 +814,7 @@ def main(argv: list[str] | None = None) -> int:
             for r in runs
             if r.strategy is None
             or (r.check is not None and not r.check["passed"])
+            or _forfeits(r)  # a forfeit on any seed is a conformance failure too
             or r.logs["within_budget"] is False
             or r.logs["within_deadline"] is False
         ]

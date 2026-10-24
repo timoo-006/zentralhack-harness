@@ -8,7 +8,14 @@ import random
 
 from arena.core import Strategy
 
-from testgames.eta.game import BATTERY_MAX, UNIT_CAPACITY, UNITS_PER_PLAYER, hop_distances
+from testgames.eta.game import (
+    BATTERY_MAX,
+    DRAIN,
+    MOVE_COST,
+    UNIT_CAPACITY,
+    UNITS_PER_PLAYER,
+    hop_distances,
+)
 
 
 class DoNothing(Strategy):
@@ -130,7 +137,7 @@ class SafeGreedy(Strategy):
                 if energy >= self.LEAVE_ENERGY:
                     free.append(unit)
                 continue
-            if energy - DRAIN_STAY < 2 * home[node] - 1:
+            if energy - DRAIN < 2 * home[node] - 1:
                 moves.append([uid, self._hop(node, base)])  # must head home now
             elif target[node] > 0:
                 target[node] -= 1  # stays and serves
@@ -148,7 +155,7 @@ class SafeGreedy(Strategy):
                 continue
             unit = by_id[uid]
             nxt = self._hop(unit["node"], v)
-            if unit["energy"] - 2 < 2 * home[nxt] - 1:
+            if unit["energy"] - MOVE_COST - DRAIN < 2 * home[nxt] - 1:
                 continue  # could not get back from there
             used.add(uid)
             target[v] -= 1
@@ -157,6 +164,3 @@ class SafeGreedy(Strategy):
             if uid not in used and unit["node"] != base:
                 moves.append([uid, self._hop(unit["node"], base)])  # nothing to do: recharge
         return moves
-
-
-DRAIN_STAY = 1  # energy a rover loses by staying away one more turn

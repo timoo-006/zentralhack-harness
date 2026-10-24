@@ -65,8 +65,10 @@ class Strategy:
 - Do not mutate the observation. Never rely on the observation containing anything the spec
   does not promise.
 - If the observation reports feedback about your previous action (malformed, illegal moves),
-  treat a bad report as a bug signal: switch to a simpler, conservative way of building
-  moves for the rest of the match instead of repeating the same mistake.
+  treat repeated bad reports as a bug signal: after two such turns, switch to a simpler,
+  conservative way of building moves for the rest of the match instead of repeating the same
+  mistake. A single bad report can come from the harness replacing one action by a no-op
+  (or from a skipped turn), so one alone is no reason to change course.
 
 ## How to approach a task
 

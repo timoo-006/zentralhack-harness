@@ -104,6 +104,33 @@ DoNothing 0 wins). Takeaways:
   --model gpt-6.1-sol --model gpt-6-astra`). At most 1-2 real C runs before the freeze.
 - Calibration done, so no more one-off experiments without a reason. Target: < $30 total.
 
+## Against overfitting (rules for everyone tuning prompts or code)
+
+We are scored on two games nobody has seen, so every change is judged by how it transfers.
+
+| set | games | use |
+|-----|-------|-----|
+| tuning | alpha, beta, gamma, delta, epsilon, eta | run, read the failures, change prompts/code |
+| **held out** | **zeta, theta** | only measure; never read their transcripts to fix prompts |
+
+- **No game-specific content** in `src/harness/` (enforced by `tests/test_prompts.py` for
+  the prompts): a lesson goes into the playbook only if it is phrased for the whole family and
+  helped on at least two tuning games.
+- **Compare on data, not one run**: a change is kept if it improves (or keeps) the
+  cross-tournament result over all tuning games, 2-3 runs each, and does not hurt the
+  held-out games. Single-run differences are noise (the evaluation itself averages 5 runs).
+- **In a run** (built into `pipeline.py`):
+  - candidates are ranked by their **mean score per opponent** (every opponent weighs the
+    same), then their **worst pairing**, then the margin;
+  - a challenger replaces the champion only if it is better by a margin and does not lose
+    the head-to-head (incumbent protection against noisy self-play);
+  - the pool always contains **idle** (never lose to doing nothing), the **safe** persona,
+    and a cheap **sparring** draft that stands in for the naive part of the real field;
+  - both seats and several seeds (= several random maps) per pairing;
+  - the simulator is trusted only after it reproduces the spec's worked examples; strategies
+    are written from the spec, never from the simulator's code, so they cannot be tuned to
+    its bugs.
+
 ## How to run things
 
 Linux matters: the guard's timer (`signal.setitimer`) and arena's isolated runner

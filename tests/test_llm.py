@@ -76,6 +76,9 @@ def status_error(cls, code, headers=None):
 def make(tmp_path, client, *, limit=10.0, deadline=1000.0, task=TASK, **kw):
     budget = Budget(limit, PRICES)
     clock = Clock(deadline, margin_s=12.0)
+    # The clock counts from when clock.py was imported (process start): re-anchor it, or a
+    # long test session would leave a short deadline already expired.
+    clock.start = time.monotonic()
     log = tmp_path / "logs" / "transcript.jsonl"
     return LLM(task, budget, clock, log, client=client, **kw), budget, clock, log
 
@@ -136,7 +139,7 @@ def test_success_and_cost_accounting(tmp_path):
     assert kw["max_output_tokens"] == 5000
     assert kw["store"] is False
     assert "tools" not in kw and "previous_response_id" not in kw
-    assert kw["timeout"] == 120
+    assert 119.5 < kw["timeout"] <= 120
     (rec,) = lines(log)
     assert rec["label"] == "t1" and rec["status"] == "completed"
     assert math.isclose(rec["cost"], expected) and math.isclose(rec["spent_total"], expected)
@@ -521,7 +524,7 @@ def test_retries_share_the_caller_timeout(tmp_path, monkeypatch):
     r = m.call(label="t", model="gpt-6-luna", instructions="s", input="i", timeout_s=5.0)
     assert r.ok and len(client.calls) == 2
     first, second = (c["timeout"] for c in client.calls)
-    assert first <= 5.0 and second <= first - 0.09  # what the first attempt used is gone
+    assert first <= 5.0 and second <= first - 0.05  # what the first attempt used is gone
 
 
 def test_response_whose_usage_raises_frees_the_reservation(tmp_path):
@@ -535,10 +538,26 @@ def test_response_whose_usage_raises_frees_the_reservation(tmp_path):
 
     m, budget, *_ = make(tmp_path, FakeClient(Bad()))
     r = m.call(label="t", model="gpt-6-luna", instructions="s", input="i", max_output_tokens=1000)
-    assert not r.ok and r.status == "error"
+    assert r.ok and r.text == "x" and r.usage is None
     assert budget.reserved == 0.0  # not leaked: kept as spent (the call was made)
     wc = budget.worst_case("gpt-6-luna", estimate_tokens("s\ni"), 1000)
     assert math.isclose(budget.spent, wc) and math.isclose(r.cost, wc)
+
+
+def test_unprintable_response_parts_never_leak_the_reservation(tmp_path):
+    class Unprintable:
+        def model_dump(self):
+            raise RuntimeError("no dump")
+
+        def __str__(self):
+            raise RuntimeError("no str")
+
+    resp = response("partial", status="incomplete", incomplete_details=Unprintable())
+    m, budget, *_ = make(tmp_path, FakeClient(resp))
+    r = m.call(label="t", model="gpt-6-luna", instructions="s", input="i")
+    assert r.status in ("incomplete", "error")
+    assert budget.reserved == 0.0
+    assert math.isclose(budget.spent, cost(USAGE, PRICES["gpt-6-luna"]))
 
 
 def test_exception_with_broken_str_frees_the_reservation(tmp_path):
@@ -569,6 +588,14 @@ def test_extract_keeps_broken_file_over_parsing_snippet():
 
 
 def test_extract_never_raises_on_odd_input():
-    for text in ["```", "```\n```", "``````", "~~~~", "```python```", "\x00```python\n\x00\n```",
-                 "```python\n" + "(" * 300 + "\n```", "class A:\n" + " " * 10 + "(" * 300]:
+    for text in [
+        "```",
+        "```\n```",
+        "``````",
+        "~~~~",
+        "```python```",
+        "\x00```python\n\x00\n```",
+        "```python\n" + "(" * 300 + "\n```",
+        "class A:\n" + " " * 10 + "(" * 300,
+    ]:
         extract_code(text)

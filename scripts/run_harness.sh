@@ -5,8 +5,9 @@
 #   scripts/run_harness.sh TASK_DIR [N]      # N runs in parallel (default 1)
 #
 # Each run is `harness TASK_DIR` (local mode: runs/<task>/<time>/output/ holds the strategy and
-# logs/). After all runs end, this script adds harness.log (the run's stdout+stderr) and
-# run_meta.json (exit code, wall time, deadline, commit) to each run directory, and prints the
+# logs/). After all runs end, this script adds harness.log (the run's stdout+stderr), a copy of
+# task.json and run_meta.json (exit code, wall time, deadline, commit) to each run directory,
+# and prints the
 # run directories on stdout, one per line, for scripts/evaluate.py. Progress goes to stderr.
 #
 # From Windows Git Bash it re-executes itself in WSL. Env overrides: HARNESS_BIN, PY, WSL_DISTRO.
@@ -23,7 +24,7 @@ if [[ $(uname -s) != Linux ]]; then  # Git Bash on Windows: hop into WSL, same r
     shift
     printf -v rest ' %q' "$@"
     envs=""  # environment variables do not cross into WSL by themselves
-    for v in HARNESS_BIN PY; do
+    for v in HARNESS_BIN PY HARNESS_ABLATE; do
         if [[ -n ${!v:-} ]]; then envs+=" $v=$(printf '%q' "${!v}")"; fi
     done
     exec wsl -d "$distro" -e bash -lc \
@@ -51,7 +52,8 @@ set +a
 deadline=$("$PY" -c 'import json, sys; v = json.load(open(sys.argv[1])).get("deadline_s")
 print("" if v is None else int(-(-float(v) // 1)))' "$task/task.json")
 commit=$(git -c safe.directory='*' rev-parse --short HEAD 2>/dev/null || echo unknown)
-dirty=$(git -c safe.directory='*' status --porcelain --untracked-files=no 2>/dev/null | wc -l)
+# (no git, or not a repository: 0; without the braces pipefail + set -e end the script here)
+dirty=$({ git -c safe.directory='*' status --porcelain --untracked-files=no 2>/dev/null || true; } | wc -l)
 runs_root=runs/$(basename "$task")
 mkdir -p "$runs_root"
 tmp=$(mktemp -d)
@@ -91,7 +93,7 @@ for ((i = 0; i < n; i++)); do
     # The harness names its run directory by the second it started: find it, and launch the
     # next run in a later second so that two runs never share (or race for) a directory.
     dirs[i]=""
-    for _ in $(seq 100); do
+    for _ in $(seq 300); do  # up to 60 s: imports from /mnt/c can be slow
         new=$(comm -13 <(echo "$before") <(list_runs) | head -n 1)
         if [[ -n $new ]]; then
             dirs[i]=$runs_root/$new
@@ -107,10 +109,13 @@ wait
 
 for ((i = 0; i < n; i++)); do
     read -r code start end <"$tmp/$i.exit" || { code=-1; start=0; end=0; }
-    dir=${dirs[i]}
-    if [[ -z $dir ]]; then  # it may have appeared late (slow start)
-        dir=$(grep -oE 'runs/[^ ]+/[0-9]{8}-[0-9]{6}' "$tmp/$i.log" | head -n 1 || true)
-        [[ -n $dir && -d $dir ]] || dir=""
+    # The directory the harness says it writes to ("running ... into DIR"); the listing diff
+    # can pick another run's directory if a start took longer than the wait above.
+    dir=$(grep -oE '[^ ]*runs/[^ ]+/[0-9]{8}-[0-9]{6}' "$tmp/$i.log" | head -n 1 || true)
+    if [[ -n $dir && -d $dir ]]; then
+        dir=$(realpath --relative-to=. "$dir")
+    else
+        dir=${dirs[i]}
     fi
     if [[ -z $dir ]]; then
         echo "run $i: exit $code, NO run directory; log:" >&2
@@ -118,6 +123,7 @@ for ((i = 0; i < n; i++)); do
         continue
     fi
     mv "$tmp/$i.log" "$dir/harness.log"
+    cp "$task/task.json" "$dir/task.json"  # the exact budget/deadline, for evaluate.py
     "$PY" - "$dir/run_meta.json" "$code" "$start" "$end" "${deadline:-}" "$commit" "$dirty" \
         "$task" <<'EOF'
 import json, sys
