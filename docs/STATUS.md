@@ -155,6 +155,18 @@ zeta and theta were never used for tuning. Task B, 2 runs per arm, commit `aa029
 All 8 strategies pass `arena check`; all runs within budget and deadline. The pipeline's
 advantage over the one-shot baseline holds on games it was not tuned on.
 
+## Task C check (C-lite: $2, 900 s, sol + astra; done, 11:25)
+
+| game | wall | spend | improvement rounds | champion | check | vs baselines |
+|------|-----:|------:|---:|----------|-------|-------------:|
+| beta | 869 / 900 s | $1.11 | 2 | `improve1` (a sol challenger) | PASS | 100% |
+| gamma | 874 / 900 s | $0.96 | 1 | `improve1` (a sol challenger) | PASS | 100% |
+
+The large profile works end to end; time binds before money (at the real task C, 1800 s and
+$10, there is room for about twice the rounds). In both runs the winning challenger came from
+sol, not astra (n = 2, consistent with the calibration: astra is not stronger than sol here).
+Astra stays in for diversity: at the evaluation its cost is not ours.
+
 ## How one run works
 
 ```
