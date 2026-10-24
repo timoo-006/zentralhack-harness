@@ -177,12 +177,12 @@ Times are fractions of `deadline_s`; task-specific settings are in §6.
 
 | #  | milestone | done when | status |
 |----|-----------|-----------|--------|
-| M0 | **Setup:** private repo from the template, team and `nkaslin` invited, `uv sync`, tasks for alpha and beta per task profile, `./run.sh` works | template runs in Docker on alpha | open |
-| M1 | **Never forfeit:** t=0 fallback, SIGTERM handler, deadline and budget manager, guard wrapper, own conformance check, atomic promotion, task profiles, up to 4 parallel calls | 20/20 runs across tasks and dev games pass `arena check`; no budget overrun; every run ends before its deadline | open |
-| M2 | **Strong first attempt:** game-card extraction, system prompt with a playbook for this game family, model per role | beats all dev baselines on alpha and beta in tasks B and C | open |
-| M3 | **Simulator:** generate, verify against worked examples, fuzz, fix loop | reproduces the worked examples in ≥ 90% of runs; agrees with the real `game.py` on random rollouts | open |
-| M4 | **Self-play selection and improvement:** candidates, opponent pool, statistics, promotion | new harness version beats the previous one in a harness-vs-harness tournament | open |
-| M5 | **Generalisation suite:** 2–4 own test games of the family with new mechanics (`spec.md` + `game.py` + baselines) | harness reaches M1–M4 criteria on them too | open |
+| M0 | **Setup:** private repo from the template, team and `nkaslin` invited, `uv sync`, tasks for alpha and beta per task profile, `./run.sh` works | template runs in Docker on alpha | in progress: `uv sync` + WSL venv done; Docker run pending; `nkaslin` invite? |
+| M1 | **Never forfeit:** t=0 fallback, SIGTERM handler, deadline and budget manager, guard wrapper, own conformance check, atomic promotion, task profiles, up to 4 parallel calls | 20/20 runs across tasks and dev games pass `arena check`; no budget overrun; every run ends before its deadline | built on `feat/harness-v1`, integrating |
+| M2 | **Strong first attempt:** game-card extraction, system prompt with a playbook for this game family, model per role | beats all dev baselines on alpha and beta in tasks B and C | prompts + playbook + personas written; calibration done (STATUS.md) |
+| M3 | **Simulator:** generate, verify against worked examples, fuzz, fix loop | reproduces the worked examples in ≥ 90% of runs; agrees with the real `game.py` on random rollouts | built (selftest + generic checks + repair/escalation), untested end-to-end |
+| M4 | **Self-play selection and improvement:** candidates, opponent pool, statistics, promotion | new harness version beats the previous one in a harness-vs-harness tournament | built (incremental round robin, challengers), untested end-to-end |
+| M5 | **Generalisation suite:** 2–4 own test games of the family with new mechanics (`spec.md` + `game.py` + baselines) | harness reaches M1–M4 criteria on them too | in progress: 6 games (gamma, delta, epsilon, zeta, eta, theta) |
 | M6 | **Freeze:** `report.md`, presentation, final `./run.sh` tests in Docker for every task | freeze commit sent to the organisers | open |
 
 Suggested split: (1) harness core, budget and deadline (M1); (2) simulator and verification

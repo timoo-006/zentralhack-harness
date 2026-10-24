@@ -14,7 +14,12 @@ harness = "harness.__main__:main"
 # development. They are not in the evaluation image, which installs with --no-dev. uv.lock pins
 # the commits; `uv sync --upgrade-package arena --upgrade-package arena-games-dev` moves both to
 # their latest main.
-dev = ["ruff", "arena", "arena-games-dev"]
+dev = [
+    "ruff",
+    "arena",
+    "arena-games-dev",
+    "pytest>=9.1.1",
+]
 
 [tool.uv.sources]
 arena = { git = "https://github.com/zentralhack-2026-agentic-ai-harness/arena", branch = "main" }

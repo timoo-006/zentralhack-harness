@@ -5,12 +5,16 @@ Read this file fully before changing anything.
 
 ## Read first
 
+0. [`docs/STATUS.md`](docs/STATUS.md): what is built, what we measured, money rules, next
+   steps. Keep it current when something lands.
 1. [`docs/TASK.md`](docs/TASK.md): the official hackathon task (evaluation tasks, scoring,
    deliverables).
 2. [`docs/PLAN.md`](docs/PLAN.md): our design and milestones. Follow it, and update its status
    table when a milestone lands.
-3. [`README.md`](README.md): the template's contract (paths, deadline, budget, local commands).
-4. After `uv sync`, the dev games and the match engine are readable in
+3. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): the module contracts of `src/harness/`.
+   Change an interface there first.
+4. [`README.md`](README.md): the template's contract (paths, deadline, budget, local commands).
+5. After `uv sync`, the dev games and the match engine are readable in
    `.venv/lib/python3.13/site-packages/arena/` and `.../arena_games_dev/` (each game has
    `spec.md`, `game.py`, `baselines.py`).
 
@@ -86,14 +90,24 @@ Never read, print, log or commit `.env` or API keys. `.env` is gitignored.
 ## Repository layout
 
 ```
-src/harness/__main__.py   entry point: wires /task and /output (or TASK_DIR locally) to the agent
-src/harness/agent.py      the agent loop (template: cheapest model, one bash tool)
-src/harness/pricing.py    cost per call, as the evaluation counts it: do not change the formula
-src/harness/prompt.md     system prompt
-run.sh                    run a task in Docker exactly like the evaluation
-docs/TASK.md              official task description
-docs/PLAN.md              our plan and milestones
-tasks/, runs/             generated locally, gitignored
+src/harness/__main__.py     entry point: t=0 fallback, SIGTERM, wires /task and /output to the pipeline
+src/harness/pipeline.py     one run: profiles, stages, selection, promotion
+src/harness/clock.py        deadline clock (from container start)
+src/harness/budget.py       worst-case reservation per LLM call
+src/harness/llm.py          Responses API client: concurrency cap, retries, transcript
+src/harness/specdoc.py      deterministic spec parsing (example observations, schema, constants)
+src/harness/guard.py        never-forfeit wrapper that assembles the delivered strategy file
+src/harness/sandbox.py      runs untrusted code (strategies, simulators) in subprocesses
+src/harness/runner_child.py stdlib-only child process: probes, matches, simulator checks
+src/harness/tournament.py   incremental self-play round robin, standings
+src/harness/prompts/        system prompt, playbook (lessons file), stage prompts, personas
+src/harness/pricing.py      cost per call, as the evaluation counts it: do not change the formula
+tests/                      unit tests (pytest; Linux-only ones skip on Windows)
+testgames/                  our own family games for generalisation tests (dev only)
+scripts/                    dev tooling: make tasks, run batches, evaluate (dev only)
+run.sh                      run a task in Docker exactly like the evaluation
+docs/                       TASK (official), PLAN (design), ARCHITECTURE (contracts), STATUS (now)
+tasks/, runs/               generated locally, gitignored
 ```
 
 New harness modules go in `src/harness/`.
