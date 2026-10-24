@@ -533,29 +533,44 @@ def run_selftest(job: dict) -> dict:
 # ------------------------------------------------------------------------------- checksim
 
 
-def type_problems(path: str, value, example, depth: int = 0) -> list[str]:
-    """Differences in kind between a simulator value and the spec's example value."""
-    if example is None or depth > 3:
+def type_problems(path: str, value, examples: list, depth: int = 0) -> list[str]:
+    """Differences in kind between a simulator value and the spec's example values.
+
+    `examples` are the spec's values at this position: the field in every example
+    observation, or every element of the example lists. The value must have the kind of one
+    of them; None is accepted where an example shows None (e.g. `list[int | None]` for
+    hidden information), and positions the examples leave open (only None) are not checked.
+    """
+    refs = [e for e in examples if e is not None]
+    if depth > 3 or not refs:
         return []
-    if isinstance(example, bool):
-        ok = isinstance(value, bool)
-    elif isinstance(example, int):
-        ok = isinstance(value, int) and not isinstance(value, bool)
-    elif isinstance(example, float):
-        ok = isinstance(value, int | float) and not isinstance(value, bool)
-    else:
-        ok = type(value) is type(example)
-    if not ok:
-        return [f"{path}: expected {type(example).__name__}, got {type(value).__name__}"]
-    if isinstance(example, list | tuple) and example and value:
-        return type_problems(f"{path}[0]", value[0], example[0], depth + 1)
-    if isinstance(example, dict):
+    if value is None and len(refs) < len(examples):
+        return []
+    matching = [e for e in refs if _same_kind(value, e)]
+    if not matching:
+        return [f"{path}: expected {type(refs[0]).__name__}, got {type(value).__name__}"]
+    if isinstance(value, list | tuple) and value:
+        elements = [x for e in matching if isinstance(e, list | tuple) for x in e]
+        return type_problems(f"{path}[0]", value[0], elements, depth + 1)
+    if isinstance(value, dict):
+        dicts = [e for e in matching if isinstance(e, dict)]
         out = []
-        for k in example:
+        for k in dict.fromkeys(k for d in dicts for k in d):
             if k in value:
-                out += type_problems(f"{path}[{k!r}]", value[k], example[k], depth + 1)
+                at_k = [d[k] for d in dicts if k in d]
+                out += type_problems(f"{path}[{k!r}]", value[k], at_k, depth + 1)
         return out
     return []
+
+
+def _same_kind(value, example) -> bool:
+    if isinstance(example, bool):
+        return isinstance(value, bool)
+    if isinstance(example, int):
+        return isinstance(value, int) and not isinstance(value, bool)
+    if isinstance(example, float):
+        return isinstance(value, int | float) and not isinstance(value, bool)
+    return type(value) is type(example)
 
 
 def garbage_action(rng: random.Random, obs):
@@ -629,8 +644,7 @@ def run_checksim(job: dict) -> dict:
                     f"{where}: keys differ from the spec: missing {missing}, extra {extra}"
                 )
         for key, value in obs.items():
-            example = next((ex[key] for ex in examples if key in ex), None)
-            for p in type_problems(key, value, example):
+            for p in type_problems(key, value, [ex[key] for ex in examples if key in ex]):
                 problems.append(f"{where}: {p}")
 
     for seed in seeds:

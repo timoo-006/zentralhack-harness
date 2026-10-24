@@ -308,3 +308,21 @@ def test_probe_never_raises_on_odd_input(tmp_path):
     assert res.ok and res.calls == []
     ok, problems = sandbox.check_simulator(tmp_path / "missing.py", None, work_dir=tmp_path)
     assert not ok and problems
+
+
+def test_schema_check_accepts_none_where_the_spec_shows_none() -> None:
+    from harness.runner_child import type_problems
+
+    # list[int | None]: hidden nodes are None, visible ones an int (the spec's example has both)
+    spec = [[0, None, None, 3]]
+    assert type_problems("opp", [None, 2, 0, None], spec) == []
+    assert type_problems("opp", [1.5], spec) == ["opp[0]: expected int, got float"]
+    # where the examples never show None, None is still wrong
+    assert type_problems("units", [None], [[1, 2]]) == ["units[0]: expected int, got NoneType"]
+    assert type_problems("turn", None, [0, 1]) == ["turn: expected int, got NoneType"]
+    # tuples stay tuples, bools are not ints, a field in any example observation counts
+    assert type_problems("move", [[1, 2, 3]], [[(1, 2, 3)]]) == [
+        "move[0]: expected tuple, got list"
+    ]
+    assert type_problems("n", True, [3]) == ["n: expected int, got bool"]
+    assert type_problems("bonus", None, [5, None]) == []
