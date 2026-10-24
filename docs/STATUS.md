@@ -1,7 +1,7 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~10:40.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:05.
 > Freeze: **today 16:00**.
 
 ## TL;DR
@@ -14,6 +14,56 @@
 - **OpenAI money:** we have ~150 CHF in total. ~$6.60 spent so far (calibration, first runs,
   experiment 1). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
+
+## If Elias' Claude stops (session limit): how to finish
+
+Everything that matters is committed; `main` is a tested, freezable state at all times. Only
+experiment *results* live outside git (`runs-exp/` on Elias' machine, gitignored). Any Claude
+Code (or a human) can continue from here on Elias' machine:
+
+**1. Experiments running at 11:05** (started from commit `aa0297c`, results in `runs-exp/`):
+
+| dir | arms | question | decision rule |
+|-----|------|----------|---------------|
+| `runs-exp/exp2` | `full`, `polish` (= no polish), `improve_low` on beta-B, gamma-B, epsilon-B, 2 runs | spare-time seeds; cheaper improvement calls | keep polish unless `polish` arm beats `full` (net) on >= 2 of 3 games; set mid-tier `improve_effort="low"` only if `improve_low` beats `full` on >= 2 of 3 games |
+| `runs-exp/exp2h` | `full`, `oneshot` on **zeta-B, theta-B** (held out) | does it transfer to untuned games? | report only (no tuning on these!) |
+| `runs-exp/clite` | `full` on beta-C-lite, gamma-C-lite | does the large profile (task C, 55%) work? | must: exit 0, check PASS, spend <= $1.80, wall < 900 s, no `error` events |
+
+Evaluate (Windows Git Bash, repo root; takes a few minutes each):
+
+```bash
+# exp2 tuning games (cross-tournament between arms + panel vs baselines)
+uv run python scripts/evaluate.py --wsl --cross --seeds 6 --cross-seeds 6 --workers 12 --no-log \
+  --group full='runs-exp/exp2/full/*/*' --group nopolish='runs-exp/exp2/polish/*/*' \
+  --group improvelow='runs-exp/exp2/improve_low/*/*'
+# held-out exam
+uv run python scripts/evaluate.py --wsl --cross --seeds 6 --cross-seeds 6 --workers 12 --no-log \
+  --group full='runs-exp/exp2h/full/*/*' --group oneshot='runs-exp/exp2h/oneshot/*/*'
+# C-lite: check, panel, spend and time
+uv run python scripts/evaluate.py --wsl --seeds 6 --workers 12 --no-log 'runs-exp/clite/full/*/*'
+```
+
+Read the `| group | W-D-L | net | net/strategy |` rows per game. Apply a decision in
+`src/harness/pipeline.py`: `Profile.polish` default, or `improve_effort` in the `mid` profile
+of `make_profile`. Then `uv run pytest -q`, commit on `feat/harness-v1`, write the numbers into
+this file (an "Experiment 2" section like "Experiment 1").
+
+**2. Open proposals:** a read-only failure-mining workflow (2 agents) was analysing the
+experiment-1 logs; if its proposals are not in this file yet, skip them: the harness is
+complete without them.
+
+**3. Freeze checklist (by 15:45):**
+
+```bash
+uv run pytest -q                                   # all pass (Linux-only ones skip on Windows)
+wsl -d Ubuntu-24.04 -- bash -lc 'cd /mnt/c/Users/elias/Documents/HSLU_MODULE/Semester_3/Zentral_Hack/zentralhack-harness && /root/venv-harness/bin/python -m pytest -q tests/'
+./run.sh tasks/beta-A                              # Docker, like the evaluation: exit 0, strategy written
+git checkout main && git merge --ff-only feat/harness-v1 && git push origin main
+git rev-parse HEAD                                 # send this full hash to the organisers (T5)
+```
+
+Also: `report.md` must be committed (fill in "Measurements" from this file), and the
+organiser account `nkaslin` must have access to the repository.
 
 ## Want to help? → [`TASKS.md`](TASKS.md)
 
