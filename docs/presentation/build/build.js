@@ -89,7 +89,7 @@ pres.addSection({ title: "Why" });
   const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: "Why" });
   eyebrow(s, "THE TASK · THE INSIGHT", ORANGE_DK);
   s.addText("An unseen game, a fixed budget, only wins count", { placeholder: "title" });
-  const y = 2.35, h = 3.4, w = 3.85, gap = 0.3;
+  const y = 2.3, h = 3.75, w = 3.85, gap = 0.3;
   const xs = [M, M + w + gap, M + 2 * (w + gap)];
   // card 1: the task
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[0], y, w, h, rectRadius: 0.12, fill: { color: CARD }, line: { color: LINE_L, width: 0.75 }, shadow: shadow(), objectName: "card task" });
@@ -105,15 +105,16 @@ pres.addSection({ title: "Why" });
   s.addText("What research says", { x: xs[1] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
   s.addText([{ text: "9", options: { color: BLUE_DK } }, { text: " / 10", options: { color: GREY_BAR } }],
     { x: xs[1] + 0.35, y: y + 0.95, w: w - 0.7, h: 0.9, fontFace: HEAD, fontSize: 44, bold: true, margin: 0, isTextBox: true });
-  s.addText("games where LLM-written code + search matches or beats a top LLM playing directly", { x: xs[1] + 0.35, y: y + 1.95, w: w - 0.7, h: 0.75, fontFace: BODY, fontSize: 16, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
+  s.addText("games where code written by an LLM matches or beats an LLM picking the moves", { x: xs[1] + 0.35, y: y + 1.95, w: w - 0.7, h: 0.75, fontFace: BODY, fontSize: 16, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   s.addText("Code World Models, Google DeepMind", { x: xs[1] + 0.35, y: y + 2.95, w: w - 0.7, h: 0.5, fontFace: BODY, fontSize: 14, italic: true, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   // card 3: insight (dark)
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: xs[2], y, w, h, rectRadius: 0.12, fill: { color: INK }, line: { color: INK, width: 0.75 }, shadow: shadow(), objectName: "card insight" });
   s.addText("Our insight", { x: xs[2] + 0.35, y: y + 0.3, w: w - 0.7, h: 0.4, fontFace: HEAD, fontSize: 20, bold: true, color: ORANGE, margin: 0, isTextBox: true });
-  s.addText("The LLM is the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.95, w: w - 0.7, h: 2.4, fontFace: HEAD, fontSize: 30, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
+  s.addText("Plain code, not the LLM, checks everything it writes.", { x: xs[2] + 0.35, y: y + 2.7, w: w - 0.7, h: 0.8, fontFace: BODY, fontSize: 18, bold: false, color: MUTED_D, margin: 0, valign: "top", isTextBox: true });
+  s.addText("The LLM is the programmer, not the player.", { x: xs[2] + 0.35, y: y + 0.95, w: w - 0.7, h: 1.45, fontFace: HEAD, fontSize: 30, bold: true, color: TEXT_L, margin: 0, valign: "top", isTextBox: true });
   s.addText("Sources: Zentral Hack 2026 task description; Code World Models for General Game Playing, arXiv 2510.04542.",
     { x: M, y: 6.92, w: 10.5, h: 0.32, fontFace: BODY, fontSize: 10, color: "6B7380", margin: 0, isTextBox: true });
-  s.addNotes("(0:15–0:45) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. So our insight: the LLM is the programmer, not the player, and nothing it writes is trusted before it is verified.");
+  s.addNotes("(0:15–0:45) The task: a written game spec in, a strategy file out, unattended, on three budgets from three cents and three minutes up to ten dollars and thirty minutes. Only wins count. We started with research: Google DeepMind’s Code World Models: an LLM that writes a simulator plus search code matches or beats Gemini 2.5 Pro playing directly in 9 of 10 games. And our strategy may not call an LLM during the game anyway: stdlib only, no network. So the LLM is the programmer, not the player, and it never checks its own work: plain code runs everything it writes and keeps only what is proven.");
 }
 
 // ---------------------------------------------------------------- 3 pipeline
@@ -121,7 +122,7 @@ pres.addSection({ title: "How" });
 {
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: "How" });
   eyebrow(s, "THE HARNESS", ORANGE);
-  s.addText("Many drafts, one verified simulator, one champion", { placeholder: "title" });
+  s.addText("The LLM writes, our code verifies", { placeholder: "title" });
   const stages = [
     ["1", "Write", "drafts + a simulator"],
     ["2", "Verify", "against the spec"],
@@ -150,7 +151,7 @@ pres.addSection({ title: "How" });
     s.addText([{ text: k + "  ", options: { bold: true, color: TEXT_L } }, { text: v, options: { color: MUTED_D } }],
       { x, y: 5.85, w: 5.9, h: 0.65, fontFace: BODY, fontSize: 14, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addNotes("(0:45–1:30) The pipeline. It writes several strategy drafts with different strategic personas and, in parallel, a simulator of the game. Nothing is trusted: the simulator must reproduce the spec’s worked examples, every draft is probed and repaired from its tracebacks. The survivors play a round robin on the simulator, both seats, many seeds, under the tournament’s real time limits. Then the strongest model writes challengers against the champion’s weak spots, and we repeat while time and money last. Around all of it, a guard: hard timer, fallback strategy, output check, so a forfeit is impossible by construction. Budget and deadline are enforced per call.");
+  s.addNotes("(0:45–1:30) How: the LLM writes, our code verifies. The LLM writes several strategy drafts with different strategic personas and, in parallel, a simulator of the game. Nothing is trusted: the simulator must reproduce the spec’s worked examples, every draft is probed and repaired from its tracebacks. The survivors play a round robin on the simulator, both seats, many seeds, under the tournament’s real time limits. Then the strongest model writes challengers against the champion’s weak spots, and we repeat while time and money last. Around all of it, a guard: hard timer, fallback strategy, output check, so a forfeit is impossible by construction. Budget and deadline are enforced per call.");
 }
 
 // ---------------------------------------------------------------- 4 loop
@@ -170,7 +171,7 @@ pres.addSection({ title: "How" });
   const epochs = [
     ["EPOCH 1", "Ablation", "kept only what wins"],
     ["EPOCH 2", "Tournament conditions", "selection = reality"],
-    ["EPOCH 3", "Midpoint feedback", "weak runs traced and fixed"],
+    ["EPOCH 3", "Midpoint feedback · 2 experiments", "2 ideas rejected, weak runs traced and fixed"],
   ];
   epochs.forEach(([tag, title, desc], i) => {
     const y = 2.8 + i * 1.3;
@@ -179,7 +180,7 @@ pres.addSection({ title: "How" });
     s.addText(title, { x: ex + 1.65, y: y + 0.16, w: ew - 1.95, h: 0.4, fontFace: HEAD, fontSize: 18, bold: true, color: TEXT_D, margin: 0, isTextBox: true });
     s.addText(desc, { x: ex + 1.65, y: y + 0.56, w: ew - 1.95, h: 0.5, fontFace: BODY, fontSize: 14, color: MUTED_L, margin: 0, valign: "top", isTextBox: true });
   });
-  s.addNotes("(1:30–2:15) We built the harness the way it works itself. Claude Code was our engineering team: parallel agents wrote and reviewed every module, held to 416 tests. Then we ran loops. Besides the two dev games we built eight games of our own with new mechanics, and kept four of them out of all tuning, as an honest exam. Each epoch: switch features off one at a time, measure, keep only what wins. More than 120 measured runs, about 45 dollars in total.");
+  s.addNotes("(1:30–2:15) We built the harness the way it works itself. Claude Code was our engineering team: parallel agents wrote and reviewed every module, held to 416 tests. Then we ran loops. Besides the two dev games we built eight games of our own with new mechanics, and kept four of them out of all tuning, as an honest exam. Each epoch: switch features off one at a time, measure, keep only what wins. After the organisers' midpoint evaluation, Timo's two experiments rejected two ideas and traced our weak runs to the simulator check, which we fixed. More than 120 measured runs, about 45 dollars in total.");
 }
 
 pres.addSection({ title: "Demo" });
