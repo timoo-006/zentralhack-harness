@@ -1,7 +1,7 @@
 # Status: read this first
 
 > Living handoff page for the team. Updated whenever something lands. Branch:
-> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:35.
+> **`main`** (harness merged at 10:45; development on `feat/harness-v1`). Last update: Sat 24 Oct, ~11:50.
 > Freeze: **today 16:00**.
 
 ## TL;DR
@@ -36,12 +36,54 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
    `nkaslin` must have access to the repository; `report.md` is already complete.
 3. **Optional, only with measurement** (same rules as experiments 1-2: fix the decision rule
    first, compare with `scripts/ablate.sh` on tuning games only, never on zeta/theta):
-   the failure-mining proposals below, if any; tasks T2/T3 on [`TASKS.md`](TASKS.md).
+   the open proposals in "Failure mining of experiment 1" (numbered by expected value);
+   tasks T2/T3 on [`TASKS.md`](TASKS.md).
 4. **Do not** change `src/harness/` in the last hour without a full test run and one Docker
    run afterwards.
 
 **Template leftovers:** `src/harness/agent.py` and `prompt.md` are unused (nothing imports
 them); deleting them is cosmetic and safe.
+
+## Failure mining of experiment 1 (11:40): applied fixes and open proposals
+
+Two read-only agents analysed all experiment-1 logs (tuning games only) and replayed every
+valid candidate (93 strategies) in a round robin on the real games. Key facts: 98 of 99
+candidates passed their first probe, 18 of 18 simulators passed first try, 0 forfeits or
+malformed actions in 92 final-tournament rows; self-play ranking vs the later cross-tournament:
+Spearman 0.88 (it picks well); 8 of 27 challengers promoted (round 1: 6 of 11; later rounds:
+2 of 16).
+
+**Applied at 11:45** (defects, with evidence):
+
+- *Provisional champion was protected like an elected one*: the first draft to finish kept
+  the crown on exact ties, so 2 of 18 runs delivered the weaker draft (cross 15 vs 48 and
+  33 vs 66). Now only a champion chosen by self-play gets incumbent protection
+  (`Run.elected`).
+- *Task-B call timeout 200 s was too short*: legitimate improvement calls took up to 195 s;
+  the one timeout cost $0.15 (a third of the budget) and returned nothing. Now 300 s.
+
+**Open proposals (not measured; only with an ablation on tuning games, rule fixed first):**
+
+1. *Budget stranding*: 8 of 12 runs ended on `skipped_budget` with $0.07-0.14 and 160-290 s
+   left, because the worst-case reservation (~$0.15) is far above the real cost (~$0.086).
+   Idea: on `skipped_budget`, retry the improvement with a smaller cap / low effort / the
+   cheaper model instead of repeating the same call.
+2. *Prompt caching*: the spec is in `input`, so fix/improve calls only hit the 4.3k-token
+   system prefix and pay 1.25x on 5-7k spec tokens. Idea: append the spec to `instructions`
+   (about $0.03-0.04 per run saved). Verify with two probe calls first.
+3. *Plan routes, not targets*: the winning round-1 challengers all planned whole per-unit
+   routes (wait, harvest en route, return) plus scenario-wise opponent models. Idea: a
+   family-general playbook paragraph or an itinerary-planner persona, so drafts start there.
+4. *More drafts*: draft quality varies hugely within a persona (best_response on gamma: +114
+   to -106 cross); a draft costs $0.03 vs $0.09 per improvement round, and rounds 2+ rarely
+   promote. Idea: 5 drafts in the mid tier (adding lookahead and adaptive), at most 2 rounds.
+5. *Give the improver evidence*: 21 of 27 improvement diagnoses said the report shows no
+   failure. Idea: include the source of the champion's hardest opponent in `improve.md`.
+6. *5xx accounting*: a 520 error after 11 s was booked at the full worst case ($0.10).
+   Releasing instead of booking is only right if the gateway does not bill such calls.
+
+Evidence and scripts: the agents' reports are summarised here; their scratch scripts are not
+in git.
 
 ## Want to help? → [`TASKS.md`](TASKS.md)
 

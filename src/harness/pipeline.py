@@ -169,7 +169,7 @@ def make_profile(task: dict, llm: LLM, clock: Clock) -> Profile:
             analysis_model=None, analysis_effort="low",
             repair_model=strong, repair_effort="low", repair_max_out=8000,
             improve_model=strong, improve_effort="medium", improve_max_out=10000,
-            improve_parallel=1, call_timeout_s=200.0, seeds=4,
+            improve_parallel=1, call_timeout_s=300.0, seeds=4,
             max_sim_repairs=2, max_strategy_repairs=1, min_improve_s=130.0,
         )  # fmt: skip
     return Profile(  # dollars per run: time binds before money
@@ -219,6 +219,9 @@ class Run:
         self.lock = threading.RLock()
         self.cands: dict[str, Candidate] = {}
         self.champion: Candidate | None = None
+        # True once self-play (not just the first finished draft) chose the champion: only
+        # an elected champion is protected against challengers within the noise margin.
+        self.elected = False
         self.fallback: Candidate | None = None  # the safe persona, if it passed
         self.sim_path: Path | None = None
         self.tournament: Tournament | None = None
@@ -654,7 +657,7 @@ class Run:
         if best == champ:
             return
         by_id = {i: (m, w) for m, w, _, i in rows}
-        if champ in by_id:
+        if champ in by_id and self.elected:
             # Incumbent protection against selection noise: a challenger must be better by
             # a margin and must not lose the head-to-head, unless it is clearly better.
             gain = by_id[best][0] - by_id[champ][0]
@@ -681,6 +684,8 @@ class Run:
             return
         guard.write_atomic(self.strategy_path, text)
         self.champion = c
+        if reason.startswith("tournament"):
+            self.elected = True
         self.event("promoted", id=c.id, reason=reason, fallback=fb.id if fb else None)
 
     def _final_probe(self, path: Path) -> bool:
