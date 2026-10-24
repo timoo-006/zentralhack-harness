@@ -1,0 +1,36 @@
+running /w/tasks/eta-B into /w/runs/eta-B/20261024-112253-4226 (no Docker)
+[    0.2s $0.0000] fallback_written {}
+[    0.2s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 5, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] sim0 gpt-6.1-sol completed 38.2s $0.0446 (spent $0.0446)
+[   38.4s $0.0446] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.2, "cost": 0.04457, "spent": 0.04457}
+[   38.4s $0.0446] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_best_response gpt-6.1-sol completed 49.1s $0.0333 (spent $0.0779)
+[   49.3s $0.0779] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 49.1, "cost": 0.03333, "spent": 0.07791}
+[   51.6s $0.0779] candidate {"id": "c1_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   54.0s $0.0779] promoted {"id": "c1_best_response", "reason": "provisional", "fallback": null}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 54.6s $0.0317 (spent $0.1097)
+[   54.8s $0.1097] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 54.6, "cost": 0.03175, "spent": 0.10965}
+[   56.3s $0.1097] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_adaptive gpt-6.1-sol completed 62.7s $0.0602 (spent $0.1699)
+[   62.9s $0.1699] llm {"label": "cand_adaptive", "model": "gpt-6.1-sol", "status": "completed", "secs": 62.7, "cost": 0.06022, "spent": 0.16987}
+[   65.6s $0.1699] candidate {"id": "c3_adaptive", "persona": "adaptive", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_safe gpt-6.1-sol completed 35.6s $0.0214 (spent $0.1913)
+[   74.0s $0.1913] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 35.6, "cost": 0.02143, "spent": 0.1913}
+[   74.1s $0.1913] candidate {"id": "c4_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_lookahead gpt-6.1-sol completed 61.0s $0.0595 (spent $0.2508)
+[  116.6s $0.2508] llm {"label": "cand_lookahead", "model": "gpt-6.1-sol", "status": "completed", "secs": 61.0, "cost": 0.05952, "spent": 0.25082}
+[  119.1s $0.2508] candidate {"id": "c5_lookahead", "persona": "lookahead", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  273.5s $0.2508] ranking {"rows": [{"id": "c3_adaptive", "mean": 0.925, "worst": 0.625, "margin": 1246.5}, {"id": "c1_best_response", "mean": 0.875, "worst": 0.375, "margin": 1184.1}, {"id": "c2_marginal_greedy", "mean": 0.5,
+[  275.7s $0.2508] promoted {"id": "c3_adaptive", "reason": "tournament", "fallback": "c4_safe"}
+[llm] improve_c3_adaptive_0 gpt-6.1-sol completed 79.6s $0.0728 (spent $0.3236)
+[  355.4s $0.3236] llm {"label": "improve_c3_adaptive_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 79.6, "cost": 0.07281, "spent": 0.32363}
+[  360.1s $0.3236] candidate {"id": "c6_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  360.1s $0.3236] improve_round {"round": 1, "added": ["c6_improve0"]}
+[  489.9s $0.3236] ranking {"rows": [{"id": "c6_improve0", "mean": 0.875, "worst": 0.5, "margin": 1176.3}, {"id": "c3_adaptive", "mean": 0.854, "worst": 0.5, "margin": 1082.8}, {"id": "c1_best_response", "mean": 0.771, "worst":
+[  489.9s $0.3236] kept_champion {"champion": "c3_adaptive", "challenger": "c6_improve0", "gain": 0.021, "h2h": [0, 0]}
+[  564.7s $0.3236] polished {"seeds": 5, "matches": 193}
+[  564.7s $0.3236] ranking {"rows": [{"id": "c6_improve0", "mean": 0.889, "worst": 0.5, "margin": 1041.6}, {"id": "c3_adaptive", "mean": 0.858, "worst": 0.5, "margin": 1049.4}, {"id": "c1_best_response", "mean": 0.753, "worst":
+[  569.0s $0.3236] promoted {"id": "c6_improve0", "reason": "tournament", "fallback": "c4_safe"}
+[  573.3s $0.3236] final_probe {"ok": true}
+[  573.3s $0.3236] end {"champion": "c6_improve0", "spent": 0.3236274, "elapsed": 573.3200324270001}
+strategy written: /w/runs/eta-B/20261024-112253-4226/output/strategy.py

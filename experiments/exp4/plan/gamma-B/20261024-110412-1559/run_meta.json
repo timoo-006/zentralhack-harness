@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792839852.8926446,
+  "wall_s": 564.16,
+  "deadline_s": 600.0,
+  "commit": "88968a8",
+  "dirty_files": 0,
+  "task_dir": "/w/tasks/gamma-B"
+}

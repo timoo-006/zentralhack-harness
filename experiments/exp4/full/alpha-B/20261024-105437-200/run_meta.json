@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792839277.923065,
+  "wall_s": 562.9,
+  "deadline_s": 600.0,
+  "commit": "faa028d",
+  "dirty_files": 1,
+  "task_dir": "/w/tasks/alpha-B"
+}

@@ -11,8 +11,8 @@
   **self-play**, improves it, and wraps it in a **never-forfeit guard**.
 - How the modules fit together: [`ARCHITECTURE.md`](ARCHITECTURE.md) (module contracts).
   Why: [`PLAN.md`](PLAN.md). What we measured: below.
-- **OpenAI money:** we have ~150 CHF in total. ~$26 spent so far (calibration, first runs,
-  experiments 1-3, held-out exam, task-C check). Rules below.
+- **OpenAI money:** we have ~150 CHF in total. ~$36 spent so far (calibration, first runs,
+  experiments 1-4, held-out exam, task-C check). Rules below.
 - **It works end to end**, also in Docker exactly like the evaluation (see "First results").
 
 ## Handover: continue on any machine (Mac guide: [`MAC.md`](MAC.md))
@@ -55,20 +55,33 @@ that can be frozen as it is. Nothing depends on Elias' laptop any more.
 - Ruff: `experiments/` is excluded (generated strategies), Markdown is never reformatted
   (`ruff format .` would otherwise rewrite the prompts' code blocks).
 
-## Experiment 4 (running, 13:05): game plan first, more drafts
+## Experiment 4 (done, 13:45): game plan first, more drafts -> both rejected
 
 Midpoint report (B, beta + hidden h1): our best h1 strategy was the best of the whole field
 (94.8%), but 2 of our 5 h1 runs were weak (29%, 38%): the problem is variance between runs.
-Two variants on branch `exp/plan-drafts`, each against `main` (`full`):
-`plan` (the strong model writes a game plan with `analysis.md` at medium effort first, the
-drafts wait for it, at most 150 s, and are written from it) and `drafts5` (5 drafts, not 3).
-Task B, all 8 games x 1 run per arm (24 runs, about $9).
+Two variants (commit `faa028d`), each against `main` (`full`): `plan` (the strong model writes
+a game plan with `analysis.md` at medium effort first; the drafts wait for it, at most 150 s,
+and are written from it) and `drafts5` (5 drafts, not 3). Task B, all 8 games x 1 run per arm,
+24 runs, $8.74. Evaluated on macOS (isolated): check, panel 4 seeds, cross 6 seeds.
+
+| net per strategy | alpha | beta | gamma | delta | epsilon | eta | **tuning** | zeta | theta |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `full` (= `main`) | 0 | 0 | +2 | 0 | +16 | 0 | **+18** | 0 | -6 |
+| `plan` | 0 | 0 | -4 | -10 | -1 | 0 | -15 | 0 | **+24** |
+| `drafts5` | 0 | 0 | +2 | +10 | -15 | 0 | -3 | 0 | -18 |
+
+All 24 strategies pass `arena check`, 0 forfeits, all within budget ($0.31-0.40) and deadline.
+Panel vs baselines: `full` lost 3 of 200 matches, `plan` 5, `drafts5` 7 (all on delta, zeta,
+theta). The plan is fast: sol wrote it in about 26 s for about $0.02.
 
 Decision rule (fixed before the runs): a variant replaces `main` only if (1) zero check
-failures and forfeits, (2) cross-tournament net per strategy >= `full` on at least 4 of the 6
-tuning games and in total over them, (3) held-out zeta + theta together not worse, (4) all
-runs within budget and deadline. If both pass, the higher tuning total wins (the combination
-is not measured, so not adopted). A tie keeps `main`.
+failures and forfeits, (2) net >= `full` on at least 4 of the 6 tuning games and in total,
+(3) zeta + theta together not worse, (4) within budget and deadline. `plan`: >= on 3 of 6,
+tuning total -15 vs +18: **rejected** (despite theta, 12-0-0 against both arms). `drafts5`:
+>= on 5 of 6 but total -3 vs +18, held-out worse: **rejected**. `main` is also the best arm
+over all 8 games (+12 vs +9 and -21). Both switches were removed again (the code is in
+`faa028d`). With 1 run per game the single cells are noisy; the plan's held-out result is
+the one worth a follow-up with more runs after the hackathon.
 
 ## Experiment 3 (done, 12:50): budget rescue (open proposal 1) -> adopted, weak evidence
 

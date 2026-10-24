@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792840973.6975822,
+  "wall_s": 573.35,
+  "deadline_s": 600.0,
+  "commit": "88968a8",
+  "dirty_files": 0,
+  "task_dir": "/w/tasks/eta-B"
+}

@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "sigterm": false,
+  "sigkill": false,
+  "start": 1792841478.750031,
+  "wall_s": 517.65,
+  "deadline_s": 600.0,
+  "commit": "88968a8",
+  "dirty_files": 0,
+  "task_dir": "/w/tasks/zeta-B"
+}

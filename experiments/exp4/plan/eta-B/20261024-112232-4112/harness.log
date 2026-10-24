@@ -1,0 +1,36 @@
+running /w/tasks/eta-B into /w/runs/eta-B/20261024-112232-4112 (no Docker)
+[    0.2s $0.0000] fallback_written {}
+[    0.2s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] analysis gpt-6.1-sol completed 23.5s $0.0292 (spent $0.0292)
+[   23.7s $0.0292] llm {"label": "analysis", "model": "gpt-6.1-sol", "status": "completed", "secs": 23.5, "cost": 0.02923, "spent": 0.02923}
+[   23.7s $0.0292] plan {"ready": true, "chars": 3795}
+[llm] sim0 gpt-6.1-sol completed 38.3s $0.0436 (spent $0.0728)
+[   38.5s $0.0728] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.3, "cost": 0.04358, "spent": 0.07281}
+[   38.6s $0.0728] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_safe gpt-6.1-sol completed 35.5s $0.0451 (spent $0.1180)
+[   59.2s $0.1180] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 35.5, "cost": 0.04514, "spent": 0.11795}
+[   59.3s $0.1180] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   59.5s $0.1180] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_best_response gpt-6.1-sol completed 47.5s $0.0548 (spent $0.1728)
+[   71.2s $0.1728] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 47.5, "cost": 0.05482, "spent": 0.17278}
+[   77.3s $0.1728] candidate {"id": "c2_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 42.7s $0.0511 (spent $0.2239)
+[   82.7s $0.2239] promoted {"id": "c2_best_response", "reason": "provisional", "fallback": "c1_safe"}
+[   81.5s $0.2239] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 42.7, "cost": 0.05112, "spent": 0.2239}
+[   83.4s $0.2239] candidate {"id": "c3_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  157.2s $0.2239] ranking {"rows": [{"id": "c2_best_response", "mean": 1.0, "worst": 1.0, "margin": 1877.7}, {"id": "c3_marginal_greedy", "mean": 0.667, "worst": 0.0, "margin": 1219.2}, {"id": "c1_safe", "mean": 0.333, "worst"
+[llm] improve_c2_best_response_0 gpt-6.1-sol completed 123.0s $0.0931 (spent $0.3170)
+[  280.3s $0.3170] llm {"label": "improve_c2_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 123.0, "cost": 0.09312, "spent": 0.31702}
+[  283.9s $0.3170] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  283.9s $0.3170] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  386.6s $0.3170] ranking {"rows": [{"id": "c4_improve0", "mean": 1.0, "worst": 1.0, "margin": 1629.2}, {"id": "c2_best_response", "mean": 0.75, "worst": 0.0, "margin": 1357.0}, {"id": "c3_marginal_greedy", "mean": 0.5, "worst
+[  391.6s $0.3170] promoted {"id": "c4_improve0", "reason": "tournament", "fallback": "c1_safe"}
+[  391.6s $0.3170] rescue {"model": "gpt-6.1-sol", "remaining": 0.133}
+[llm] improve_c4_improve0_0 gpt-6.1-sol completed 38.1s $0.0681 (spent $0.3851)
+[  429.7s $0.3851] llm {"label": "improve_c4_improve0_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.1, "cost": 0.06807, "spent": 0.38509}
+[  437.6s $0.3851] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  437.6s $0.3851] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  520.9s $0.3851] ranking {"rows": [{"id": "c4_improve0", "mean": 0.9, "worst": 0.5, "margin": 1533.0}, {"id": "c5_improve0", "mean": 0.9, "worst": 0.5, "margin": 1399.6}, {"id": "c2_best_response", "mean": 0.6, "worst": 0.0, 
+[  568.5s $0.3851] final_probe {"ok": true}
+[  568.5s $0.3851] end {"champion": "c4_improve0", "spent": 0.38508950000000003, "elapsed": 568.4565512569998}
+strategy written: /w/runs/eta-B/20261024-112232-4112/output/strategy.py

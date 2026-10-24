@@ -1,0 +1,28 @@
+running /w/tasks/theta-B into /w/runs/theta-B/20261024-113535-5933 (no Docker)
+[    0.3s $0.0000] fallback_written {}
+[    0.3s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 5, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 36.1s $0.0224 (spent $0.0224)
+[   36.4s $0.0224] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 36.1, "cost": 0.02241, "spent": 0.02241}
+[   36.5s $0.0224] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   36.5s $0.0224] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] sim0 gpt-6.1-sol completed 38.5s $0.0494 (spent $0.0718)
+[   38.8s $0.0718] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.5, "cost": 0.04942, "spent": 0.07183}
+[   38.8s $0.0718] sim_checked {"attempt": 0, "repair": 0, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): dema
+[llm] cand_marginal_greedy gpt-6.1-sol completed 56.9s $0.0347 (spent $0.1065)
+[   57.2s $0.1065] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 56.9, "cost": 0.03471, "spent": 0.10654}
+[   57.2s $0.1065] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   57.3s $0.1065] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_best_response gpt-6.1-sol completed 59.1s $0.0372 (spent $0.1437)
+[   59.4s $0.1437] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 59.1, "cost": 0.03718, "spent": 0.14372}
+[   59.5s $0.1437] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_lookahead gpt-6.1-sol completed 76.4s $0.0687 (spent $0.3096)
+[  112.8s $0.3096] llm {"label": "cand_lookahead", "model": "gpt-6.1-sol", "status": "completed", "secs": 76.4, "cost": 0.06867, "spent": 0.30956}
+[  113.2s $0.3096] candidate {"id": "c4_lookahead", "persona": "lookahead", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] cand_adaptive gpt-6.1-sol completed 60.8s $0.1296 (spent $0.3420) attempt 1: InternalServerError: Error code: 520 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-520/', 'title': 'Error 520: Web serv
+[  118.3s $0.3420] llm {"label": "cand_adaptive", "model": "gpt-6.1-sol", "status": "completed", "secs": 60.8, "cost": 0.12963, "spent": 0.34201}
+[  118.4s $0.3420] candidate {"id": "c5_adaptive", "persona": "adaptive", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0_fix0 gpt-6.1-sol skipped_budget 0.0s $0.0000 (spent $0.3420) worst case $0.1401 > $0.1080 left
+[  119.1s $0.3420] llm {"label": "sim0_fix0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.34201}
+[  119.1s $0.3420] final_probe {"ok": true}
+[  119.1s $0.3420] end {"champion": "c2_marginal_greedy", "spent": 0.34201430000000005, "elapsed": 119.1078909289995}
+strategy written: /w/runs/theta-B/20261024-113535-5933/output/strategy.py

@@ -1,0 +1,50 @@
+running /w/tasks/alpha-B into /w/runs/alpha-B/20261024-105437-200 (no Docker)
+[    0.6s $0.0000] fallback_written {}
+[    0.6s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] sim0 gpt-6.1-sol completed 23.4s $0.0418 (spent $0.0418)
+[   24.0s $0.0418] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 23.4, "cost": 0.04183, "spent": 0.04183}
+[   24.0s $0.0418] sim_checked {"attempt": 0, "repair": 0, "problems": []}
+[llm] cand_safe gpt-6.1-sol completed 29.0s $0.0281 (spent $0.0699)
+[   29.5s $0.0699] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 29.0, "cost": 0.02809, "spent": 0.06992}
+[   29.6s $0.0699] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   29.6s $0.0699] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 37.3s $0.0347 (spent $0.1047)
+[   37.8s $0.1047] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 37.3, "cost": 0.03474, "spent": 0.10466}
+[   37.9s $0.1047] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   38.0s $0.1047] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] cand_best_response gpt-6.1-sol completed 41.0s $0.0384 (spent $0.1431)
+[   41.5s $0.1431] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 41.0, "cost": 0.03843, "spent": 0.14309}
+[   41.7s $0.1431] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   43.8s $0.1431] ranking {"rows": [{"id": "c3_best_response", "mean": 0.833, "worst": 0.5, "margin": 3727.0}, {"id": "c2_marginal_greedy", "mean": 0.833, "worst": 0.5, "margin": 3724.4}, {"id": "c1_safe", "mean": 0.333, "wors
+[   44.0s $0.1431] promoted {"id": "c3_best_response", "reason": "tournament", "fallback": "c1_safe"}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 90.1s $0.0598 (spent $0.2029)
+[  134.1s $0.2029] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 90.1, "cost": 0.05981, "spent": 0.20291}
+[  134.6s $0.2029] candidate {"id": "c4_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  134.6s $0.2029] improve_round {"round": 1, "added": ["c4_improve0"]}
+[  143.7s $0.2029] ranking {"rows": [{"id": "c4_improve0", "mean": 0.75, "worst": 0.5, "margin": 2805.8}, {"id": "c3_best_response", "mean": 0.75, "worst": 0.5, "margin": 2793.4}, {"id": "c2_marginal_greedy", "mean": 0.75, "wor
+[  143.7s $0.2029] kept_champion {"champion": "c3_best_response", "challenger": "c4_improve0", "gain": 0.0, "h2h": [0, 0]}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 123.0s $0.0706 (spent $0.2735)
+[  266.7s $0.2735] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 123.0, "cost": 0.07058, "spent": 0.27349}
+[  267.2s $0.2735] candidate {"id": "c5_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  267.2s $0.2735] improve_round {"round": 2, "added": ["c5_improve0"]}
+[  277.0s $0.2735] ranking {"rows": [{"id": "c5_improve0", "mean": 0.7, "worst": 0.5, "margin": 2245.2}, {"id": "c4_improve0", "mean": 0.7, "worst": 0.5, "margin": 2244.9}, {"id": "c3_best_response", "mean": 0.7, "worst": 0.5, 
+[  277.0s $0.2735] kept_champion {"champion": "c3_best_response", "challenger": "c5_improve0", "gain": 0.0, "h2h": [0, 0]}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 136.5s $0.0784 (spent $0.3519)
+[  413.5s $0.3519] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 136.5, "cost": 0.07837, "spent": 0.35186}
+[  414.1s $0.3519] candidate {"id": "c6_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  414.1s $0.3519] improve_round {"round": 3, "added": ["c6_improve0"]}
+[  430.3s $0.3519] ranking {"rows": [{"id": "c5_improve0", "mean": 0.667, "worst": 0.5, "margin": 1870.9}, {"id": "c4_improve0", "mean": 0.667, "worst": 0.5, "margin": 1870.8}, {"id": "c6_improve0", "mean": 0.667, "worst": 0.5,
+[  430.3s $0.3519] kept_champion {"champion": "c3_best_response", "challenger": "c5_improve0", "gain": 0.0, "h2h": [0, 0]}
+[  430.3s $0.3519] rescue {"model": "gpt-6.1-sol", "remaining": 0.0981}
+[llm] improve_c3_best_response_0 gpt-6.1-sol completed 38.6s $0.0449 (spent $0.3967)
+[  469.0s $0.3967] llm {"label": "improve_c3_best_response_0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.6, "cost": 0.04486, "spent": 0.39672}
+[  469.4s $0.3967] candidate {"id": "c7_improve0", "persona": "improve0", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[  469.4s $0.3967] improve_round {"round": 4, "added": ["c7_improve0"]}
+[  483.5s $0.3967] ranking {"rows": [{"id": "c4_improve0", "mean": 0.643, "worst": 0.5, "margin": 1605.3}, {"id": "c5_improve0", "mean": 0.643, "worst": 0.5, "margin": 1605.3}, {"id": "c6_improve0", "mean": 0.643, "worst": 0.5,
+[  483.5s $0.3967] kept_champion {"champion": "c3_best_response", "challenger": "c4_improve0", "gain": 0.0, "h2h": [0, 0]}
+[  562.6s $0.3967] polished {"seeds": 9, "matches": 504}
+[  562.6s $0.3967] ranking {"rows": [{"id": "c4_improve0", "mean": 0.643, "worst": 0.5, "margin": 1605.3}, {"id": "c5_improve0", "mean": 0.643, "worst": 0.5, "margin": 1605.3}, {"id": "c6_improve0", "mean": 0.643, "worst": 0.5,
+[  562.6s $0.3967] kept_champion {"champion": "c3_best_response", "challenger": "c4_improve0", "gain": 0.0, "h2h": [0, 0]}
+[  562.9s $0.3967] final_probe {"ok": true}
+[  562.9s $0.3967] end {"champion": "c3_best_response", "spent": 0.3967193, "elapsed": 562.86830134}
+strategy written: /w/runs/alpha-B/20261024-105437-200/output/strategy.py

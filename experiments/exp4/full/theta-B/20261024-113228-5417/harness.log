@@ -1,0 +1,26 @@
+running /w/tasks/theta-B into /w/runs/theta-B/20261024-113228-5417 (no Docker)
+[    0.2s $0.0000] fallback_written {}
+[    0.2s $0.0000] start {"profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 3, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "
+[llm] cand_safe gpt-6.1-sol completed 42.8s $0.0434 (spent $0.0434)
+[   43.0s $0.0434] llm {"label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 42.8, "cost": 0.04343, "spent": 0.04343}
+[   43.0s $0.0434] candidate {"id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   43.1s $0.0434] promoted {"id": "c1_safe", "reason": "provisional", "fallback": null}
+[llm] cand_marginal_greedy gpt-6.1-sol completed 44.9s $0.0465 (spent $0.0899)
+[   45.0s $0.0899] llm {"label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 44.9, "cost": 0.04646, "spent": 0.0899}
+[   45.1s $0.0899] candidate {"id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[   45.1s $0.0899] promoted {"id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+[llm] sim0 gpt-6.1-sol completed 45.8s $0.0737 (spent $0.1636)
+[   46.0s $0.1636] llm {"label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 45.8, "cost": 0.07371, "spent": 0.16361}
+[   46.1s $0.1636] sim_checked {"attempt": 0, "repair": 0, "problems": ["selftest() failed:\nselftest: 2 failure(s)\n- random match invariants and determinism: name '_Game__import_math_exp' is not defined\n- idle match: name '_Game
+[llm] cand_best_response gpt-6.1-sol completed 64.2s $0.0585 (spent $0.2221)
+[   64.4s $0.2221] llm {"label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 64.2, "cost": 0.05851, "spent": 0.22212}
+[   64.5s $0.2221] candidate {"id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+[llm] sim0_fix0 gpt-6.1-sol completed 32.5s $0.0841 (spent $0.3062)
+[   78.6s $0.3062] llm {"label": "sim0_fix0", "model": "gpt-6.1-sol", "status": "completed", "secs": 32.5, "cost": 0.08408, "spent": 0.30621}
+[   78.7s $0.3062] sim_checked {"attempt": 0, "repair": 1, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): dema
+[llm] sim0_fix1 gpt-6.1-sol completed 37.1s $0.0880 (spent $0.3942)
+[  115.8s $0.3942] llm {"label": "sim0_fix1", "model": "gpt-6.1-sol", "status": "completed", "secs": 37.1, "cost": 0.08803, "spent": 0.39424}
+[  115.9s $0.3942] sim_checked {"attempt": 0, "repair": 2, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): dema
+[  115.9s $0.3942] final_probe {"ok": true}
+[  115.9s $0.3942] end {"champion": "c2_marginal_greedy", "spent": 0.39423510000000006, "elapsed": 115.90341867699999}
+strategy written: /w/runs/theta-B/20261024-113228-5417/output/strategy.py

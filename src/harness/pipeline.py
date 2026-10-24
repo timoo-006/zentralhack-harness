@@ -40,7 +40,6 @@ FINAL_ACT_LIMIT_S = 0.70
 PROMOTE_MARGIN = 0.03
 CLEAR_MARGIN = 0.12
 MAX_POLISH_SEEDS = 24
-PLAN_WAIT_S = 150.0  # with plan_first: the longest the drafts wait for the game plan
 
 # Self-play files are internal: their class is always this name (the tournament and the
 # sandbox look it up), whatever task.json asks for; only the delivered file uses that.
@@ -78,7 +77,6 @@ class Profile:
     robust_rank: bool = True  # per-opponent ranking + incumbent protection (else raw standings)
     polish: bool = True  # time left after the last call: more self-play seeds, re-rank
     rescue: bool = True  # money left for less than a full improvement call: a low-effort one
-    plan_first: bool = False  # the drafts wait for the analysis (a game plan) and use it
     ablated: tuple[str, ...] = ()
 
 
@@ -95,8 +93,6 @@ ABLATIONS = {
     "polish": "no extra self-play seeds in the time left after the last LLM call",
     "improve_low": "variant: improvement calls at low effort (cheaper, more rounds)",
     "rescue": "no low-effort improvement call when the money left no longer covers a full one",
-    "plan": "variant (mid, large): the strong model writes a game plan first, drafts use it",
-    "drafts5": "variant: 5 first drafts instead of 3",
 }
 
 
@@ -117,10 +113,6 @@ def apply_ablations(p: Profile, flags: str | None) -> Profile:
             p.polish = False
         if name == "rescue":
             p.rescue = False
-        if name == "plan" and p.name != "tiny":  # tiny: the deadline binds, no time to plan
-            p.analysis_model, p.analysis_effort, p.plan_first = p.strong, "medium", True
-        if name == "drafts5":
-            p.n_candidates = max(p.n_candidates, 5)
         if name == "improve_low":
             p.improve_effort = "low"
         if name == "robust_rank":
@@ -268,22 +260,16 @@ class Run:
         """The simulator and the first candidates, in parallel; each verifies itself.
 
         Submission order is priority order: at most 4 calls are in flight, the rest queue.
-        The analysis feeds the improvement rounds; with plan_first the drafts wait for it (at
-        most PLAN_WAIT_S) and are written from it, else it never delays a candidate.
+        The analysis only feeds the improvement rounds, so it never delays a candidate.
         """
         p = self.profile
         futures = []
         if p.sim_model:
             futures.append(self.pool.submit(self._guarded, self.build_simulator))
-        if p.analysis_model and p.plan_first:
-            plan = self.pool.submit(self._guarded, self.analyse)
-            futures.append(plan)
-            self._wait([plan], reserve_s=self.clock.remaining() - PLAN_WAIT_S)
-            self.event("plan", ready=self.analysis != "(none)", chars=len(self.analysis))
         for i, persona in enumerate(self.personas[: p.n_candidates]):
             model = p.cand_models[i % len(p.cand_models)]
             futures.append(self.pool.submit(self._guarded, self.new_candidate, persona, model))
-        if p.analysis_model and not p.plan_first:
+        if p.analysis_model:
             futures.append(self.pool.submit(self._guarded, self.analyse))
         # Whatever misses the cut is not waited for: the run has to finish.
         self._wait(futures, reserve_s=self.profile.min_improve_s * 0.25 + 15)

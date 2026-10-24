@@ -1,0 +1,19 @@
+{"t": 0.26, "event": "fallback_written"}
+{"t": 0.26, "event": "start", "profile": {"name": "mid", "cheap": "gpt-6-luna", "strong": "gpt-6.1-sol", "n_candidates": 5, "cand_models": ["gpt-6.1-sol"], "cand_effort": "low", "cand_max_out": 6000, "sim_model": "gpt-6.1-sol", "sim_effort": "low", "sim_max_out": 9000, "analysis_model": null, "analysis_effort": "low", "repair_model": "gpt-6.1-sol", "repair_effort": "low", "repair_max_out": 8000, "improve_model": "gpt-6.1-sol", "improve_effort": "medium", "improve_max_out": 10000, "improve_parallel": 1, "call_timeout_s": 300.0, "seeds": 4, "max_sim_repairs": 2, "max_strategy_repairs": 1, "min_improve_s": 130.0, "robust_rank": true, "polish": true, "rescue": true, "plan_first": false, "ablated": ["drafts5"]}, "examples": 2, "obs_keys": ["turn", "n_nodes", "edges", "player_base", "opponent_base", "demand", "surge_turns_left", "player_heavy", "player_light", "opponent_heavy", "opponent_light", "player_profit_last_turn", "opponent_profit_last_turn", "player_cumulative_profit", "opponent_cumulative_profit", "n_invalid_actions_last_turn", "action_format_correct_last_turn"], "deadline_s": 600.0, "budget_usd": 0.5}
+{"t": 36.4, "event": "llm", "label": "cand_safe", "model": "gpt-6.1-sol", "status": "completed", "secs": 36.1, "cost": 0.02241, "spent": 0.02241}
+{"t": 36.45, "event": "candidate", "id": "c1_safe", "persona": "safe", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 36.48, "event": "promoted", "id": "c1_safe", "reason": "provisional", "fallback": null}
+{"t": 38.75, "event": "llm", "label": "sim0", "model": "gpt-6.1-sol", "status": "completed", "secs": 38.5, "cost": 0.04942, "spent": 0.07183}
+{"t": 38.84, "event": "sim_checked", "attempt": 0, "repair": 0, "problems": ["Game(0).observe(1): demand[0]: expected float, got NoneType", "Game(0).observe(1): surge_turns_left[0]: expected int, got NoneType", "Game(1).observe(0): demand[0]: expected float, got NoneType", "Game(1).observe(0): surge_turns_left[0]: expected int, got NoneType", "seed 1 turn 0 observe(0): demand[0]: expected float, got NoneType", "seed 1 turn 0 observe(0): surge_turns_left[0]: expected int, got NoneType", "seed 1 turn 1 observe(0): demand[0]: expected float, got NoneType", "seed 1 turn 1 observe(0): surge_turns_left[0]: expected int, got NoneType"]}
+{"t": 57.16, "event": "llm", "label": "cand_marginal_greedy", "model": "gpt-6.1-sol", "status": "completed", "secs": 56.9, "cost": 0.03471, "spent": 0.10654}
+{"t": 57.21, "event": "candidate", "id": "c2_marginal_greedy", "persona": "marginal_greedy", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 57.26, "event": "promoted", "id": "c2_marginal_greedy", "reason": "provisional", "fallback": "c1_safe"}
+{"t": 59.36, "event": "llm", "label": "cand_best_response", "model": "gpt-6.1-sol", "status": "completed", "secs": 59.1, "cost": 0.03718, "spent": 0.14372}
+{"t": 59.45, "event": "candidate", "id": "c3_best_response", "persona": "best_response", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 112.81, "event": "llm", "label": "cand_lookahead", "model": "gpt-6.1-sol", "status": "completed", "secs": 76.4, "cost": 0.06867, "spent": 0.30956}
+{"t": 113.16, "event": "candidate", "id": "c4_lookahead", "persona": "lookahead", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 118.31, "event": "llm", "label": "cand_adaptive", "model": "gpt-6.1-sol", "status": "completed", "secs": 60.8, "cost": 0.12963, "spent": 0.34201}
+{"t": 118.36, "event": "candidate", "id": "c5_adaptive", "persona": "adaptive", "model": "gpt-6.1-sol", "attempt": 0, "problems": []}
+{"t": 119.07, "event": "llm", "label": "sim0_fix0", "model": "gpt-6.1-sol", "status": "skipped_budget", "secs": 0.0, "cost": 0.0, "spent": 0.34201}
+{"t": 119.11, "event": "final_probe", "ok": true}
+{"t": 119.11, "event": "end", "champion": "c2_marginal_greedy", "spent": 0.34201430000000005, "elapsed": 119.1078909289995}
