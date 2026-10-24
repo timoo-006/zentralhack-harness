@@ -485,6 +485,9 @@ def test_core_reading_stdin_cannot_desync_arenas_worker(tmp_path):
     path = write_guarded(tmp_path, "stdin_core", core, fallback_src=fixture_src("greedy_beta"))
     cand = Entrant("cand", f"{path}:Strategy")
     idle = Entrant("idle", "arena.strategies:Idle", trusted=True)
+    t0 = time.perf_counter()
     r = play_match(BetaGame, [cand, idle], 0, isolate=True)
     assert r.forfeit is None, r.error
     assert r.winner == 0
+    assert time.perf_counter() - t0 < 30  # not 0.6 s per turn waiting on a blocked read
+    assert r.forfeit_turns == [None, None]

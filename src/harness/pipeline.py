@@ -33,6 +33,9 @@ PROMPTS = Path(__file__).with_name("prompts")
 # higher in the delivered file (1 s limit per act; the guard cuts the core at 0.6 s).
 SELFPLAY_TIME_BUDGET_S = 0.02
 FINAL_TIME_BUDGET_S = 0.25
+# The delivered file's hard limit per act (arena allows 1.0 s including the pipe round trip;
+# a loaded tournament machine needs headroom).
+FINAL_ACT_LIMIT_S = 0.70
 
 # A challenger replaces the champion only if its mean per-opponent score is higher by
 # PROMOTE_MARGIN and it does not lose the head-to-head, or if it is higher by CLEAR_MARGIN.
@@ -151,7 +154,7 @@ def make_profile(task: dict, llm: LLM, clock: Clock) -> Profile:
             sim_model=strong, sim_effort="low", sim_max_out=9000,
             analysis_model=None, analysis_effort="low",
             repair_model=strong, repair_effort="low", repair_max_out=8000,
-            improve_model=strong, improve_effort="medium", improve_max_out=14000,
+            improve_model=strong, improve_effort="medium", improve_max_out=10000,
             improve_parallel=1, call_timeout_s=200.0, seeds=4,
             max_sim_repairs=2, max_strategy_repairs=1, min_improve_s=130.0,
         )  # fmt: skip
@@ -280,7 +283,7 @@ class Run:
             if problems:
                 c.valid = False
                 self.event("late_problems", id=c.id, problems=problems[:4])
-                if self.clock.remaining() > 90:
+                if self.clock.remaining() > 90 and c.persona != SPARRING_PERSONA:
                     fixes.append(self.pool.submit(self._guarded, self.repair, c, problems))
         self._wait(fixes, reserve_s=40.0)
         valid = self.valid_candidates()
@@ -449,6 +452,8 @@ class Run:
 
     def verify(self, code: str, persona: str, model: str, repairs: int) -> Candidate | None:
         """Probe a core (and play it on the simulator if there is one); repair on failure."""
+        if persona == SPARRING_PERSONA:
+            repairs = 0  # a sparring partner is used as written, or not at all
         for attempt in range(repairs + 1):
             c = self._candidate(code, persona, model)
             c.problems = self.problems_of(c)
@@ -525,7 +530,9 @@ class Run:
             if st.get("illegal", 0) > turns // 2:
                 problems.append(f"As seat {seat}, {st['illegal']} illegal moves in {turns} turns "
                                 "(each one was skipped by the game).")  # fmt: skip
-            if r.scores is not None and r.winner is not None and r.winner != seat:
+            # Losing to idle is fine for the sparring draft: naive real opponents do that too.
+            lost = r.scores is not None and r.winner is not None and r.winner != seat
+            if lost and c.persona != SPARRING_PERSONA:
                 problems.append(
                     f"As seat {seat} it LOST against an opponent that never acts (scores "
                     f"{r.scores}). It must at least beat doing nothing."
@@ -631,7 +638,8 @@ class Run:
             c.source, strategy_class=self.cls, core_class=_core_class(c.source),
             fallback_src=fb.source if fb else None,
             fallback_class=_core_class(fb.source) if fb else "Strategy",
-            time_budget_s=FINAL_TIME_BUDGET_S, header=f"candidate {c.id} ({c.model}, {c.persona})",
+            time_budget_s=FINAL_TIME_BUDGET_S, act_limit_s=FINAL_ACT_LIMIT_S,
+            header=f"candidate {c.id} ({c.model}, {c.persona})",
         )  # fmt: skip
         staged = self.work / "staged_strategy.py"
         staged.write_text(text, "utf-8")
@@ -707,7 +715,7 @@ class Run:
         need = estimate_tokens(self.system + self.spec + stage_prompt)
         while (
             not self.budget.can_afford(model, need, max_out)
-            and self.budget.reserved > 0
+            and self.budget.in_flight() > 0
             and self.clock.remaining() > 60
         ):
             time.sleep(1.0)

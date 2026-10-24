@@ -105,7 +105,9 @@ class Budget:
         with self._lock:
             if self._open.pop(r.id, None) is None:
                 return 0.0
-            self.reserved = max(0.0, self.reserved - r.amount)
+            # Exactly 0 when nothing is open: float residue (1e-17) must not look like a call
+            # in flight to anyone waiting for reservations to settle.
+            self.reserved = max(0.0, self.reserved - r.amount) if self._open else 0.0
             self.spent += actual
         return actual
 
@@ -113,7 +115,7 @@ class Budget:
         """Free a reservation whose call made no (billable) request at all."""
         with self._lock:
             if self._open.pop(r.id, None) is not None:
-                self.reserved = max(0.0, self.reserved - r.amount)
+                self.reserved = max(0.0, self.reserved - r.amount) if self._open else 0.0
 
     def remaining(self) -> float:
         """USD still available: limit - spent - reserved."""
@@ -123,6 +125,11 @@ class Budget:
     def can_afford(self, model: str, input_tokens: int, max_output_tokens: int) -> bool:
         """Would `reserve` accept this call right now?"""
         return self.worst_case(model, input_tokens, max_output_tokens) <= self.remaining()
+
+    def in_flight(self) -> int:
+        """Number of open reservations (calls reserved but not yet settled or released)."""
+        with self._lock:
+            return len(self._open)
 
     def summary(self) -> dict:
         """Numbers for logs."""

@@ -11,11 +11,21 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Git Bash on Windows: Docker Desktop wants C:/... paths, without MSYS path mangling, and
+# python3 may be a Store alias. On Linux both helpers are the plain commands.
+if command -v cygpath >/dev/null 2>&1; then
+    export MSYS_NO_PATHCONV=1
+    hostpath() { cygpath -m "$(realpath "$1")"; }
+else
+    hostpath() { realpath "$1"; }
+fi
+py() { if python3 -c '' 2>/dev/null; then python3 "$@"; else python "$@"; fi; }
+
 task=${1:?usage: ./run.sh TASK_DIR (made with arena make-task, see the README)}
 [[ -f $task/spec.md && -f $task/task.json ]] || { echo "$task: no spec.md/task.json" >&2; exit 2; }
 [[ -f .env ]] || { echo ".env missing: put OPENAI_API_KEY=... in it" >&2; exit 2; }
 field() {  # field NAME: a task.json value, empty if it is null
-    python3 -c 'import json, sys; v = json.load(open(sys.argv[1]))[sys.argv[2]]; print("" if v is None else v)' \
+    py -c 'import json, sys; v = json.load(open(sys.argv[1]))[sys.argv[2]]; print("" if v is None else v)' \
         "$task/task.json" "$1"
 }
 deadline=$(field deadline_s)  # null in tasks made without --deadline-s: no deadline then
@@ -23,7 +33,7 @@ deadline=${deadline%.*}
 
 run=runs/$(basename "$(realpath "$task")")/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$run/output"
-ln -sfn "$(basename "$run")" "$(dirname "$run")/latest"  # runs/<task>/latest: the newest run
+ln -sfn "$(basename "$run")" "$(dirname "$run")/latest" 2>/dev/null || true  # runs/<task>/latest
 
 docker build --quiet --tag harness . >/dev/null
 
@@ -40,7 +50,7 @@ echo "running $task, deadline ${deadline:-none}${deadline:+s}, into $run"
 docker run --detach --name "$name" --init --env-file .env --user "$user" \
     --cpus 2 --memory 4g --memory-swap 4g --pids-limit 512 \
     --read-only --cap-drop ALL --security-opt no-new-privileges --tmpfs /tmp:size=1g \
-    --volume "$(realpath "$task"):/task:ro" --volume "$(realpath "$run/output"):/output:rw" \
+    --volume "$(hostpath "$task"):/task:ro" --volume "$(hostpath "$run/output"):/output:rw" \
     harness >/dev/null
 docker logs --follow "$name" 2>&1 | tee "$run/harness.log" &
 

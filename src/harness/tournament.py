@@ -70,6 +70,7 @@ class Tournament:
         path = None if strategy_path is None else Path(strategy_path)
         if entry_id in self.entries and self.entries[entry_id] != path:
             self._done = {k: v for k, v in self._done.items() if entry_id not in k[:2]}
+            self._kills = {k: n for k, n in self._kills.items() if entry_id not in k[:2]}
             self.results = [r for r in self.results if entry_id not in r.players]
         self.entries[entry_id] = path
 
